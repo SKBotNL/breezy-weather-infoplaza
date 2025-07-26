@@ -1,4 +1,4 @@
-/*
+/**
  * This file is part of Breezy Weather.
  *
  * Breezy Weather is free software: you can redistribute it and/or modify it
@@ -14,15 +14,12 @@
  * along with Breezy Weather. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package org.breezyweather.ui.details
+package org.breezyweather.sources.ncei.json
 
-import breezyweather.domain.location.model.Location
-import org.breezyweather.common.basic.models.options.appearance.DetailScreen
-import org.breezyweather.domain.weather.index.PollutantIndex
+import kotlinx.serialization.Serializable
 
-data class DetailsUiState(
-    val location: Location? = null,
-    val selectedChart: DetailScreen = DetailScreen.TAG_CONDITIONS,
-    val selectedPollutant: PollutantIndex? = null,
-    val initialIndex: Int = 0,
+@Serializable
+data class NceiStationsResultResults(
+    val stations: List<NceiStationsResultResultsStation>,
+    val centroid: NceiStationsCentroid,
 )
