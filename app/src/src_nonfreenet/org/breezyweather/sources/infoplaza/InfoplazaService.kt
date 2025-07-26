@@ -98,7 +98,7 @@ class InfoplazaService @Inject constructor(
         if ((SourceFeature.FORECAST in requestedFeatures ||
                 SourceFeature.POLLEN in requestedFeatures ||
                 SourceFeature.ALERT in requestedFeatures)
-            && geoAreaId.isNullOrEmpty()
+            && (geoAreaId.isNullOrEmpty() || geoAreaId == "null")
         ) {
             return Observable.error(InvalidLocationException())
         }
