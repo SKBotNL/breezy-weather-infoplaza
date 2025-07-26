@@ -3,7 +3,7 @@
 <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp" alt="Logo" />
 </div>
 
-<h1 align="center">Breezy Weather</h1>
+<h1 align="center">Breezy Weather with Infoplaza (Buienalarm, Weeronline, Weerplaza) support</h1>
 
 <br />
 
