@@ -22,6 +22,7 @@ import breezyweather.domain.source.SourceContinent
 import breezyweather.domain.source.SourceFeature
 import breezyweather.domain.weather.wrappers.WeatherWrapper
 import io.reactivex.rxjava3.core.Observable
+import org.breezyweather.common.exceptions.InvalidLocationException
 import org.breezyweather.common.source.HttpSource
 import org.breezyweather.common.source.LocationParametersSource
 import org.breezyweather.common.source.WeatherSource
@@ -38,7 +39,7 @@ class InfoplazaService @Inject constructor(
         coordinatesChanged: Boolean,
         features: List<SourceFeature>,
     ): Boolean {
-        if (SourceFeature.FORECAST !in features && SourceFeature.ALERT !in features) return false
+        if (SourceFeature.FORECAST !in features && SourceFeature.POLLEN !in features && SourceFeature.ALERT !in features) return false
         return coordinatesChanged
     }
 
@@ -93,6 +94,14 @@ class InfoplazaService @Inject constructor(
         requestedFeatures: List<SourceFeature>,
     ): Observable<WeatherWrapper> {
         val geoAreaId = location.parameters.getOrElse(id) { null }?.getOrElse("geoAreaId") { null }
+
+        if ((SourceFeature.FORECAST in requestedFeatures ||
+                SourceFeature.POLLEN in requestedFeatures ||
+                SourceFeature.ALERT in requestedFeatures)
+            && geoAreaId.isNullOrEmpty()
+        ) {
+            return Observable.error(InvalidLocationException())
+        }
 
         val hourly = if (SourceFeature.FORECAST in requestedFeatures) {
             mApi.getHourly(
