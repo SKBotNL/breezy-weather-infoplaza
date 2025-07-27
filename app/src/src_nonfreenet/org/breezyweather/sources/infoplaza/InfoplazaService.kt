@@ -40,7 +40,8 @@ class InfoplazaService @Inject constructor(
         coordinatesChanged: Boolean,
         features: List<SourceFeature>,
     ): Boolean {
-        return (SourceFeature.FORECAST in features || SourceFeature.POLLEN in features || SourceFeature.ALERT in features)
+        if (SourceFeature.FORECAST !in features && SourceFeature.POLLEN !in features && SourceFeature.ALERT !in features) return false
+        return !(location.isCurrentPosition && !coordinatesChanged)
     }
 
     override fun requestLocationParameters(context: Context, location: Location): Observable<Map<String, String>> {
