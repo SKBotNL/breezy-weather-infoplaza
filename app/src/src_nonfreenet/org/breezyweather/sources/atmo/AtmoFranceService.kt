@@ -36,6 +36,8 @@ import org.breezyweather.common.source.ConfigurableSource
 import org.breezyweather.common.source.HttpSource
 import org.breezyweather.common.source.LocationParametersSource
 import org.breezyweather.common.source.WeatherSource
+import org.breezyweather.common.source.WeatherSource.Companion.PRIORITY_HIGHEST
+import org.breezyweather.common.source.WeatherSource.Companion.PRIORITY_NONE
 import org.breezyweather.domain.settings.SourceConfigStore
 import org.breezyweather.sources.atmo.json.AtmoFrancePollenProperties
 import org.breezyweather.sources.atmo.json.AtmoFrancePollenResult
@@ -92,6 +94,16 @@ class AtmoFranceService @Inject constructor(
             location.countryCode.equals("FR", ignoreCase = true)
     }
 
+    override fun getFeaturePriorityForLocation(
+        location: Location,
+        feature: SourceFeature,
+    ): Int {
+        return when {
+            isFeatureSupportedForLocation(location, feature) -> PRIORITY_HIGHEST
+            else -> PRIORITY_NONE
+        }
+    }
+
     override fun requestWeather(
         context: Context,
         location: Location,
@@ -102,7 +114,7 @@ class AtmoFranceService @Inject constructor(
             return Observable.error(InvalidLocationException())
         }
 
-        val calendar = Date().toCalendarWithTimeZone(location.javaTimeZone)
+        val calendar = Date().toCalendarWithTimeZone(location.timeZone)
         val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
         calendar.apply {
             set(Calendar.HOUR_OF_DAY, 0)

@@ -46,17 +46,18 @@ import org.breezyweather.domain.settings.SettingsChangedMessage
 import org.breezyweather.domain.settings.SettingsManager
 import org.breezyweather.sources.RefreshHelper
 import org.breezyweather.sources.SourceManager
+import org.breezyweather.sources.getSupportedFeatureSources
 import org.breezyweather.ui.settings.compose.AppearanceSettingsScreen
 import org.breezyweather.ui.settings.compose.BackgroundSettingsScreen
 import org.breezyweather.ui.settings.compose.DebugSettingsScreen
 import org.breezyweather.ui.settings.compose.LocationSettingsScreen
 import org.breezyweather.ui.settings.compose.MainScreenSettingsScreen
+import org.breezyweather.ui.settings.compose.ModulesSettingsScreen
 import org.breezyweather.ui.settings.compose.NotificationsSettingsScreen
 import org.breezyweather.ui.settings.compose.RootSettingsView
 import org.breezyweather.ui.settings.compose.SettingsScreenRouter
 import org.breezyweather.ui.settings.compose.UnitSettingsScreen
 import org.breezyweather.ui.settings.compose.WeatherSourcesSettingsScreen
-import org.breezyweather.ui.settings.compose.WidgetsSettingsScreen
 import org.breezyweather.ui.theme.compose.BreezyWeatherTheme
 import javax.inject.Inject
 
@@ -179,11 +180,6 @@ class SettingsActivity : BreezyActivity() {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        EventBus.instance.remove(SettingsChangedMessage::class.java)
-    }
-
     @Composable
     private fun ContentView() {
         val scope = rememberCoroutineScope()
@@ -285,7 +281,7 @@ class SettingsActivity : BreezyActivity() {
                 )
             }
             composable(SettingsScreenRouter.Widgets.route) {
-                WidgetsSettingsScreen(
+                ModulesSettingsScreen(
                     context = this@SettingsActivity,
                     onNavigateBack = { onBack() },
                     hasNotificationPermission = hasNotificationPermission,
@@ -322,7 +318,7 @@ class SettingsActivity : BreezyActivity() {
                     context = this@SettingsActivity,
                     onNavigateBack = { onBack() },
                     configuredWorldwideSources = sourceManager
-                        .getSupportedWeatherSources(SourceFeature.FORECAST, Location()),
+                        .getSupportedFeatureSources(SourceFeature.FORECAST, Location()),
                     configurableSources = sourceManager.getConfigurableSources()
                 )
             }

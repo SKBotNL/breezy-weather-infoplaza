@@ -17,7 +17,6 @@
 package org.breezyweather.common.source
 
 import android.content.Context
-import androidx.annotation.DrawableRes
 import breezyweather.domain.location.model.Location
 import breezyweather.domain.source.SourceFeature
 import breezyweather.domain.weather.wrappers.WeatherWrapper
@@ -26,26 +25,7 @@ import io.reactivex.rxjava3.core.Observable
 /**
  * Weather service.
  */
-interface WeatherSource : Source {
-
-    /**
-     * An optional icon for the attribution page.
-     * /!\ Only include it if it is mandatory in the attribution, as we don’t want to bundle copyrighted icons which
-     * we don’t have the right to use!
-     * Example: return R.drawable.accu_icon
-     */
-    @DrawableRes
-    fun getAttributionIcon(): Int? {
-        return null
-    }
-
-    /**
-     * List the features by the source as keys
-     * Values are credits and acknowledgments that will be shown at the bottom of main screen
-     * Please check terms of the source to be sure to put the correct term here
-     * Example: <SourceFeature.FORECAST, "MyGreatApi (CC BY 4.0)">
-     */
-    val supportedFeatures: Map<SourceFeature, String>
+interface WeatherSource : FeatureSource {
 
     /**
      * One or a few locations that represents use cases you want to test for this source
@@ -76,16 +56,6 @@ interface WeatherSource : Source {
     val testingLocations: List<Location>
 
     /**
-     * May be used when you don't have reverse geocoding implemented and you want to filter
-     * location results from default location search source to only include some countries
-     * for example
-     */
-    fun isFeatureSupportedForLocation(
-        location: Location,
-        feature: SourceFeature,
-    ): Boolean = true
-
-    /**
      * Returns weather converted to Breezy Weather Weather object
      * @param requestedFeatures List of features requested by the user
      */
@@ -94,4 +64,13 @@ interface WeatherSource : Source {
         location: Location,
         requestedFeatures: List<SourceFeature>,
     ): Observable<WeatherWrapper>
+
+    companion object {
+        const val PRIORITY_HIGHEST = 100
+        const val PRIORITY_HIGH = 75
+        const val PRIORITY_MEDIUM = 50
+        const val PRIORITY_LOW = 25
+        const val PRIORITY_LOWEST = 0
+        const val PRIORITY_NONE = -1
+    }
 }

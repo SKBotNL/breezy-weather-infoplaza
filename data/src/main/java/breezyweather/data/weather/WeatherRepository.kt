@@ -23,7 +23,9 @@ import breezyweather.domain.weather.model.Alert
 import breezyweather.domain.weather.model.Daily
 import breezyweather.domain.weather.model.Hourly
 import breezyweather.domain.weather.model.Minutely
+import breezyweather.domain.weather.model.Normals
 import breezyweather.domain.weather.model.Weather
+import breezyweather.domain.weather.reference.Month
 import java.util.Date
 
 class WeatherRepository(
@@ -36,6 +38,7 @@ class WeatherRepository(
         withHourly: Boolean = true,
         withMinutely: Boolean = true,
         withAlerts: Boolean = true,
+        withNormals: Boolean = true,
     ): Weather? {
         val weather = handler.awaitOneOrNull {
             weathersQueries.getWeatherByLocationId(locationFormattedId, WeatherMapper::mapWeather)
@@ -62,6 +65,11 @@ class WeatherRepository(
                     getAlertListByLocationId(locationFormattedId)
                 } else {
                     emptyList()
+                },
+                normals = if (withNormals) {
+                    getNormalsByLocationId(locationFormattedId)
+                } else {
+                    emptyMap()
                 }
             )
         } else {
@@ -93,6 +101,17 @@ class WeatherRepository(
         }
     }
 
+    suspend fun getNormalsByLocationId(locationFormattedId: String): Map<Month, Normals> {
+        return handler.awaitList {
+            normalsQueries.getNormalsByLocationId(locationFormattedId)
+        }.associate {
+            Month.of(it.month.toInt()) to Normals(
+                daytimeTemperature = it.daytime_temperature,
+                nighttimeTemperature = it.nighttime_temperature
+            )
+        }
+    }
+
     suspend fun getCurrentAlertsByLocationId(locationFormattedId: String): List<Alert> {
         return handler.awaitList {
             alertsQueries.getCurrentAlertsByLocationId(
@@ -117,6 +136,8 @@ class WeatherRepository(
                 minutelyUpdateTime = weather.base.minutelyUpdateTime?.time,
                 alertsUpdateTime = weather.base.alertsUpdateTime?.time,
                 normalsUpdateTime = weather.base.normalsUpdateTime?.time,
+                normalsUpdateLatitude = weather.base.normalsUpdateLatitude,
+                normalsUpdateLongitude = weather.base.normalsUpdateLongitude,
 
                 // current
                 weatherText = weather.current?.weatherText,
@@ -148,12 +169,7 @@ class WeatherRepository(
                 visibility = weather.current?.visibility,
                 ceiling = weather.current?.ceiling,
                 dailyForecast = weather.current?.dailyForecast,
-                hourlyForecast = weather.current?.hourlyForecast,
-
-                // normals
-                normalsMonth = weather.normals?.month?.toLong(),
-                normalsDaytimeTemperature = weather.normals?.daytimeTemperature,
-                normalsNighttimeTemperature = weather.normals?.nighttimeTemperature
+                hourlyForecast = weather.current?.hourlyForecast
             )
 
             // 2. Save daily (delete first, then re-add)
@@ -165,7 +181,7 @@ class WeatherRepository(
 
                     // daytime.
                     daytimeWeatherText = daily.day?.weatherText,
-                    daytimeWeatherPhase = daily.day?.weatherPhase,
+                    daytimeweatherSummary = daily.day?.weatherSummary,
                     daytimeWeatherCode = daily.day?.weatherCode,
 
                     daytimeTemperature = daily.day?.temperature?.temperature,
@@ -196,11 +212,9 @@ class WeatherRepository(
                     daytimeWindSpeed = daily.day?.wind?.speed,
                     daytimeWindGusts = daily.day?.wind?.gusts,
 
-                    daytimeCloudCover = daily.day?.cloudCover?.toLong(),
-
                     // nighttime.
                     nighttimeWeatherText = daily.night?.weatherText,
-                    nighttimeWeatherPhase = daily.night?.weatherPhase,
+                    nighttimeweatherSummary = daily.night?.weatherSummary,
                     nighttimeWeatherCode = daily.night?.weatherCode,
 
                     nighttimeTemperature = daily.night?.temperature?.temperature,
@@ -230,8 +244,6 @@ class WeatherRepository(
                     nighttimeWindDegree = daily.night?.wind?.degree,
                     nighttimeWindSpeed = daily.night?.wind?.speed,
                     nighttimeWindGusts = daily.night?.wind?.gusts,
-
-                    nighttimeCloudCover = daily.night?.cloudCover?.toLong(),
 
                     degreeDayHeating = daily.degreeDay?.heating,
                     degreeDayCooling = daily.degreeDay?.cooling,
@@ -285,7 +297,27 @@ class WeatherRepository(
                     // uv.
                     uvIndex = daily.uV?.index,
 
-                    sunshineDuration = daily.sunshineDuration
+                    sunshineDuration = daily.sunshineDuration,
+
+                    relativeHumidityAverage = daily.relativeHumidity?.average,
+                    relativeHumidityMin = daily.relativeHumidity?.min,
+                    relativeHumidityMax = daily.relativeHumidity?.max,
+
+                    dewpointAverage = daily.dewPoint?.average,
+                    dewpointMin = daily.dewPoint?.min,
+                    dewpointMax = daily.dewPoint?.max,
+
+                    pressureAverage = daily.pressure?.average,
+                    pressureMin = daily.pressure?.min,
+                    pressureMax = daily.pressure?.max,
+
+                    cloudCoverAverage = daily.cloudCover?.average?.toLong(),
+                    cloudCoverMin = daily.cloudCover?.min?.toLong(),
+                    cloudCoverMax = daily.cloudCover?.max?.toLong(),
+
+                    visibilityAverage = daily.visibility?.average,
+                    visibilityMin = daily.visibility?.min,
+                    visibilityMax = daily.visibility?.max
                 )
             }
 
@@ -366,6 +398,17 @@ class WeatherRepository(
                     source = alert.source,
                     severity = alert.severity,
                     color = alert.color.toLong()
+                )
+            }
+
+            // 6. Save normals (delete first, then re-add)
+            normalsQueries.deleteNormalsForLocationId(location.formattedId)
+            weather.normals.forEach { normals ->
+                normalsQueries.insert(
+                    locationFormattedId = location.formattedId,
+                    month = normals.key.value.toLong(),
+                    daytimeTemperature = normals.value.daytimeTemperature,
+                    nighttimeTemperature = normals.value.nighttimeTemperature
                 )
             }
         }

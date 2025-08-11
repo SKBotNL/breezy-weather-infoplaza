@@ -49,8 +49,6 @@ import org.breezyweather.common.extensions.isDarkMode
 import org.breezyweather.common.extensions.isMotionReduced
 import org.breezyweather.common.extensions.isTabletDevice
 import org.breezyweather.common.extensions.setSystemBarStyle
-import org.breezyweather.common.extensions.uiModeManager
-import org.breezyweather.common.utils.helpers.LogHelper
 import org.breezyweather.databinding.FragmentHomeBinding
 import org.breezyweather.domain.location.model.getPlace
 import org.breezyweather.domain.settings.SettingsManager
@@ -203,8 +201,8 @@ class HomeFragment : MainModuleFragment() {
             }
             true
         }
-        binding.toolbar.menu.findItem(R.id.action_edit).setVisible(false)
-        binding.toolbar.menu.findItem(R.id.action_open_in_other_app).setVisible(false)
+        binding.toolbar.menu.findItem(R.id.action_edit).isVisible = false
+        binding.toolbar.menu.findItem(R.id.action_open_in_other_app).isVisible = false
         // Needed to get the icon to show the correct color depending on dark mode
         binding.toolbar.overflowIcon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_more_vert)
 
@@ -278,8 +276,8 @@ class HomeFragment : MainModuleFragment() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.currentLocation.collect {
                     if (it?.location != null) {
-                        binding.toolbar.menu.findItem(R.id.action_edit).setVisible(true)
-                        binding.toolbar.menu.findItem(R.id.action_open_in_other_app).setVisible(true)
+                        binding.toolbar.menu.findItem(R.id.action_edit).isVisible = true
+                        binding.toolbar.menu.findItem(R.id.action_open_in_other_app).isVisible = true
                     }
 
                     // TODO: Dirty workaround to avoid recollecting on lifecycle resume
@@ -335,8 +333,6 @@ class HomeFragment : MainModuleFragment() {
 
     private fun updateDarkMode(location: Location?) {
         val expectedLightTheme = ThemeManager.isLightTheme(requireContext(), location)
-        LogHelper.log(msg = "Night mode: ${requireContext().uiModeManager?.nightMode}")
-        LogHelper.log(msg = "Expected light theme for ${location?.city}: $expectedLightTheme")
 
         (activity as BreezyActivity).updateLocalNightMode(expectedLightTheme)
     }

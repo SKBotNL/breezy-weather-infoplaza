@@ -21,6 +21,7 @@ import breezyweather.domain.location.model.Location
 import breezyweather.domain.source.SourceContinent
 import breezyweather.domain.source.SourceFeature
 import breezyweather.domain.weather.model.Normals
+import breezyweather.domain.weather.reference.Month
 import breezyweather.domain.weather.wrappers.WeatherWrapper
 import com.google.maps.android.SphericalUtil
 import com.google.maps.android.model.LatLng
@@ -31,6 +32,8 @@ import org.breezyweather.common.extensions.toCalendarWithTimeZone
 import org.breezyweather.common.source.HttpSource
 import org.breezyweather.common.source.LocationParametersSource
 import org.breezyweather.common.source.WeatherSource
+import org.breezyweather.common.source.WeatherSource.Companion.PRIORITY_HIGHEST
+import org.breezyweather.common.source.WeatherSource.Companion.PRIORITY_NONE
 import org.breezyweather.sources.ncei.json.NceiDataResult
 import retrofit2.Retrofit
 import java.util.Calendar
@@ -70,13 +73,16 @@ class NceiService @Inject constructor(
         weatherAttribution to "https://www.ncei.noaa.gov/"
     )
 
-    // NCEI is temporarily disabled for Current Location
-    // until better caching is implemented (#1996)
-    override fun isFeatureSupportedForLocation(
+    override fun getFeaturePriorityForLocation(
         location: Location,
         feature: SourceFeature,
-    ): Boolean {
-        return !location.isCurrentPosition
+    ): Int {
+        return when {
+            arrayOf("US", "PR", "VI", "MP", "GU").any {
+                location.countryCode.equals(it, ignoreCase = true)
+            } -> PRIORITY_HIGHEST
+            else -> PRIORITY_NONE
+        }
     }
 
     override val testingLocations: List<Location> = emptyList()
@@ -86,17 +92,16 @@ class NceiService @Inject constructor(
         location: Location,
         requestedFeatures: List<SourceFeature>,
     ): Observable<WeatherWrapper> {
-        val month = Date().toCalendarWithTimeZone(location.javaTimeZone)[Calendar.MONTH] + 1
-        val finalYear = (Date().toCalendarWithTimeZone(location.javaTimeZone)[Calendar.YEAR]).toDouble()
+        val finalYear = (Date().toCalendarWithTimeZone(location.timeZone)[Calendar.YEAR]).toDouble()
             .roundDownToNearestMultiplier(10.0).roundToInt()
         val initialYear = finalYear - 29
 
         val failedFeatures = mutableMapOf<SourceFeature, Throwable>()
 
         val stationMap: Map<String, Double> = Json.decodeFromString<Map<String, Double>>(
-            location.parameters.getOrElse(id) {
-                emptyMap()
-            }.getOrElse("stations") { "" }
+            location.parameters
+                .getOrElse(id) { emptyMap() }
+                .getOrElse("stations") { "" }
         )
         val stations = stationMap.keys.joinToString(",")
         val normals = if (stations != "") {
@@ -114,56 +119,49 @@ class NceiService @Inject constructor(
 
         return normals.map {
             WeatherWrapper(
-                normals = getNormals(month, it, stationMap),
+                normals = getNormals(it, stationMap),
                 failedFeatures = failedFeatures
             )
         }
     }
 
     private fun getNormals(
-        month: Int,
         normalsList: List<NceiDataResult>? = null,
         stationMap: Map<String, Double>,
-    ): Normals {
-        var tMaxWeightedSum = 0.0
-        var tMaxWeightTotal = 0.0
-        var tMinWeightedSum = 0.0
-        var tMinWeightTotal = 0.0
-        val monthEnding: String = if (month in 1..9) {
-            "-0$month"
-        } else {
-            "-$month"
-        }
-
+    ): Map<Month, Normals> {
         // Assign a weight to each station as a function of its distance from the weather location.
         // We calculate weights here so that we won't have to force reload location parameters
         // even if the weight function changes in the future.
-        val stationWeights = stationMap.mapValues {
-            getWeight(it.value)
-        }
+        val stationWeights = stationMap.mapValues { getWeight(it.value) }
 
-        // Add each relevant monthly record to the weighted sum of tMax and tMin,
-        // using the weight of the reporting station,
-        // so that we can calculate the weighted average later.
-        normalsList?.forEach {
-            if (it.date.endsWith(monthEnding)) {
-                if (it.station in stationWeights.keys) {
-                    if (it.tMax != null) {
-                        tMaxWeightedSum += it.tMax.toDouble().times(stationWeights[it.station]!!)
-                        tMaxWeightTotal += stationWeights[it.station]!!
-                    }
-                    if (it.tMin != null) {
-                        tMinWeightedSum += it.tMin.toDouble().times(stationWeights[it.station]!!)
-                        tMinWeightTotal += stationWeights[it.station]!!
-                    }
+        return Month.entries.associateWith { month ->
+            val monthEnding = if (month.value in 1..9) "-0${month.value}" else "-${month.value}"
+            val thisMonthNormals = normalsList
+                ?.filter { it.date.endsWith(monthEnding) && it.station in stationWeights.keys }
+
+            // Add each relevant monthly record to the weighted sum of tMax and tMin,
+            // using the weight of the reporting station,
+            // so that we can calculate the weighted average later.
+            var tMaxWeightedSum = 0.0
+            var tMaxWeightTotal = 0.0
+            var tMinWeightedSum = 0.0
+            var tMinWeightTotal = 0.0
+            thisMonthNormals?.forEach {
+                it.tMax?.toDoubleOrNull()?.let { tMax ->
+                    tMaxWeightedSum += tMax.times(stationWeights[it.station]!!)
+                    tMaxWeightTotal += stationWeights[it.station]!!
+                }
+                it.tMin?.toDoubleOrNull()?.let { tMin ->
+                    tMinWeightedSum += tMin.times(stationWeights[it.station]!!)
+                    tMinWeightTotal += stationWeights[it.station]!!
                 }
             }
+
+            Normals(
+                daytimeTemperature = if (tMaxWeightTotal > 0) tMaxWeightedSum.div(tMaxWeightTotal) else null,
+                nighttimeTemperature = if (tMinWeightTotal > 0) tMinWeightedSum.div(tMinWeightTotal) else null
+            )
         }
-        return Normals(
-            month = month,
-            daytimeTemperature = if (tMaxWeightTotal > 0) tMaxWeightedSum.div(tMaxWeightTotal) else null,
-            nighttimeTemperature = if (tMinWeightTotal > 0) tMinWeightedSum.div(tMinWeightTotal) else null
-        )
     }
 
     /*
@@ -181,8 +179,7 @@ class NceiService @Inject constructor(
     private fun getWeight(distance: Double): Double {
         val sigmaDistance = DISTANCE_LIMIT / 3.0
         val x = distance / sigmaDistance
-        val weight = 1.0 / sqrt(2.0 * PI) * exp(-x.pow(2.0) / 2.0)
-        return weight
+        return 1.0 / sqrt(2.0 * PI) * exp(-x.pow(2.0) / 2.0)
     }
 
     override fun needsLocationParametersRefresh(
@@ -213,7 +210,7 @@ class NceiService @Inject constructor(
         }
         val bbox = "$north,$west,$south,$east"
 
-        val finalYear = (Date().toCalendarWithTimeZone(location.javaTimeZone)[Calendar.YEAR]).toDouble()
+        val finalYear = (Date().toCalendarWithTimeZone(location.timeZone)[Calendar.YEAR]).toDouble()
             .roundDownToNearestMultiplier(10.0).roundToInt()
         val initialYear = finalYear - 29
 

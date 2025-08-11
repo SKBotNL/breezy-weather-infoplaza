@@ -17,8 +17,8 @@
 package org.breezyweather.sources.naturalearth
 
 import android.content.Context
-import android.os.Build
-import breezyweather.domain.location.model.Location
+import breezyweather.domain.location.model.LocationAddressInfo
+import breezyweather.domain.source.SourceFeature
 import com.google.maps.android.PolyUtil
 import com.google.maps.android.SphericalUtil
 import com.google.maps.android.data.geojson.GeoJsonFeature
@@ -29,10 +29,11 @@ import com.google.maps.android.data.geojson.GeoJsonPolygon
 import com.google.maps.android.model.LatLng
 import io.reactivex.rxjava3.core.Observable
 import org.breezyweather.R
-import org.breezyweather.common.extensions.codeForNaturalEarthService
+import org.breezyweather.common.extensions.codeForNaturalEarth
 import org.breezyweather.common.extensions.currentLocale
 import org.breezyweather.common.source.ReverseGeocodingSource
 import org.breezyweather.common.utils.helpers.LogHelper
+import org.breezyweather.sources.RefreshHelper
 import org.json.JSONObject
 import javax.inject.Inject
 
@@ -55,12 +56,49 @@ class NaturalEarthService @Inject constructor() : ReverseGeocodingSource {
 
     override val id = "naturalearth"
     override val name = "Natural Earth"
-    override val reverseGeocodingAttribution = name
+
+    override val supportedFeatures = mapOf(
+        SourceFeature.REVERSE_GEOCODING to name
+    )
+
+    override fun requestNearestLocation(
+        context: Context,
+        latitude: Double,
+        longitude: Double,
+    ): Observable<List<LocationAddressInfo>> {
+        val languageCode = context.currentLocale.codeForNaturalEarth
+
+        // Countries
+        val matchingCountries = getMatchingFeaturesForLocation(
+            context,
+            R.raw.ne_50m_admin_0_countries,
+            latitude,
+            longitude
+        )
+        if (matchingCountries.size != 1) {
+            LogHelper.log(
+                msg = "[NaturalEarthService] Reverse geocoding skipped: ${matchingCountries.size} matching results"
+            )
+            return Observable.just(emptyList())
+        }
+
+        return Observable.just(
+            listOf(
+                LocationAddressInfo(
+                    country = matchingCountries[0].getProperty("NAME_$languageCode")
+                        ?: matchingCountries[0].getProperty("NAME_LONG"),
+                    countryCode = matchingCountries[0].getProperty("ISO_A2")
+                        ?: ""
+                )
+            )
+        )
+    }
 
     private fun getMatchingFeaturesForLocation(
         context: Context,
         file: Int,
-        location: Location,
+        latitude: Double,
+        longitude: Double,
     ): List<GeoJsonFeature> {
         val text = context.resources.openRawResource(file)
             .bufferedReader().use { it.readText() }
@@ -69,53 +107,19 @@ class NaturalEarthService @Inject constructor() : ReverseGeocodingSource {
         return geoJsonParser.features.filter { feature ->
             when (feature.geometry) {
                 is GeoJsonPolygon -> (feature.geometry as GeoJsonPolygon).coordinates.any { polygon ->
-                    PolyUtil.containsLocation(location.latitude, location.longitude, polygon, true)
+                    PolyUtil.containsLocation(latitude, longitude, polygon, true)
                 }
                 is GeoJsonMultiPolygon -> (feature.geometry as GeoJsonMultiPolygon).polygons.any {
                     it.coordinates.any { polygon ->
-                        PolyUtil.containsLocation(location.latitude, location.longitude, polygon, true)
+                        PolyUtil.containsLocation(latitude, longitude, polygon, true)
                     }
                 }
                 is GeoJsonPoint -> SphericalUtil.computeDistanceBetween(
-                    LatLng(location.latitude, location.longitude),
+                    LatLng(latitude, longitude),
                     (feature.geometry as GeoJsonPoint).coordinates
-                ) < 50000 // 50 km circle around center point, it’s arbitrary and may need to be adjusted
+                ) < RefreshHelper.REVERSE_GEOCODING_DISTANCE_LIMIT
                 else -> false
             }
         }
-    }
-
-    override fun requestReverseGeocodingLocation(
-        context: Context,
-        location: Location,
-    ): Observable<List<Location>> {
-        val locationList = mutableListOf<Location>()
-        val languageCode = context.currentLocale.codeForNaturalEarthService
-
-        // Countries
-        val matchingCountries = getMatchingFeaturesForLocation(context, R.raw.ne_50m_admin_0_countries, location)
-        if (matchingCountries.size != 1) {
-            locationList.add(location)
-            LogHelper.log(
-                msg = "[NaturalEarthService] Reverse geocoding skipped: ${matchingCountries.size} matching results"
-            )
-            return Observable.just(locationList)
-        }
-
-        locationList.add(
-            location.copy(
-                country = matchingCountries[0].getProperty("NAME_$languageCode")
-                    ?: matchingCountries[0].getProperty("NAME_LONG")
-                    ?: "",
-                countryCode = matchingCountries[0].getProperty("ISO_A2"),
-                // Make sure to update TimeZone, especially useful on current location
-                timeZone = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    android.icu.util.TimeZone.getDefault().id
-                } else {
-                    java.util.TimeZone.getDefault().id
-                }
-            )
-        )
-        return Observable.just(locationList)
     }
 }

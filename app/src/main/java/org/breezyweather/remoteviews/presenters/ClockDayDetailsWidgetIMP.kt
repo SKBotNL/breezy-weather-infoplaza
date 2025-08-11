@@ -20,6 +20,7 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.graphics.Color
+import android.os.Build
 import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
@@ -42,6 +43,7 @@ import org.breezyweather.remoteviews.Widgets
 import org.breezyweather.ui.theme.resource.ResourceHelper
 import org.breezyweather.ui.theme.resource.ResourcesProviderFactory
 import java.util.Date
+import kotlin.math.roundToInt
 
 object ClockDayDetailsWidgetIMP : AbstractRemoteViewsPresenter() {
 
@@ -92,32 +94,32 @@ object ClockDayDetailsWidgetIMP : AbstractRemoteViewsPresenter() {
         views.setString(
             R.id.widget_clock_day_clock_light,
             "setTimeZone",
-            location.timeZone
+            location.timeZone.id
         )
         views.setString(
             R.id.widget_clock_day_clock_normal,
             "setTimeZone",
-            location.timeZone
+            location.timeZone.id
         )
         views.setString(
             R.id.widget_clock_day_clock_black,
             "setTimeZone",
-            location.timeZone
+            location.timeZone.id
         )
         views.setString(
             R.id.widget_clock_day_clock_aa_light,
             "setTimeZone",
-            location.timeZone
+            location.timeZone.id
         )
         views.setString(
             R.id.widget_clock_day_clock_aa_normal,
             "setTimeZone",
-            location.timeZone
+            location.timeZone.id
         )
         views.setString(
             R.id.widget_clock_day_clock_aa_black,
             "setTimeZone",
-            location.timeZone
+            location.timeZone.id
         )
 
         // Date
@@ -125,7 +127,7 @@ object ClockDayDetailsWidgetIMP : AbstractRemoteViewsPresenter() {
         views.setString(
             R.id.widget_clock_day_title,
             "setTimeZone",
-            location.timeZone
+            location.timeZone.id
         )
         views.setCharSequence(
             R.id.widget_clock_day_title,
@@ -172,9 +174,10 @@ object ClockDayDetailsWidgetIMP : AbstractRemoteViewsPresenter() {
         weather.current?.temperature?.feelsLikeTemperature?.let {
             views.setTextViewText(
                 R.id.widget_clock_day_feelsLikeTemp,
-                context.getString(R.string.temperature_feels_like) +
-                    " " +
+                context.getString(
+                    R.string.temperature_feels_like_with_unit,
                     temperatureUnit.formatMeasure(context, it, 0)
+                )
             )
         } ?: run {
             views.setTextViewText(R.id.widget_clock_day_feelsLikeTemp, null)
@@ -228,6 +231,9 @@ object ClockDayDetailsWidgetIMP : AbstractRemoteViewsPresenter() {
                 setTextViewTextSize(R.id.widget_clock_day_feelsLikeTemp, TypedValue.COMPLEX_UNIT_PX, contentSize)
                 setTextViewTextSize(R.id.widget_clock_day_aqiHumidity, TypedValue.COMPLEX_UNIT_PX, contentSize)
                 setTextViewTextSize(R.id.widget_clock_day_wind, TypedValue.COMPLEX_UNIT_PX, contentSize)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    setInt(R.id.widget_clock_day_subtitle, "setLineHeight", contentSize.roundToInt())
+                }
             }
         }
         if (color.showCard) {

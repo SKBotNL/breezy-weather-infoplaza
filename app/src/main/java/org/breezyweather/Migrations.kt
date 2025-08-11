@@ -29,6 +29,8 @@ import org.breezyweather.common.basic.models.options.appearance.DailyTrendDispla
 import org.breezyweather.common.basic.models.options.appearance.HourlyTrendDisplay
 import org.breezyweather.domain.settings.SettingsManager
 import org.breezyweather.sources.SourceManager
+import org.breezyweather.sources.getReverseGeocodingSource
+import org.breezyweather.sources.getWeatherSource
 import org.breezyweather.ui.main.utils.StatementManager
 import java.io.File
 
@@ -176,7 +178,9 @@ object Migrations {
                             .forEach {
                                 if (it.isCurrentPosition) {
                                     val source = sourceManager.getReverseGeocodingSource(it.forecastSource)
-                                    if (source != null && source.isReverseGeocodingSupportedForLocation(it)) {
+                                    if (source != null &&
+                                        source.isFeatureSupportedForLocation(it, SourceFeature.REVERSE_GEOCODING)
+                                    ) {
                                         locationRepository.update(
                                             it.copy(
                                                 reverseGeocodingSource = source.id
@@ -255,6 +259,27 @@ object Migrations {
                                 "arpae_cosmo_5m" to "italia_meteo_arpae_icon_2i"
                             )
                         )
+                    }
+                }
+
+                if (oldVersion < 60005) {
+                    // V6.0.5 restricts Open-Meteo pollen to Europe, and Accu to US/Europe
+                    runBlocking {
+                        locationRepository.getAllLocations(withParameters = false)
+                            .forEach {
+                                if (it.pollenSource in arrayOf("openmeteo", "accu")) {
+                                    val source = sourceManager.getWeatherSource(it.pollenSource!!)
+                                    if (source == null ||
+                                        !source.isFeatureSupportedForLocation(it, SourceFeature.POLLEN)
+                                    ) {
+                                        locationRepository.update(
+                                            it.copy(
+                                                pollenSource = ""
+                                            )
+                                        )
+                                    }
+                                }
+                            }
                     }
                 }
             }

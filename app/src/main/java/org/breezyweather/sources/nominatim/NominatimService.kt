@@ -17,12 +17,12 @@
 package org.breezyweather.sources.nominatim
 
 import android.content.Context
-import android.os.Build
-import breezyweather.domain.location.model.Location
+import breezyweather.domain.location.model.LocationAddressInfo
 import breezyweather.domain.source.SourceContinent
+import breezyweather.domain.source.SourceFeature
 import io.reactivex.rxjava3.core.Observable
 import org.breezyweather.BuildConfig
-import org.breezyweather.common.extensions.currentLocale
+import org.breezyweather.common.exceptions.InvalidLocationException
 import org.breezyweather.common.source.HttpSource
 import org.breezyweather.common.source.ReverseGeocodingSource
 import retrofit2.Retrofit
@@ -41,11 +41,14 @@ class NominatimService @Inject constructor(
 
     override val id = "nominatim"
     override val name = "Nominatim"
-    override val reverseGeocodingAttribution =
+    private val attribution =
         "Nominatim • Data © OpenStreetMap contributors, ODbL 1.0. https://osm.org/copyright"
     override val privacyPolicyUrl = "https://osmfoundation.org/wiki/Privacy_Policy"
     override val continent = SourceContinent.WORLDWIDE
 
+    override val supportedFeatures = mapOf(
+        SourceFeature.REVERSE_GEOCODING to attribution
+    )
     override val attributionLinks = mapOf(
         name to NOMINATIM_BASE_URL,
         "OpenStreetMap" to "https://osm.org/",
@@ -58,43 +61,32 @@ class NominatimService @Inject constructor(
             .create(NominatimApi::class.java)
     }
 
-    override fun requestReverseGeocodingLocation(
+    override fun requestNearestLocation(
         context: Context,
-        location: Location,
-    ): Observable<List<Location>> {
+        latitude: Double,
+        longitude: Double,
+    ): Observable<List<LocationAddressInfo>> {
         return mApi.getReverseLocation(
             userAgent = USER_AGENT,
-            lat = location.latitude,
-            lon = location.longitude
+            lat = latitude,
+            lon = longitude
         ).map {
-            val locationList = mutableListOf<Location>()
-            locationList.add(
-                location.copy(
-                    cityId = it.placeId?.toString(),
-                    district = it.address?.village,
-                    city = it.address?.town ?: it.name,
-                    admin3 = it.address?.municipality,
-                    admin2 = it.address?.county,
-                    admin1 = it.address?.state,
-                    country = it.address?.country.let { country ->
-                        if (country.isNullOrEmpty()) location.country else country
-                    },
-                    countryCode = it.address?.countryCode.let { countryCode ->
-                        if (countryCode.isNullOrEmpty()) {
-                            location.countryCode
-                        } else {
-                            countryCode.uppercase(context.currentLocale)
-                        }
-                    },
-                    // Make sure to update TimeZone, especially useful on current location
-                    timeZone = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        android.icu.util.TimeZone.getDefault().id
-                    } else {
-                        java.util.TimeZone.getDefault().id
-                    }
+            if (it.address?.countryCode == null) {
+                throw InvalidLocationException()
+            }
+
+            listOf(
+                LocationAddressInfo(
+                    district = it.address.village,
+                    city = it.address.town ?: it.name,
+                    cityCode = it.placeId?.toString(),
+                    admin3 = it.address.municipality,
+                    admin2 = it.address.county,
+                    admin1 = it.address.state,
+                    country = it.address.country,
+                    countryCode = it.address.countryCode
                 )
             )
-            locationList
         }
     }
 

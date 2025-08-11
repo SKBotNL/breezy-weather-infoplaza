@@ -100,6 +100,15 @@ enum class DistanceUnit(
             else -> KILOMETER
         }
 
+        val visibilityScaleThresholds = listOf(
+            0.0,
+            VISIBILITY_VERY_POOR,
+            VISIBILITY_POOR,
+            VISIBILITY_MODERATE,
+            VISIBILITY_GOOD,
+            VISIBILITY_CLEAR
+        )
+
         /**
          * Source: https://weather.metoffice.gov.uk/guides/what-does-this-forecast-mean
          */
@@ -124,6 +133,14 @@ enum class DistanceUnit(
                 in VISIBILITY_CLEAR..Double.MAX_VALUE -> context.getString(R.string.visibility_perfectly_clear)
                 else -> null
             }
+        }
+
+        fun validateValue(distance: Double?): Double? {
+            return distance?.let { if (it >= 0.0) it else null }
+        }
+
+        fun getUnit(id: String): DistanceUnit? {
+            return DistanceUnit.entries.firstOrNull { it.id == id }
         }
     }
 

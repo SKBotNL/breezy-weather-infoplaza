@@ -22,16 +22,21 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ShortcutInfo
 import android.os.Build
+import android.os.TransactionTooLargeException
 import androidx.annotation.RequiresApi
 import androidx.core.location.LocationManagerCompat
 import breezyweather.data.location.LocationRepository
 import breezyweather.data.weather.WeatherRepository
 import breezyweather.domain.location.model.Location
+import breezyweather.domain.location.model.LocationAddressInfo
 import breezyweather.domain.source.SourceFeature
 import breezyweather.domain.weather.model.Base
 import breezyweather.domain.weather.model.Weather
-import breezyweather.domain.weather.model.WeatherCode
+import breezyweather.domain.weather.reference.Month
+import breezyweather.domain.weather.reference.WeatherCode
 import breezyweather.domain.weather.wrappers.WeatherWrapper
+import com.google.maps.android.SphericalUtil
+import com.google.maps.android.model.LatLng
 import io.reactivex.rxjava3.core.Observable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -41,19 +46,23 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import org.breezyweather.BreezyWeather
 import org.breezyweather.BuildConfig
+import org.breezyweather.common.basic.models.options.unit.PrecipitationIntensityUnit
 import org.breezyweather.common.exceptions.ApiKeyMissingException
 import org.breezyweather.common.exceptions.LocationException
 import org.breezyweather.common.exceptions.NoNetworkException
 import org.breezyweather.common.exceptions.ReverseGeocodingException
 import org.breezyweather.common.exceptions.WeatherException
+import org.breezyweather.common.extensions.currentLocale
 import org.breezyweather.common.extensions.getIsoFormattedDate
 import org.breezyweather.common.extensions.hasPermission
 import org.breezyweather.common.extensions.isOnline
 import org.breezyweather.common.extensions.locationManager
 import org.breezyweather.common.extensions.roundDecimals
 import org.breezyweather.common.extensions.shortcutManager
+import org.breezyweather.common.extensions.sizeInBytes
 import org.breezyweather.common.extensions.toCalendarWithTimeZone
 import org.breezyweather.common.extensions.toDateNoHour
+import org.breezyweather.common.source.BroadcastSource
 import org.breezyweather.common.source.ConfigurableSource
 import org.breezyweather.common.source.HttpSource
 import org.breezyweather.common.source.LocationParametersSource
@@ -66,6 +75,7 @@ import org.breezyweather.common.utils.helpers.LogHelper
 import org.breezyweather.common.utils.helpers.ShortcutsHelper
 import org.breezyweather.domain.location.model.getPlace
 import org.breezyweather.domain.location.model.isDaylight
+import org.breezyweather.domain.settings.CurrentLocationStore
 import org.breezyweather.domain.settings.SettingsManager
 import org.breezyweather.domain.settings.SourceConfigStore
 import org.breezyweather.remoteviews.presenters.ClockDayDetailsWidgetIMP
@@ -86,6 +96,7 @@ import org.breezyweather.ui.main.utils.RefreshErrorType
 import org.breezyweather.ui.theme.resource.ResourcesProviderFactory
 import java.util.Calendar
 import java.util.Date
+import java.util.TimeZone
 import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Inject
 import kotlin.math.min
@@ -97,98 +108,17 @@ class RefreshHelper @Inject constructor(
     private val sourceManager: SourceManager,
     private val locationRepository: LocationRepository,
     private val weatherRepository: WeatherRepository,
+    private val currentLocationStore: CurrentLocationStore,
 ) {
-    suspend fun getLocation(
+
+    /**
+     * Get updated coordinates from the location service
+     * Update the store and returns the result, including the potential errors
+     */
+    suspend fun updateCurrentCoordinates(
         context: Context,
-        location: Location,
         background: Boolean,
-    ): LocationResult {
-        if (!location.isCurrentPosition) {
-            return LocationResult(location)
-        }
-
-        var currentErrors = mutableListOf<RefreshError>()
-
-        // Getting current longitude and latitude
-        val currentLocation = try {
-            requestCurrentLocation(context, location, background)
-                .also { currentErrors = it.errors.toMutableList() }
-                .location
-        } catch (e: Throwable) {
-            e.printStackTrace()
-            currentErrors.add(RefreshError(RefreshErrorType.LOCATION_FAILED))
-            location
-        }
-
-        // Longitude and latitude incorrect? Let’s return earlier
-        if (!currentLocation.isUsable) {
-            return LocationResult(currentLocation, currentErrors)
-        }
-
-        val locationGeocoded = if (
-            location.longitude != currentLocation.longitude ||
-            location.latitude != currentLocation.latitude ||
-            location.needsGeocodeRefresh
-        ) {
-            val reverseGeocodingService = sourceManager.getReverseGeocodingSourceOrDefault(
-                location.reverseGeocodingSource ?: BuildConfig.DEFAULT_GEOCODING_SOURCE
-            )
-            try {
-                // Getting the address for this
-                requestReverseGeocoding(reverseGeocodingService, currentLocation, context).also {
-                    locationRepository.update(it)
-                }
-            } catch (e: Throwable) {
-                currentErrors.add(
-                    RefreshError(
-                        RefreshErrorType.getTypeFromThrowable(context, e, RefreshErrorType.REVERSE_GEOCODING_FAILED),
-                        reverseGeocodingService.name,
-                        SourceFeature.REVERSE_GEOCODING
-                    )
-                )
-
-                // Fallback to offline reverse geocoding
-                if (reverseGeocodingService.id != BuildConfig.DEFAULT_GEOCODING_SOURCE) {
-                    val defaultReverseGeocodingSource = sourceManager.getReverseGeocodingSourceOrDefault(
-                        BuildConfig.DEFAULT_GEOCODING_SOURCE
-                    )
-                    try {
-                        // Getting the address for this from the fallback reverse geocoding source
-                        requestReverseGeocoding(defaultReverseGeocodingSource, currentLocation, context).also {
-                            locationRepository.update(it)
-                        }
-                    } catch (e: Throwable) {
-                        /**
-                         * Returns the original location
-                         * Previously, we used to return the new coordinates without the reverse geocoding,
-                         * leading to issues when reverse geocoding fails (because the mandatory countryCode
-                         * -for some sources- would be missing)
-                         * However, if both the reverse geocoding source + the offline fallback reverse geocoding source
-                         * are failing, it safes to assume that the longitude and latitude are completely junky and
-                         * should be discarded
-                         */
-                        location
-                    }
-                } else {
-                    /**
-                     * Returns the original location
-                     * Same comment as above
-                     */
-                    location
-                }
-            }
-        } else {
-            // If no need for reverse geocoding, just return the current location which already has the info
-            currentLocation // Same as "location"
-        }
-        return LocationResult(locationGeocoded, currentErrors)
-    }
-
-    private suspend fun requestCurrentLocation(
-        context: Context,
-        location: Location,
-        background: Boolean,
-    ): LocationResult {
+    ): List<RefreshError> {
         val locationSource = SettingsManager.getInstance(context).locationSource
         val locationService = sourceManager.getLocationSourceOrDefault(locationSource)
         val errors = mutableListOf<RefreshError>()
@@ -214,7 +144,7 @@ class RefreshHelper @Inject constructor(
             errors.add(RefreshError(RefreshErrorType.LOCATION_ACCESS_OFF))
         }
         if (errors.isNotEmpty()) {
-            return LocationResult(location, errors)
+            return errors
         }
 
         return try {
@@ -226,51 +156,203 @@ class RefreshHelper @Inject constructor(
                 .awaitFirstOrElse {
                     throw LocationException()
                 }
-            val newLongitude = result.longitude.roundDecimals(6)!!
-            val newLatitude = result.latitude.roundDecimals(6)!!
-            return LocationResult(
-                if (newLatitude != location.latitude || newLongitude != location.longitude) {
-                    location.copy(
-                        latitude = newLatitude,
-                        longitude = newLongitude,
-                        timeZone = result.timeZone ?: location.timeZone,
-                        /*
-                         * Don’t keep old data as the user can have changed position
-                         * It avoids keeping old data from a reverse geocoding-compatible weather source
-                         * onto a weather source without reverse geocoding
-                         */
-                        country = result.country ?: "",
-                        countryCode = result.countryCode ?: "",
-                        admin1 = result.admin1 ?: "",
-                        admin1Code = result.admin1Code ?: "",
-                        admin2 = result.admin2 ?: "",
-                        admin2Code = result.admin2Code ?: "",
-                        admin3 = result.admin3 ?: "",
-                        admin3Code = result.admin3Code ?: "",
-                        admin4 = result.admin4 ?: "",
-                        admin4Code = result.admin4Code ?: "",
-                        city = result.city ?: "",
-                        district = result.district ?: ""
-                    )
-                } else {
-                    // Return as-is without overwriting reverse geocoding info
-                    location
-                }
+
+            // Some sources do not accept more than 6 decimals, so truncating it here
+            currentLocationStore.updateCurrentLocation(
+                longitude = result.longitude.roundDecimals(6)!!.toFloat(),
+                latitude = result.latitude.roundDecimals(6)!!.toFloat()
             )
+
+            return emptyList()
         } catch (e: Throwable) {
-            LocationResult(
-                location,
-                errors = listOf(
-                    RefreshError(
-                        RefreshErrorType.getTypeFromThrowable(context, e, RefreshErrorType.LOCATION_FAILED),
-                        locationService.name
-                    )
+            listOf(
+                RefreshError(
+                    RefreshErrorType.getTypeFromThrowable(context, e, RefreshErrorType.LOCATION_FAILED),
+                    locationService.name
                 )
             )
         }
     }
 
-    private suspend fun requestReverseGeocoding(
+    /**
+     * Performs the following task on a location if it is current location:
+     * - Apply updated coordinates
+     * - Reverse geocoding (if current location)
+     * On non-current location, just returns the location
+     */
+    suspend fun getLocation(
+        context: Context,
+        location: Location,
+    ): LocationResult {
+        // Longitude and latitude incorrect? Let’s return earlier
+        if (location.isCurrentPosition && !currentLocationStore.isUsable) {
+            // There was already an error earlier in the process, so no errors
+            return LocationResult(location, emptyList())
+        }
+
+        val currentErrors = mutableListOf<RefreshError>()
+
+        // STEP 1 - Update coordinates if current position
+        val locationWithUpdatedCoordinates = if (location.isCurrentPosition) {
+            val coordinatesChanged = location.latitude != currentLocationStore.lastKnownLatitude.toDouble() ||
+                location.longitude != currentLocationStore.lastKnownLongitude.toDouble()
+            if (coordinatesChanged) {
+                location.copy(
+                    latitude = currentLocationStore.lastKnownLatitude.toDouble(),
+                    longitude = currentLocationStore.lastKnownLongitude.toDouble(),
+                    /*
+                     * Don’t keep old data as the user can have changed position
+                     * It avoids keeping old data from a reverse geocoding-compatible weather source
+                     * onto a weather source without reverse geocoding
+                     */
+                    timeZone = TimeZone.getTimeZone("GMT"),
+                    country = "",
+                    countryCode = "",
+                    admin1 = "",
+                    admin1Code = "",
+                    admin2 = "",
+                    admin2Code = "",
+                    admin3 = "",
+                    admin3Code = "",
+                    admin4 = "",
+                    admin4Code = "",
+                    city = "",
+                    district = "",
+                    needsGeocodeRefresh = true
+                )
+            } else {
+                location
+            }
+        } else {
+            location
+        }
+
+        // STEP 2 - Add address info if needed
+        val locationGeocoded = if (locationWithUpdatedCoordinates.needsGeocodeRefresh) {
+            val reverseGeocodingService = sourceManager.getReverseGeocodingSourceOrDefault(
+                location.reverseGeocodingSource ?: BuildConfig.DEFAULT_GEOCODING_SOURCE
+            )
+            try {
+                // Getting the address for this
+                requestReverseGeocoding(reverseGeocodingService, locationWithUpdatedCoordinates, context).let {
+                    if (
+                        SphericalUtil.computeDistanceBetween(
+                            LatLng(it.latitude, it.longitude),
+                            LatLng(location.latitude, location.longitude)
+                        ) > REVERSE_GEOCODING_DISTANCE_LIMIT
+                    ) {
+                        LogHelper.log(
+                            msg = "Nearest location found is too far away from the user-provided location"
+                        )
+                        currentErrors.add(
+                            RefreshError(
+                                RefreshErrorType.REVERSE_GEOCODING_FAILED,
+                                reverseGeocodingService.name,
+                                SourceFeature.REVERSE_GEOCODING
+                            )
+                        )
+                        location
+                    } else if (reverseGeocodingService.id != BuildConfig.DEFAULT_GEOCODING_SOURCE &&
+                        !it.hasValidCountryCode
+                    ) {
+                        /**
+                         * If country code is missing or invalid, don't accept the result and reverse to
+                         * previous valid location
+                         * Exception: The default geocoding source is allowed to send an empty countryCode
+                         */
+                        LogHelper.log(
+                            msg = "Found invalid country code during reverse geocoding: ${it.countryCode}"
+                        )
+                        currentErrors.add(
+                            RefreshError(
+                                RefreshErrorType.REVERSE_GEOCODING_FAILED,
+                                reverseGeocodingService.name,
+                                SourceFeature.REVERSE_GEOCODING
+                            )
+                        )
+                        location
+                    } else {
+                        locationRepository.update(it)
+                        it
+                    }
+                }
+            } catch (e: Throwable) {
+                currentErrors.add(
+                    RefreshError(
+                        RefreshErrorType.getTypeFromThrowable(
+                            context,
+                            e,
+                            RefreshErrorType.REVERSE_GEOCODING_FAILED
+                        ),
+                        reverseGeocodingService.name,
+                        SourceFeature.REVERSE_GEOCODING
+                    )
+                )
+
+                // Fallback to offline reverse geocoding
+                if (reverseGeocodingService.id != BuildConfig.DEFAULT_GEOCODING_SOURCE) {
+                    val defaultReverseGeocodingSource = sourceManager.getReverseGeocodingSourceOrDefault(
+                        BuildConfig.DEFAULT_GEOCODING_SOURCE
+                    )
+                    try {
+                        // Getting the address for this from the fallback reverse geocoding source
+                        requestReverseGeocoding(
+                            defaultReverseGeocodingSource,
+                            locationWithUpdatedCoordinates,
+                            context
+                        ).copy(
+                            // We failed to refresh, so retry reverse geocoding next time
+                            needsGeocodeRefresh = true
+                        ).also {
+                            locationRepository.update(it)
+                        }
+                    } catch (_: Throwable) {
+                        /**
+                         * Returns the original location
+                         * Previously, we used to return the new coordinates without the reverse geocoding,
+                         * leading to issues when reverse geocoding fails (because the mandatory countryCode
+                         * -for some sources- would be missing)
+                         * However, if both the reverse geocoding source + the offline fallback reverse geocoding
+                         * source are failing, it safes to assume that the longitude and latitude are completely
+                         * junky and should be discarded
+                         */
+                        location
+                    }
+                } else {
+                    /**
+                     * Returns the original location
+                     * Same comment as above
+                     */
+                    location
+                }
+            }
+        } else {
+            // If no need for reverse geocoding, just return the current location which already has the info
+            locationWithUpdatedCoordinates // Same as "location"
+        }
+
+        // STEP 3 - Add timezone if missing
+        val locationWithTimeZone = if (locationGeocoded.timeZone.id == "GMT") {
+            locationGeocoded.copy(
+                timeZone = getTimeZoneForLocation(context, locationGeocoded)
+            )
+        } else {
+            locationGeocoded
+        }
+
+        return LocationResult(locationWithTimeZone, currentErrors)
+    }
+
+    suspend fun getTimeZoneForLocation(context: Context, location: Location): TimeZone {
+        return sourceManager
+            .getTimeZoneSource()
+            .requestTimezone(context, location)
+            .awaitFirstOrElse {
+                TimeZone.getDefault()
+            }
+    }
+
+    suspend fun requestReverseGeocoding(
         reverseGeocodingService: ReverseGeocodingSource,
         currentLocation: Location,
         context: Context,
@@ -280,26 +362,13 @@ class RefreshHelper @Inject constructor(
         }
 
         return reverseGeocodingService
-            .requestReverseGeocodingLocation(context, currentLocation)
+            .requestNearestLocation(context, currentLocation.latitude, currentLocation.longitude)
             .map { locationList ->
                 if (locationList.isNotEmpty()) {
-                    val result = locationList[0]
-                    currentLocation.copy(
-                        cityId = result.cityId,
-                        timeZone = result.timeZone,
-                        country = result.country,
-                        countryCode = result.countryCode ?: "",
-                        admin1 = result.admin1 ?: "",
-                        admin1Code = result.admin1Code ?: "",
-                        admin2 = result.admin2 ?: "",
-                        admin2Code = result.admin2Code ?: "",
-                        admin3 = result.admin3 ?: "",
-                        admin3Code = result.admin3Code ?: "",
-                        admin4 = result.admin4 ?: "",
-                        admin4Code = result.admin4Code ?: "",
-                        city = result.city,
-                        district = result.district ?: "",
-                        needsGeocodeRefresh = false
+                    currentLocation.toLocationWithAddressInfo(
+                        context.currentLocale,
+                        locationList[0],
+                        overwriteCoordinates = false
                     )
                 } else {
                     throw ReverseGeocodingException()
@@ -336,6 +405,7 @@ class RefreshHelper @Inject constructor(
         context: Context,
         location: Location,
         coordinatesChanged: Boolean,
+        ignoreCaching: Boolean = false,
     ): WeatherResult {
         try {
             if (!location.isUsable || location.needsGeocodeRefresh) {
@@ -381,7 +451,7 @@ class RefreshHelper @Inject constructor(
             // TODO: Use Calendar to handle DST
             val yesterdayMidnight = Date(Date().time - 1.days.inWholeMilliseconds)
                 .getIsoFormattedDate(location)
-                .toDateNoHour(location.javaTimeZone)!!
+                .toDateNoHour(location.timeZone)!!
             var forecastUpdateTime = base.forecastUpdateTime
             var currentUpdateTime = base.currentUpdateTime
             var airQualityUpdateTime = base.airQualityUpdateTime
@@ -389,6 +459,8 @@ class RefreshHelper @Inject constructor(
             var minutelyUpdateTime = base.minutelyUpdateTime
             var alertsUpdateTime = base.alertsUpdateTime
             var normalsUpdateTime = base.normalsUpdateTime
+            var normalsUpdateLatitude = base.normalsUpdateLatitude
+            var normalsUpdateLongitude = base.normalsUpdateLongitude
 
             // TODO: Debug source is not online, don't use this check in that case
             // Can't return from inside `async`
@@ -459,6 +531,7 @@ class RefreshHelper @Inject constructor(
                                             }
                                             .filter {
                                                 service !is HttpSource ||
+                                                    ignoreCaching ||
                                                     !isWeatherDataStillValid(
                                                         location,
                                                         it,
@@ -659,10 +732,11 @@ class RefreshHelper @Inject constructor(
                         null
                     },
                     alertList = if (!location.alertSource.isNullOrEmpty()) {
+                        // Special case: if we had errors, but still received at least 1 alert, accept the newer data
                         if (errors.any {
                                 it.feature == SourceFeature.ALERT &&
                                     it.source == location.alertSource!!
-                            }
+                            } && sourceCalls.getOrElse(location.alertSource!!) { null }?.alertList?.isEmpty() != false
                         ) {
                             null
                         } else {
@@ -682,11 +756,15 @@ class RefreshHelper @Inject constructor(
                         ) {
                             null
                         } else {
+                            // Combine with previous stored months if not current location
                             sourceCalls.getOrElse(location.normalsSource!!) { null }?.normals?.let {
                                 normalsUpdateTime = Date()
-                                it
+                                normalsUpdateLatitude = location.latitude
+                                normalsUpdateLongitude = location.longitude
+                                ((if (!location.isCurrentPosition) location.weather?.normals else null) ?: emptyMap()) +
+                                    it
                             }
-                        } ?: getNormalsFromWeather(location)
+                        } ?: location.weather?.normals
                     } else {
                         null
                     }
@@ -733,6 +811,23 @@ class RefreshHelper @Inject constructor(
                 location
             )
 
+            // Detect incompatible times between forecast hourly and air quality hourly
+            // No need to do this for pollen at the moment, as we don't store hourly pollen
+            if (weatherWrapperCompleted.airQuality?.hourlyForecast?.isNotEmpty() == true &&
+                hourlyForecast.isNotEmpty() &&
+                !hourlyForecast.any { hourly ->
+                    weatherWrapperCompleted.airQuality!!.hourlyForecast!!.contains(hourly.date)
+                }
+            ) {
+                errors.add(
+                    RefreshError(
+                        RefreshErrorType.INCOMPATIBLE_FORECAST_TIMES,
+                        location.airQualitySource,
+                        SourceFeature.AIR_QUALITY
+                    )
+                )
+            }
+
             // Example: 15:01 -> starts at 15:00, 15:59 -> starts at 15:00
             val currentHour = hourlyForecast.firstOrNull {
                 it.date.time >= System.currentTimeMillis() - 1.hours.inWholeMilliseconds
@@ -750,20 +845,27 @@ class RefreshHelper @Inject constructor(
                     pollenUpdateTime = pollenUpdateTime,
                     minutelyUpdateTime = minutelyUpdateTime,
                     alertsUpdateTime = alertsUpdateTime,
-                    normalsUpdateTime = normalsUpdateTime
+                    normalsUpdateTime = normalsUpdateTime,
+                    normalsUpdateLatitude = normalsUpdateLatitude,
+                    normalsUpdateLongitude = normalsUpdateLongitude
                 ),
                 current = completeCurrentFromHourlyData(
                     weatherWrapperCompleted.current,
                     currentHour,
                     currentDay,
-                    weatherWrapperCompleted.airQuality?.current,
+                    weatherWrapperCompleted.airQuality?.current
+                        ?: weatherWrapperCompleted.airQuality?.hourlyForecast?.entries?.firstOrNull {
+                            it.key.time >= System.currentTimeMillis() - 1.hours.inWholeMilliseconds
+                        }?.value, // Workaround for incompatibility with hourly forecast times
                     location
                 ),
-                normals = completeNormalsFromDaily(weatherWrapperCompleted.normals, dailyForecast),
                 dailyForecast = dailyForecast,
                 hourlyForecast = hourlyForecast,
-                minutelyForecast = weatherWrapperCompleted.minutelyForecast ?: emptyList(),
-                alertList = weatherWrapperCompleted.alertList ?: emptyList()
+                minutelyForecast = weatherWrapperCompleted.minutelyForecast
+                    ?.map { PrecipitationIntensityUnit.validateMinutely(it) }
+                    ?: emptyList(),
+                alertList = weatherWrapperCompleted.alertList ?: emptyList(),
+                normals = weatherWrapperCompleted.normals ?: emptyMap()
             )
             locationRepository.insertParameters(location.formattedId, locationParameters)
             weatherRepository.insert(location, weather)
@@ -781,7 +883,7 @@ class RefreshHelper @Inject constructor(
         context: Context,
         query: String,
         locationSearchSource: String,
-    ): Observable<List<Location>> {
+    ): Observable<List<LocationAddressInfo>> {
         val searchService = sourceManager.getLocationSearchSourceOrDefault(locationSearchSource)
 
         // Debug source is not online
@@ -792,8 +894,8 @@ class RefreshHelper @Inject constructor(
         return searchService.requestLocationSearch(context, query).map { locationList ->
             locationList.map {
                 it.copy(
-                    longitude = it.longitude.roundDecimals(6)!!,
-                    latitude = it.latitude.roundDecimals(6)!!
+                    longitude = it.longitude?.roundDecimals(6),
+                    latitude = it.latitude?.roundDecimals(6)
                 )
             }
         }
@@ -875,7 +977,8 @@ class RefreshHelper @Inject constructor(
                         withDaily = true,
                         withHourly = i == 0, // Not needed in multi city
                         withMinutely = false,
-                        withAlerts = i == 0 // Not needed in multi city
+                        withAlerts = i == 0, // Not needed in multi city
+                        withNormals = false
                     )
                 )
             }
@@ -899,7 +1002,8 @@ class RefreshHelper @Inject constructor(
                         withDaily = true,
                         withHourly = i == 0, // Not needed in multi city
                         withMinutely = false,
-                        withAlerts = i == 0 // Not needed in multi city
+                        withAlerts = i == 0, // Not needed in multi city
+                        withNormals = false
                     )
                 )
             }
@@ -918,12 +1022,10 @@ class RefreshHelper @Inject constructor(
         val locationList = locationRepository.getAllLocations(withParameters = false)
             .map {
                 it.copy(
-                    weather = weatherRepository.getWeatherByLocationId(
-                        it.formattedId
-                    )
+                    weather = weatherRepository.getWeatherByLocationId(it.formattedId)
                 )
             }
-        return broadcastDataIfNecessary(context, locationList, sourceId)
+        return broadcastDataIfNecessary(context, locationList, sourceId = sourceId)
     }
 
     fun isBroadcastSourcesEnabled(context: Context): Boolean {
@@ -938,6 +1040,7 @@ class RefreshHelper @Inject constructor(
     fun broadcastDataIfNecessary(
         context: Context,
         locationList: List<Location>,
+        updatedLocationIds: Array<String>? = null,
         sourceId: String? = null,
     ) {
         sourceManager.getBroadcastSources()
@@ -967,23 +1070,85 @@ class RefreshHelper @Inject constructor(
                     }
 
                     if (enabledAndAvailablePackages.isNotEmpty()) {
-                        val data = source.getExtras(context, locationList)
-                        if (data != null) {
-                            enabledAndAvailablePackages.forEach {
-                                if (BreezyWeather.instance.debugMode) {
-                                    LogHelper.log(msg = "[${source.name}] Sending data to $it")
-                                }
-                                context.sendBroadcast(
-                                    Intent(source.intentAction)
-                                        .setPackage(it)
-                                        .putExtras(data)
-                                        .setFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES)
-                                )
-                            }
-                        }
+                        sendBroadcastSafely(
+                            context,
+                            enabledAndAvailablePackages,
+                            source,
+                            locationList,
+                            updatedLocationIds
+                        )
                     }
                 }
             }
+    }
+
+    private fun sendBroadcastSafely(
+        context: Context,
+        enabledAndAvailablePackages: List<String>,
+        source: BroadcastSource,
+        locationList: List<Location>,
+        updatedLocationIds: Array<String>?,
+    ) {
+        if (locationList.isNotEmpty()) {
+            val data = source.getExtras(context, locationList, updatedLocationIds)
+            if (data != null) {
+                if (data.sizeInBytes > 1000000) {
+                    if (BreezyWeather.instance.debugMode) {
+                        LogHelper.log(msg = "[${source.name}] Parcel size is too large, retrying with less locations")
+                    }
+                    sendBroadcastSafely(
+                        context,
+                        enabledAndAvailablePackages,
+                        source,
+                        locationList.dropLast(1),
+                        updatedLocationIds
+                    )
+                    return
+                }
+
+                try {
+                    enabledAndAvailablePackages.forEach {
+                        if (BreezyWeather.instance.debugMode) {
+                            LogHelper.log(
+                                msg = "[${source.name}] Sending data for ${locationList.size} locations to $it"
+                            )
+                        }
+                        context.sendBroadcast(
+                            Intent(source.intentAction)
+                                .setPackage(it)
+                                .putExtras(data)
+                                .setFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES)
+                        )
+                    }
+                } catch (e: RuntimeException) {
+                    if (e.cause is TransactionTooLargeException) {
+                        if (BreezyWeather.instance.debugMode) {
+                            LogHelper.log(
+                                msg = "[${source.name}] Transaction too large for ${locationList.size} locations"
+                            )
+                        }
+                        // Retry with one less location, until location list is empty
+                        sendBroadcastSafely(
+                            context,
+                            enabledAndAvailablePackages,
+                            source,
+                            locationList.dropLast(1),
+                            updatedLocationIds
+                        )
+                    } else {
+                        if (BreezyWeather.instance.debugMode) {
+                            LogHelper.log(msg = "[${source.name}] Uncaught exception")
+                        }
+                        e.printStackTrace()
+                    }
+                } catch (e: Exception) {
+                    if (BreezyWeather.instance.debugMode) {
+                        LogHelper.log(msg = "[${source.name}] Uncaught exception")
+                    }
+                    e.printStackTrace()
+                }
+            }
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N_MR1)
@@ -1024,7 +1189,7 @@ class RefreshHelper @Inject constructor(
             )
         }
         try {
-            shortcutManager.setDynamicShortcuts(shortcutList)
+            shortcutManager.dynamicShortcuts = shortcutList
         } catch (ignore: Exception) {
             // do nothing.
         }
@@ -1089,17 +1254,28 @@ class RefreshHelper @Inject constructor(
                 )
             }
             SourceFeature.NORMALS -> {
-                if (location.weather!!.base.normalsUpdateTime == null) return false
+                val base = location.weather!!.base
+                if ((base.normalsUpdateTime ?: 0) == 0 ||
+                    base.normalsUpdateLongitude == 0.0 ||
+                    base.normalsUpdateLatitude == 0.0
+                ) {
+                    return false
+                }
 
                 if (location.isCurrentPosition) {
-                    return isUpdateStillValid(
-                        location.weather!!.base.normalsUpdateTime,
-                        if (isRestricted) WAIT_NORMALS_CURRENT_RESTRICTED else WAIT_NORMALS_CURRENT
+                    val distance = SphericalUtil.computeDistanceBetween(
+                        LatLng(base.normalsUpdateLatitude, base.normalsUpdateLongitude),
+                        LatLng(location.latitude, location.longitude)
                     )
+                    return distance <= CACHING_DISTANCE_LIMIT
                 } else {
-                    if (location.weather!!.normals?.month == null) return false
-                    val cal = Date().toCalendarWithTimeZone(location.javaTimeZone)
-                    return location.weather!!.normals!!.month == cal[Calendar.MONTH] + 1
+                    if (location.weather!!.normals.isEmpty()) return false
+                    val cal = Date().toCalendarWithTimeZone(location.timeZone)
+                    return location.weather!!.normals
+                        .getOrElse(Month.fromCalendarMonth(cal[Calendar.MONTH])) { null }
+                        ?.let {
+                            if (it.daytimeTemperature != null || it.nighttimeTemperature != null) it else null
+                        } != null
                 }
             }
             else -> {
@@ -1146,7 +1322,8 @@ class RefreshHelper @Inject constructor(
         const val WAIT_ALERTS_ONGOING = WAIT_MINIMUM // 1 min
         const val WAIT_ALERTS_RESTRICTED = WAIT_ONE_HOUR // 1 hour
         const val WAIT_ALERTS_RESTRICTED_ONGOING = WAIT_REGULAR // 5 min
-        const val WAIT_NORMALS_CURRENT = WAIT_REGULAR // 5 min
-        const val WAIT_NORMALS_CURRENT_RESTRICTED = WAIT_RESTRICTED // 15 min
+
+        const val CACHING_DISTANCE_LIMIT = 5000 // 5 km
+        const val REVERSE_GEOCODING_DISTANCE_LIMIT = 50000 // 50 km
     }
 }

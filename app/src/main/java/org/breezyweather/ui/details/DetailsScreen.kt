@@ -77,13 +77,13 @@ import kotlinx.coroutines.launch
 import org.breezyweather.R
 import org.breezyweather.common.basic.models.options.appearance.CalendarHelper
 import org.breezyweather.common.basic.models.options.appearance.DetailScreen
+import org.breezyweather.common.extensions.getCalendarMonth
 import org.breezyweather.common.extensions.getFormattedDate
 import org.breezyweather.common.extensions.getFormattedDayOfTheMonth
 import org.breezyweather.common.extensions.getFormattedFullDayAndMonth
 import org.breezyweather.common.extensions.getFormattedMediumDayAndMonthInAdditionalCalendar
 import org.breezyweather.common.extensions.getWeek
 import org.breezyweather.common.extensions.setSystemBarStyle
-import org.breezyweather.common.extensions.toCalendar
 import org.breezyweather.common.extensions.toCalendarWithTimeZone
 import org.breezyweather.common.extensions.toTimezoneSpecificHour
 import org.breezyweather.common.source.PollenIndexSource
@@ -212,7 +212,6 @@ fun DailyPagerIndicator(
         modifier = modifier.fillMaxWidth()
     ) {
         pages.forEachIndexed { i, date ->
-            val cal = date.toCalendar(location)
             Tab(
                 selected = (selected == i),
                 unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -365,10 +364,10 @@ fun DailyPagerContent(
     }
 
     val hourlyList = remember(selected) {
-        val startingDate = daily.date.toTimezoneSpecificHour(location.javaTimeZone, 0)
-        val endingDate = daily.date.toCalendarWithTimeZone(location.javaTimeZone).apply {
+        val startingDate = daily.date.toTimezoneSpecificHour(location.timeZone, 0)
+        val endingDate = daily.date.toCalendarWithTimeZone(location.timeZone).apply {
             add(Calendar.DAY_OF_MONTH, 1)
-        }.time.toTimezoneSpecificHour(location.javaTimeZone, 0)
+        }.time.toTimezoneSpecificHour(location.timeZone, 0)
 
         val firstHourlyIndex = location.weather!!.hourlyForecast.indexOfFirst {
             it.date >= startingDate
@@ -386,28 +385,43 @@ fun DailyPagerContent(
         location.weather!!.hourlyForecast.subList(firstHourlyIndex, lastHourlyIndex + 1).toImmutableList()
     }
 
+    val currentUpdateTime = remember(location) {
+        location.weather!!.base.currentUpdateTime
+            ?: location.weather!!.base.forecastUpdateTime
+            ?: location.weather!!.base.refreshTime!!
+    }
+
+    val current = remember(selected) {
+        if (daily.isToday(location) && currentUpdateTime > daily.date) location.weather!!.current else null
+    }
+
     Column(
         modifier = modifier
     ) {
         when (selectedChart) {
             DetailScreen.TAG_CONDITIONS, DetailScreen.TAG_FEELS_LIKE -> {
-                val cal = daily.date.toCalendarWithTimeZone(location.javaTimeZone)
-                val thisDayNormals = if (location.weather?.normals?.month == cal[Calendar.MONTH] + 1) {
-                    location.weather!!.normals
-                } else {
-                    null
-                }
                 DetailsConditions(
                     location,
                     hourlyList,
                     daily,
-                    thisDayNormals,
+                    location.weather?.normals?.getOrElse(daily.date.getCalendarMonth(location)) { null },
                     selectedChart,
                     { setSelectedChart(if (it) DetailScreen.TAG_CONDITIONS else DetailScreen.TAG_FEELS_LIKE) }
                 )
             }
-            DetailScreen.TAG_PRECIPITATION -> DetailsPrecipitation(location, hourlyList, daily)
-            DetailScreen.TAG_WIND -> DetailsWind(location, hourlyList, daily)
+            DetailScreen.TAG_PRECIPITATION -> {
+                DetailsPrecipitation(location, hourlyList, daily)
+            }
+            DetailScreen.TAG_WIND -> {
+                DetailsWind(
+                    location,
+                    hourlyList,
+                    daily,
+                    current?.wind?.let {
+                        if (it.isValid) Pair(currentUpdateTime, it) else null
+                    }
+                )
+            }
             DetailScreen.TAG_AIR_QUALITY -> {
                 val supportedPollutants = remember(location) {
                     PollutantIndex.entries
@@ -429,18 +443,67 @@ fun DailyPagerContent(
                     setSelectedPollutant,
                     hourlyList,
                     daily,
-                    (if (daily.isToday(location)) location.weather!!.current?.airQuality else null),
-                    location.weather!!.base.currentUpdateTime
-                        ?: location.weather!!.base.forecastUpdateTime
-                        ?: location.weather!!.base.refreshTime
+                    current?.airQuality?.let {
+                        if (it.isValid) Pair(currentUpdateTime, it) else null
+                    }
                 )
             }
-            DetailScreen.TAG_POLLEN -> DetailsPollen(daily.pollen, pollenIndexSource)
-            DetailScreen.TAG_UV_INDEX -> DetailsUV(location, hourlyList, daily)
-            DetailScreen.TAG_HUMIDITY -> DetailsHumidity(location, hourlyList, daily.date)
-            DetailScreen.TAG_PRESSURE -> DetailsPressure(location, hourlyList, daily.date)
-            DetailScreen.TAG_CLOUD_COVER -> DetailsCloudCover(location, hourlyList, daily)
-            DetailScreen.TAG_VISIBILITY -> DetailsVisibility(location, hourlyList, daily.date)
+            DetailScreen.TAG_POLLEN -> {
+                DetailsPollen(daily.pollen, pollenIndexSource)
+            }
+            DetailScreen.TAG_UV_INDEX -> {
+                DetailsUV(
+                    location,
+                    hourlyList,
+                    daily,
+                    current?.uV?.let {
+                        if (it.isValid) Pair(currentUpdateTime, it) else null
+                    }
+                )
+            }
+            DetailScreen.TAG_HUMIDITY -> {
+                DetailsHumidity(
+                    location,
+                    hourlyList,
+                    daily,
+                    current?.relativeHumidity?.let { relativeHumidity ->
+                        Pair(currentUpdateTime, relativeHumidity)
+                    },
+                    current?.dewPoint?.let { dewPoint ->
+                        Pair(currentUpdateTime, dewPoint)
+                    }
+                )
+            }
+            DetailScreen.TAG_PRESSURE -> {
+                DetailsPressure(
+                    location,
+                    hourlyList,
+                    daily,
+                    current?.pressure?.let { pressure ->
+                        Pair(currentUpdateTime, pressure)
+                    }
+                )
+            }
+            DetailScreen.TAG_CLOUD_COVER -> {
+                DetailsCloudCover(
+                    location,
+                    hourlyList,
+                    daily,
+                    current?.cloudCover?.let { cloudCover ->
+                        Pair(currentUpdateTime, cloudCover)
+                    }
+                )
+            }
+            DetailScreen.TAG_VISIBILITY -> {
+                DetailsVisibility(
+                    location,
+                    hourlyList,
+                    daily,
+                    current?.visibility?.let { visibility ->
+                        Pair(currentUpdateTime, visibility)
+                    }
+                )
+            }
             DetailScreen.TAG_SUN_MOON -> {
                 val sunTimes = remember(selected) {
                     location.weather!!.dailyForecast.mapNotNull { it.sun }

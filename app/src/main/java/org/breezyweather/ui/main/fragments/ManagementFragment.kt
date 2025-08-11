@@ -50,6 +50,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -85,23 +86,25 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import breezyweather.domain.location.model.Location
 import com.google.accompanist.permissions.PermissionStatus
-import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.launch
 import org.breezyweather.BreezyWeather
+import org.breezyweather.BuildConfig
 import org.breezyweather.R
 import org.breezyweather.common.basic.BreezyActivity
 import org.breezyweather.common.extensions.isDarkMode
 import org.breezyweather.common.extensions.plus
 import org.breezyweather.common.extensions.setSystemBarStyle
-import org.breezyweather.common.source.LocationPreset
 import org.breezyweather.common.source.getName
 import org.breezyweather.common.utils.helpers.IntentHelper
 import org.breezyweather.common.utils.helpers.PermissionHelper
 import org.breezyweather.common.utils.helpers.SnackbarHelper
+import org.breezyweather.domain.location.model.applyDefaultPreset
 import org.breezyweather.domain.location.model.getPlace
 import org.breezyweather.domain.settings.SettingsManager
 import org.breezyweather.sources.SourceManager
 import org.breezyweather.ui.common.composables.AlertDialogNoPadding
+import org.breezyweather.ui.common.composables.AnimatedVisibilitySlideVertically
 import org.breezyweather.ui.common.composables.NotificationCard
 import org.breezyweather.ui.common.composables.SecondarySourcesPreference
 import org.breezyweather.ui.common.decorations.Material3ListItemDecoration
@@ -169,13 +172,19 @@ open class ManagementFragment : MainModuleFragment(), TouchReactor {
         ensureResourceProvider()
 
         val validLocationListState = viewModel.validLocationList.collectAsState()
-        var notificationDismissed by remember { mutableStateOf(false) }
-        var notificationAppUpdateCheckDismissed by remember { mutableStateOf(false) }
+        var notificationDismissed by remember {
+            mutableStateOf(viewModel.statementManager.isPostNotificationDialogAlreadyShown)
+        }
+        var notificationAppUpdateCheckDismissed by remember {
+            mutableStateOf(viewModel.statementManager.isAppUpdateCheckDialogAlreadyShown)
+        }
 
         val dialogChooseWeatherSourcesOpenState = viewModel.dialogChooseWeatherSourcesOpen.collectAsState()
         val selectedLocationState = viewModel.selectedLocation.collectAsState()
 
         val dialogChooseDebugLocationOpenState = viewModel.dialogChooseDebugLocationOpen.collectAsState()
+
+        val locationLoadingState = viewModel.locationListLoading.collectAsState()
 
         /*
          * We should add a scroll behavior to make the top bar change color when scrolling, but
@@ -213,6 +222,7 @@ open class ManagementFragment : MainModuleFragment(), TouchReactor {
                     Column {
                         if (BreezyWeather.instance.debugMode) {
                             FloatingActionButton(
+                                containerColor = MaterialTheme.colorScheme.tertiary,
                                 onClick = {
                                     viewModel.openChooseDebugLocationDialog()
                                 }
@@ -226,8 +236,12 @@ open class ManagementFragment : MainModuleFragment(), TouchReactor {
                         }
                         if (validLocationListState.value.firstOrNull { it.isCurrentPosition } == null) {
                             FloatingActionButton(
+                                containerColor = MaterialTheme.colorScheme.tertiary,
                                 onClick = {
-                                    viewModel.openChooseWeatherSourcesDialog(null)
+                                    viewModel.openChooseWeatherSourcesDialog(
+                                        Location(isCurrentPosition = true)
+                                            .applyDefaultPreset((requireActivity() as MainActivity).sourceManager)
+                                    )
                                 }
                             ) {
                                 Icon(
@@ -238,6 +252,7 @@ open class ManagementFragment : MainModuleFragment(), TouchReactor {
                             Spacer(modifier = Modifier.height(dimensionResource(R.dimen.normal_margin)))
                         }
                         FloatingActionButton(
+                            containerColor = MaterialTheme.colorScheme.tertiary,
                             onClick = {
                                 callback?.onSearchBarClicked()
                             }
@@ -264,50 +279,71 @@ open class ManagementFragment : MainModuleFragment(), TouchReactor {
                             end = dimensionResource(R.dimen.normal_margin)
                         )
                 ) {
-                    if (!viewModel.statementManager.isPostNotificationDialogAlreadyShown &&
-                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                        !notificationDismissed
-                    ) {
-                        val notificationPermissionState =
-                            rememberPermissionState(permission = Manifest.permission.POST_NOTIFICATIONS)
-                        if (notificationPermissionState.status != PermissionStatus.Granted) {
-                            NotificationCard(
-                                title = stringResource(R.string.dialog_permissions_notification_title),
-                                summary = stringResource(R.string.dialog_permissions_notification_content),
-                                onClick = {
-                                    viewModel.statementManager.setPostNotificationDialogAlreadyShown()
-                                    notificationDismissed = true
+                    if (locationLoadingState.value) {
+                        LinearProgressIndicator(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = dimensionResource(R.dimen.small_margin))
+                        )
+                    } else {
+                        Spacer(
+                            modifier = Modifier.height(4.dp + dimensionResource(R.dimen.small_margin))
+                        )
+                    }
+                    var hasNotificationPermission: Boolean? = null
+                    if (!notificationDismissed || !notificationAppUpdateCheckDismissed) {
+                        val notificationPermissionState = rememberMultiplePermissionsState(
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                listOf(Manifest.permission.POST_NOTIFICATIONS)
+                            } else {
+                                // permission not needed
+                                emptyList()
+                            }
+                        )
+                        hasNotificationPermission = notificationPermissionState.permissions.isEmpty() ||
+                            notificationPermissionState.permissions[0].status == PermissionStatus.Granted
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        AnimatedVisibilitySlideVertically(
+                            hasNotificationPermission == false && !notificationDismissed
+                        ) {
+                            Column {
+                                NotificationCard(
+                                    title = stringResource(R.string.dialog_permissions_notification_title),
+                                    summary = stringResource(R.string.dialog_permissions_notification_content),
+                                    onClick = {
+                                        viewModel.statementManager.setPostNotificationDialogAlreadyShown()
+                                        notificationDismissed = true
 
-                                    PermissionHelper.requestPermissionWithFallback(
-                                        activity = requireActivity(),
-                                        permission = Manifest.permission.POST_NOTIFICATIONS,
-                                        fallback = {
-                                            IntentHelper.startNotificationSettingsActivity(requireActivity())
-                                        }
-                                    )
-                                },
-                                onClose = {
-                                    viewModel.statementManager.setPostNotificationDialogAlreadyShown()
-                                    notificationDismissed = true
-                                    /*
-                                     * We could turn off alert notification from SettingsManager, but
-                                     * it’s best not to, as the user can still enable notification
-                                     * permission again from Android settings, and there is a
-                                     * permission check before sending any notification even if
-                                     * preference is enabled.
-                                     */
-                                }
-                            )
-                            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_margin)))
+                                        PermissionHelper.requestPermissionWithFallback(
+                                            activity = requireActivity(),
+                                            permission = Manifest.permission.POST_NOTIFICATIONS,
+                                            fallback = {
+                                                IntentHelper.startNotificationSettingsActivity(requireActivity())
+                                            }
+                                        )
+                                    },
+                                    onClose = {
+                                        viewModel.statementManager.setPostNotificationDialogAlreadyShown()
+                                        notificationDismissed = true
+                                        /*
+                                         * We could turn off alert notification from SettingsManager, but
+                                         * it’s best not to, as the user can still enable notification
+                                         * permission again from Android settings, and there is a
+                                         * permission check before sending any notification even if
+                                         * preference is enabled.
+                                         */
+                                    }
+                                )
+                                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_margin)))
+                            }
                         }
                     }
-                    if (!viewModel.statementManager.isAppUpdateCheckDialogAlreadyShown &&
-                        !notificationAppUpdateCheckDismissed
-                    ) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            val notificationPermissionState =
-                                rememberPermissionState(permission = Manifest.permission.POST_NOTIFICATIONS)
-                            if (notificationPermissionState.status == PermissionStatus.Granted) {
+                    if (BuildConfig.FLAVOR != "freenet") {
+                        AnimatedVisibilitySlideVertically(
+                            hasNotificationPermission == true && !notificationAppUpdateCheckDismissed
+                        ) {
+                            Column {
                                 NotificationCard(
                                     title = stringResource(R.string.dialog_app_update_check_title),
                                     summary = stringResource(R.string.dialog_app_update_check_content),
@@ -323,21 +359,6 @@ open class ManagementFragment : MainModuleFragment(), TouchReactor {
                                 )
                                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_margin)))
                             }
-                        } else {
-                            NotificationCard(
-                                title = stringResource(R.string.dialog_app_update_check_title),
-                                summary = stringResource(R.string.dialog_app_update_check_content),
-                                onClick = {
-                                    viewModel.statementManager.setAppUpdateCheckDialogAlreadyShown()
-                                    notificationAppUpdateCheckDismissed = true
-                                    SettingsManager.getInstance(requireContext()).isAppUpdateCheckEnabled = true
-                                },
-                                onClose = {
-                                    viewModel.statementManager.setAppUpdateCheckDialogAlreadyShown()
-                                    notificationAppUpdateCheckDismissed = true
-                                }
-                            )
-                            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_margin)))
                         }
                     }
                     AndroidView(
@@ -383,7 +404,10 @@ open class ManagementFragment : MainModuleFragment(), TouchReactor {
                         }
                         OutlinedButton(
                             onClick = {
-                                viewModel.openChooseWeatherSourcesDialog(null)
+                                viewModel.openChooseWeatherSourcesDialog(
+                                    Location(isCurrentPosition = true)
+                                        .applyDefaultPreset((requireActivity() as MainActivity).sourceManager)
+                                )
                             }
                         ) {
                             Icon(
@@ -425,43 +449,40 @@ open class ManagementFragment : MainModuleFragment(), TouchReactor {
         }
 
         if (dialogChooseWeatherSourcesOpenState.value) {
-            SecondarySourcesPreference(
-                sourceManager = (requireActivity() as MainActivity).sourceManager,
-                location = selectedLocationState.value
-                    ?: LocationPreset.getLocationWithPresetApplied(Location(isCurrentPosition = true)),
-                onClose = { newLocation: Location? ->
-                    viewModel.closeChooseWeatherSourcesDialog()
+            selectedLocationState.value?.let {
+                SecondarySourcesPreference(
+                    sourceManager = (requireActivity() as MainActivity).sourceManager,
+                    location = it,
+                    onClose = { newLocation: Location? ->
+                        viewModel.closeChooseWeatherSourcesDialog()
 
-                    if (newLocation != null) {
-                        // If coming from an existing location
-                        if (selectedLocationState.value != null) {
-                            // If main source was changed, we need to check first that it doesn't create
-                            // a duplicate
-                            if (selectedLocationState.value!!.forecastSource != newLocation.forecastSource) {
+                        if (newLocation != null) {
+                            if (viewModel.locationExists(it)) { // Updating
+                                // If main source was changed, we need to check first that it doesn't create
+                                // a duplicate
+                                if (it.forecastSource != newLocation.forecastSource &&
+                                    viewModel.locationExists(newLocation)
+                                ) {
+                                    SnackbarHelper.showSnackbar(getString(R.string.location_message_already_exists))
+                                } else {
+                                    viewModel.updateLocation(newLocation, it)
+                                    SnackbarHelper.showSnackbar(getString(R.string.location_message_updated))
+                                }
+                            } else { // Adding new location
                                 if (viewModel.locationExists(newLocation)) {
                                     SnackbarHelper.showSnackbar(getString(R.string.location_message_already_exists))
                                 } else {
-                                    viewModel.updateLocation(newLocation, selectedLocationState.value!!)
-                                    SnackbarHelper.showSnackbar(getString(R.string.location_message_updated))
+                                    viewModel.addLocation(newLocation, null)
+                                    SnackbarHelper.showSnackbar(getString(R.string.location_message_added))
                                 }
-                            } else {
-                                viewModel.updateLocation(newLocation, selectedLocationState.value!!)
-                                SnackbarHelper.showSnackbar(getString(R.string.location_message_updated))
-                            }
-                        } else {
-                            if (viewModel.locationExists(newLocation)) {
-                                SnackbarHelper.showSnackbar(getString(R.string.location_message_already_exists))
-                            } else {
-                                viewModel.addLocation(newLocation, null)
-                                SnackbarHelper.showSnackbar(getString(R.string.location_message_added))
                             }
                         }
+                    },
+                    locationExists = { loc: Location ->
+                        viewModel.locationExists(loc)
                     }
-                },
-                locationExists = { loc: Location ->
-                    viewModel.locationExists(loc)
-                }
-            )
+                )
+            }
         }
 
         if (BreezyWeather.instance.debugMode && dialogChooseDebugLocationOpenState.value) {

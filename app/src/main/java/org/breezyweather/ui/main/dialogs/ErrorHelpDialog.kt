@@ -27,7 +27,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import org.breezyweather.R
-import org.breezyweather.common.utils.helpers.IntentHelper
 import org.breezyweather.ui.main.MainActivity
 import org.breezyweather.ui.theme.ThemeManager
 import org.breezyweather.ui.theme.compose.BreezyWeatherTheme
@@ -37,7 +36,8 @@ object ErrorHelpDialog {
         activity: Activity,
         @StringRes title: Int,
         @StringRes content: Int,
-        showSettings: Boolean,
+        @StringRes action: Int? = null,
+        onActionClick: ((Activity) -> Unit)? = null,
     ) {
         val view = LayoutInflater
             .from(activity)
@@ -71,15 +71,15 @@ object ErrorHelpDialog {
                                 Text(stringResource(id = R.string.action_close))
                             }
                         },
-                        dismissButton = if (showSettings) {
+                        dismissButton = if (action != null && onActionClick != null) {
                             {
                                 TextButton(
                                     onClick = {
-                                        IntentHelper.startWeatherProviderSettingsActivity(activity)
+                                        onActionClick(activity)
                                         dialogOpenState.value = false
                                     }
                                 ) {
-                                    Text(stringResource(id = R.string.action_settings))
+                                    Text(stringResource(id = action))
                                 }
                             }
                         } else {

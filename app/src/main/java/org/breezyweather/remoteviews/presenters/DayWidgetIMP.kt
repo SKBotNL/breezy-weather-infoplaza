@@ -20,6 +20,7 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.graphics.Color
+import android.os.Build
 import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
@@ -201,7 +202,7 @@ object DayWidgetIMP : AbstractRemoteViewsPresenter() {
             views.setString(
                 R.id.widget_day_time,
                 "setTimeZone",
-                location.timeZone
+                location.timeZone.id
             )
             views.setCharSequence(
                 R.id.widget_day_time,
@@ -222,7 +223,7 @@ object DayWidgetIMP : AbstractRemoteViewsPresenter() {
             views.setString(
                 R.id.widget_day_title,
                 "setTimeZone",
-                location.timeZone
+                location.timeZone.id
             )
             views.setCharSequence(
                 R.id.widget_day_title,
@@ -296,6 +297,18 @@ object DayWidgetIMP : AbstractRemoteViewsPresenter() {
                     TypedValue.COMPLEX_UNIT_PX,
                     getTimeSize(context, viewStyle).times(textSize).div(100f)
                 )
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    setInt(
+                        R.id.widget_day_title,
+                        "setLineHeight",
+                        getTitleSize(context, viewStyle).times(textSize).div(100f).roundToInt()
+                    )
+                    setInt(
+                        R.id.widget_day_subtitle,
+                        "setLineHeight",
+                        getSubtitleSize(context, viewStyle).times(textSize).div(100f).roundToInt()
+                    )
+                }
             }
         }
         views.setViewVisibility(R.id.widget_day_time, if (hideSubtitle) View.GONE else View.VISIBLE)
@@ -442,9 +455,10 @@ object DayWidgetIMP : AbstractRemoteViewsPresenter() {
                 else -> null
             }
             "feels_like" -> weather.current?.temperature?.feelsLikeTemperature?.let {
-                context.getString(R.string.temperature_feels_like) +
-                    " " +
+                context.getString(
+                    R.string.temperature_feels_like_with_unit,
                     temperatureUnit.formatMeasure(context, it, 0)
+                )
             }
             else -> getCustomSubtitle(context, subtitleData, location, weather, pollenIndexSource)
         }

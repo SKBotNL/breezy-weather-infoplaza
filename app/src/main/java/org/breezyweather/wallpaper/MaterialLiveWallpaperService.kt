@@ -38,11 +38,10 @@ import androidx.core.graphics.withTranslation
 import breezyweather.data.location.LocationRepository
 import breezyweather.data.weather.WeatherRepository
 import breezyweather.domain.location.model.Location
-import breezyweather.domain.weather.model.WeatherCode
+import breezyweather.domain.weather.reference.WeatherCode
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.runBlocking
 import org.breezyweather.BreezyWeather
-import org.breezyweather.common.extensions.getTabletListAdaptiveWidth
 import org.breezyweather.common.extensions.isLandscape
 import org.breezyweather.common.extensions.sensorManager
 import org.breezyweather.common.utils.helpers.AsyncHelper
@@ -132,7 +131,7 @@ class MaterialLiveWallpaperService : WallpaperService() {
                     if (mSizes[0] != canvas.width || mSizes[1] != canvas.height) {
                         mSizes[0] = canvas.width
                         mSizes[1] = canvas.height
-                        mAdaptiveSize[0] = applicationContext.getTabletListAdaptiveWidth(mSizes[0])
+                        mAdaptiveSize[0] = mSizes[0]
                         mAdaptiveSize[1] = mSizes[1]
                         mBackground?.setBounds(0, 0, mSizes[0], mSizes[1])
                     }
@@ -309,8 +308,7 @@ class MaterialLiveWallpaperService : WallpaperService() {
                         if (holder.surface.isValid) {
                             mSizes[0] = width
                             mSizes[1] = height
-                            mAdaptiveSize[0] =
-                                applicationContext.getTabletListAdaptiveWidth(mSizes[0])
+                            mAdaptiveSize[0] = mSizes[0]
                             mAdaptiveSize[1] = mSizes[1]
                             mBackground?.setBounds(0, 0, mSizes[0], mSizes[1])
                             // Animations disabled: see #1006, #1325
@@ -381,7 +379,8 @@ class MaterialLiveWallpaperService : WallpaperService() {
                                     withDaily = configManager.dayNightType == "auto",
                                     withHourly = false,
                                     withMinutely = false,
-                                    withAlerts = false
+                                    withAlerts = false,
+                                    withNormals = false
                                 )
                             )
                         }

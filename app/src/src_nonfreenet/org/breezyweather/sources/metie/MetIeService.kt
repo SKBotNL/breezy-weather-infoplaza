@@ -17,24 +17,41 @@
 package org.breezyweather.sources.metie
 
 import android.content.Context
+import android.graphics.Color
 import breezyweather.domain.location.model.Location
+import breezyweather.domain.location.model.LocationAddressInfo
 import breezyweather.domain.source.SourceContinent
 import breezyweather.domain.source.SourceFeature
+import breezyweather.domain.weather.model.Alert
+import breezyweather.domain.weather.model.Precipitation
+import breezyweather.domain.weather.model.Wind
+import breezyweather.domain.weather.reference.AlertSeverity
+import breezyweather.domain.weather.reference.WeatherCode
+import breezyweather.domain.weather.wrappers.DailyWrapper
+import breezyweather.domain.weather.wrappers.HourlyWrapper
+import breezyweather.domain.weather.wrappers.TemperatureWrapper
 import breezyweather.domain.weather.wrappers.WeatherWrapper
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.reactivex.rxjava3.core.Observable
 import org.breezyweather.R
 import org.breezyweather.common.exceptions.InvalidLocationException
-import org.breezyweather.common.extensions.code
 import org.breezyweather.common.extensions.currentLocale
+import org.breezyweather.common.extensions.getCountryName
+import org.breezyweather.common.extensions.toDateNoHour
 import org.breezyweather.common.source.HttpSource
 import org.breezyweather.common.source.LocationParametersSource
 import org.breezyweather.common.source.ReverseGeocodingSource
 import org.breezyweather.common.source.WeatherSource
+import org.breezyweather.common.source.WeatherSource.Companion.PRIORITY_HIGHEST
+import org.breezyweather.common.source.WeatherSource.Companion.PRIORITY_NONE
 import org.breezyweather.sources.metie.json.MetIeHourly
+import org.breezyweather.sources.metie.json.MetIeLocationResult
+import org.breezyweather.sources.metie.json.MetIeWarning
 import org.breezyweather.sources.metie.json.MetIeWarningResult
 import retrofit2.Retrofit
+import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.TimeZone
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -47,7 +64,7 @@ class MetIeService @Inject constructor(
 ) : HttpSource(), WeatherSource, ReverseGeocodingSource, LocationParametersSource {
 
     override val id = "metie"
-    val countryName = Locale(context.currentLocale.code, "IE").displayCountry
+    private val countryName = context.currentLocale.getCountryName("IE")
     override val name = "MET Éireann".let {
         if (it.contains(countryName)) {
             it
@@ -70,10 +87,10 @@ class MetIeService @Inject constructor(
         "Commons Attribution 4.0 International (CC BY 4.0). Met Éireann does not accept any liability whatsoever " +
         "for any error or omission in the data, their availability, or for any loss or damage arising from their " +
         "use. ${context.getString(R.string.data_modified, context.getString(R.string.breezy_weather))}"
-    override val reverseGeocodingAttribution = weatherAttribution
     override val supportedFeatures = mapOf(
         SourceFeature.FORECAST to weatherAttribution,
-        SourceFeature.ALERT to weatherAttribution
+        SourceFeature.ALERT to weatherAttribution,
+        SourceFeature.REVERSE_GEOCODING to weatherAttribution
     )
     override val attributionLinks = mapOf(
         "Met Éireann" to "https://www.met.ie/",
@@ -85,11 +102,17 @@ class MetIeService @Inject constructor(
         location: Location,
         feature: SourceFeature,
     ): Boolean {
-        return isReverseGeocodingSupportedForLocation(location)
+        return location.countryCode.equals("IE", ignoreCase = true)
     }
 
-    override fun isReverseGeocodingSupportedForLocation(location: Location): Boolean {
-        return location.countryCode.equals("IE", ignoreCase = true)
+    override fun getFeaturePriorityForLocation(
+        location: Location,
+        feature: SourceFeature,
+    ): Int {
+        return when {
+            isFeatureSupportedForLocation(location, feature) -> PRIORITY_HIGHEST
+            else -> PRIORITY_NONE
+        }
     }
 
     override fun requestWeather(
@@ -140,20 +163,167 @@ class MetIeService @Inject constructor(
         }
     }
 
-    override fun requestReverseGeocodingLocation(
-        context: Context,
+    private fun getDailyForecast(
         location: Location,
-    ): Observable<List<Location>> {
+        hourlyResult: List<MetIeHourly>,
+    ): List<DailyWrapper> {
+        val dailyList = mutableListOf<DailyWrapper>()
+        val hourlyListByDay = hourlyResult.groupBy { it.date }
+        for (i in 0 until hourlyListByDay.entries.size - 1) {
+            val dayDate = hourlyListByDay.keys.toTypedArray()[i].toDateNoHour(location.timeZone)
+            if (dayDate != null) {
+                dailyList.add(
+                    DailyWrapper(
+                        date = dayDate
+                    )
+                )
+            }
+        }
+        return dailyList
+    }
+
+    /**
+     * Returns hourly forecast
+     */
+    private fun getHourlyForecast(
+        hourlyResult: List<MetIeHourly>,
+    ): List<HourlyWrapper> {
+        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.ENGLISH)
+        formatter.timeZone = TimeZone.getTimeZone("Europe/Dublin")
+
+        return hourlyResult.map { result ->
+            HourlyWrapper(
+                date = formatter.parse("${result.date} ${result.time}")!!,
+                weatherCode = getWeatherCode(result.weatherNumber),
+                weatherText = result.weatherDescription,
+                temperature = TemperatureWrapper(
+                    temperature = result.temperature?.toDouble()
+                ),
+                precipitation = Precipitation(
+                    total = result.rainfall?.toDoubleOrNull()
+                ),
+                wind = Wind(
+                    degree = result.windDirection?.toDoubleOrNull(),
+                    speed = result.windSpeed?.div(3.6)
+                ),
+                relativeHumidity = result.humidity?.toDoubleOrNull(),
+                pressure = result.pressure?.toDoubleOrNull()
+            )
+        }
+    }
+
+    private fun getAlertList(location: Location, warnings: List<MetIeWarning>?): List<Alert>? {
+        if (warnings == null) return null
+        if (warnings.isEmpty()) return emptyList()
+
+        val region = if (MetIeService.regionsMapping.containsKey(location.admin2)) {
+            location.admin2
+        } else {
+            location.parameters.getOrElse("metie") { null }?.getOrElse("region") { null }
+        }
+        val eiRegion = region?.let { MetIeService.regionsMapping.getOrElse(region) { null } }
+
+        return warnings
+            .filter {
+                // National
+                it.regions.contains("EI0") ||
+                    it.regions.contains(eiRegion)
+            }
+            .map { alert ->
+                val severity = when (alert.severity?.lowercase()) {
+                    "extreme" -> AlertSeverity.EXTREME
+                    "severe" -> AlertSeverity.SEVERE
+                    "moderate" -> AlertSeverity.MODERATE
+                    "minor" -> AlertSeverity.MINOR
+                    else -> AlertSeverity.UNKNOWN
+                }
+                Alert(
+                    alertId = alert.id,
+                    startDate = alert.onset,
+                    endDate = alert.expiry,
+                    headline = alert.headline,
+                    description = alert.description,
+                    source = "MET Éireann",
+                    severity = severity,
+                    color = when (alert.level?.lowercase()) {
+                        "red" -> Color.rgb(224, 0, 0)
+                        "orange" -> Color.rgb(255, 140, 0)
+                        "yellow" -> Color.rgb(255, 255, 0)
+                        else -> Alert.colorFromSeverity(severity)
+                    }
+                )
+            }
+    }
+
+    private fun getWeatherCode(icon: String?): WeatherCode? {
+        if (icon == null) return null
+        return with(icon) {
+            when {
+                startsWith("01") ||
+                    startsWith("02") -> WeatherCode.CLEAR
+                startsWith("03") -> WeatherCode.PARTLY_CLOUDY
+                startsWith("04") -> WeatherCode.CLOUDY
+                startsWith("05") ||
+                    startsWith("09") ||
+                    startsWith("10") ||
+                    startsWith("40") ||
+                    startsWith("41") ||
+                    startsWith("46") -> WeatherCode.RAIN
+                startsWith("06") ||
+                    startsWith("11") ||
+                    startsWith("14") ||
+                    startsWith("2") ||
+                    startsWith("30") ||
+                    startsWith("31") ||
+                    startsWith("32") ||
+                    startsWith("33") ||
+                    startsWith("34") -> WeatherCode.THUNDERSTORM
+                startsWith("07") ||
+                    startsWith("12") ||
+                    startsWith("42") ||
+                    startsWith("43") ||
+                    startsWith("47") ||
+                    startsWith("48") -> WeatherCode.SLEET
+                startsWith("08") ||
+                    startsWith("13") ||
+                    startsWith("44") ||
+                    startsWith("45") ||
+                    startsWith("49") ||
+                    startsWith("50") -> WeatherCode.SNOW
+                startsWith("15") -> WeatherCode.FOG
+                startsWith("51") ||
+                    startsWith("52") -> WeatherCode.HAIL
+                else -> null
+            }
+        }
+    }
+
+    override fun requestNearestLocation(
+        context: Context,
+        latitude: Double,
+        longitude: Double,
+    ): Observable<List<LocationAddressInfo>> {
         return mApi.getReverseLocation(
-            location.latitude,
-            location.longitude
+            latitude,
+            longitude
         ).map {
-            val locationList = mutableListOf<Location>()
+            val locationList = mutableListOf<LocationAddressInfo>()
             if (it.city != "NO LOCATION SELECTED") {
-                locationList.add(convert(location, it))
+                locationList.add(convertLocation(it))
             }
             locationList
         }
+    }
+
+    private fun convertLocation(
+        result: MetIeLocationResult,
+    ): LocationAddressInfo {
+        return LocationAddressInfo(
+            timeZoneId = "Europe/Dublin",
+            countryCode = "IE",
+            admin2 = result.county,
+            city = result.city
+        )
     }
 
     // Location parameters

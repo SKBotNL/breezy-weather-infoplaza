@@ -1,29 +1,64 @@
 # Version 6.0.5-alpha (not yet released)
 
+**New features**
+- Content provider: allows (with your permission) other apps to query your weather data. Currently not available in release builds during the testing phase. [Read the announcement](https://github.com/breezy-weather/breezy-weather/discussions/2089)
+- New broadcast: you can use `org.breezyweather.ACTION_UPDATE_NOTIFIER` (or `org.breezyweather.debug.ACTION_UPDATE_NOTIFIER` with the debug build) to be notified of updated locations (most common use case is coupled with the content provider)
+
+**Removed features**
+- Mean daytime/nighttime temperatures as threshold lines. Use a normals source instead
+- [Met Office UK] Removed address lookup feature
+
 **Improvements and fixes**
 - Main screen - Allow to move small blocks by drag & drop
 - Main screen - The number of items displayed at once in daily/hourly forecast now depends on display size and font scale (previously always 5 in portrait, and 7 in landscape)
 - Main screen - Show “Negligible” inside Pollen block if there is no pollen today instead of an empty block
 - Main screen - Allow up to 5 blocks on a row depending on width display size and font scale
 - Main screen - Move refresh time out of app bar when scrolling
+- Main screen - Fix settings not applying immediately
+- Main screen - Fix shooting stars getting stuck in the corner in landscape
+- Details - Don’t animate charts when “Other element animations” is disabled
 - Details - Air quality - Add individual charts for each pollutant
+- Details - Humidity/Dewpoint/Cloud cover - Show min/max of the day
+- Details - Pressure/Visibility - Fix sometimes wrong daily value
+- Details - Fallback to current value on Today screen when daily value is missing
+- Details - Add visibility and cloud cover scales
 - Alerts - Add “Translate” and “Share” to text select actions
-- Widgets - Improve UX of custom subtitle documentation (@codewithdipesh)
 - Nowcasting chart/Precipitation notification - Fix slightly wrong ending time of precipitation report
 - Settings - Improve the location-based dark mode preference to make it easier to understand
+- Sources - Add a “Recommended” section to the Source selection screen
+- Refresh - Add an error when air quality forecast times don’t match hourly forecast times (observed in India, for example)
+- Refresh - Ensure range of (almost) all values provided by sources, so you no longer have to freak out when seeing -999° with PirateWeather or 1015° with Meteo AM
+- Data sharing - Fix crash when sending too many locations (will now retry with less locations)
+- Widgets - Improve UX of custom subtitle documentation (@codewithdipesh)
+- Widgets - Improve line height on many widgets
+- Widgets - Weekly - Spread day/night temperatures on 2 lines if necessary
+- Widgets - Minor fixes
 
 **Weather sources**
+- [AccuWeather] Restrict pollen to USA, Canada and Europe as it’s only available there (@chunshek)
+- [China] Fix reversed color and severity for alerts (@chunshek)
 - [FOSS Public Alert Server] Add support for this experimental source for alerts (@chunshek)
 - [GeoSphere AT] Fix missing info in warnings
 - [GeoSphere AT] Use the newer better endpoint for air quality
 - [JMA] Added Thai translations (@chunshek)
 - [LVGMC] Fix current observations (@chunshek)
+- [NCDR] Added as alert source for Taiwan (@chunshek)
 - [NCEI] Added support for normals (@chunshek)
+- [NWS] Alerts - Updated terminology for Extreme Heat (@chunshek)
+- [NSLC] Added as address lookup source for Taiwan (@chunshek)
+- [Open-Meteo] Restrict pollen to Europe as it’s only available there (@chunshek)
 - [Pirate Weather] Add support for daily/hourly summaries
+- [Veðurstofa Íslands] Added as forecast, current, alert and address lookup source for Iceland (@chunshek)
+- [WMO SWIC] Avoid missing alerts which expired date was updated
 - [ANAM-BF, DCCMS, DMN, DWR, EMI, GMet, IGEBU, INM, Mali-Météo, Météo Benin, Météo Tchad, Météo Togo, Mettelsat, MSD, Pirate Weather, SMA (Seychelles), SMA (Sudan), SSMS] Add to  ̀freenet` flavor (was missing despite being FOSS)
 
 **Translations**
+- Initial translation added for Íslenska (@chunshek)
 - Translations updated
+
+**Technical**
+- Current location process refactoring: coordinates, forced refresh when coordinates changed from more than 5 km
+- Address lookup process refactoring to prepare for future ability to add a location manually by coordinates
 
 
 # Version 6.0.4-alpha (2025-07-23)

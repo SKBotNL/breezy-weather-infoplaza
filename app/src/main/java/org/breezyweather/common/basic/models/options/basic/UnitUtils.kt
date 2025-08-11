@@ -37,8 +37,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.em
 import org.breezyweather.R
 import org.breezyweather.common.basic.models.options.unit.SpeedUnit
 import org.breezyweather.common.basic.models.options.unit.UnitWidth
@@ -437,7 +439,7 @@ object UnitUtils {
          * Ongoing issue: https://unicode-org.atlassian.net/jira/software/c/projects/CLDR/issues/CLDR-10604
          */
         if (currentLocale.isTraditionalChinese && unit !is TimeUnit) {
-            newLocale = Locale("en", "001")
+            newLocale = Locale.Builder().setLanguage("en").setRegion("001").build()
         }
 
         /**
@@ -445,7 +447,7 @@ object UnitUtils {
          * - fr_FR uses the incorrect unit (it should be "Bf"), replace with fr_CA
          */
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA && unit == MeasureUnit.BEAUFORT) {
-            newLocale = Locale("fr", "CA")
+            newLocale = Locale.Builder().setLanguage("fr").setRegion("CA").build()
         }
 
         return Triple(newLocale, numberFormatterWidth, measureFormatWidth)
@@ -497,6 +499,13 @@ object UnitUtils {
                 .apply { maximumFractionDigits = precision }
                 .format(if (value > 0) value.div(100.0) else 0)
         }
+    }
+
+    fun formatPercent(
+        context: Context,
+        value: Int,
+    ): String {
+        return formatPercent(context, value.toDouble(), 0)
     }
 
     /**
@@ -556,6 +565,41 @@ object UnitUtils {
                 }
             }
         }
+    }
+
+    /**
+     * Format a pollutant name so that the number are subscript
+     * Units will stay at the same size if it somehow fails to parse
+     */
+    @Composable
+    fun formatPollutantName(
+        formattedMeasure: String,
+    ): AnnotatedString {
+        val firstIndexOfADigit = formattedMeasure.indexOfAny(DIGITS, 0)
+        val lastIndexOfADigit = formattedMeasure.lastIndexOfAny(DIGITS, formattedMeasure.length - 1)
+        return buildAnnotatedString {
+            if (firstIndexOfADigit < 0 || lastIndexOfADigit < 0 || lastIndexOfADigit > formattedMeasure.length) {
+                append(formattedMeasure)
+            } else {
+                if (firstIndexOfADigit > 0) {
+                    append(formattedMeasure.substring(0, firstIndexOfADigit))
+                }
+                withStyle(style = SpanStyle(baselineShift = BaselineShift.Subscript, fontSize = 0.8.em)) {
+                    append(formattedMeasure.substring(firstIndexOfADigit, lastIndexOfADigit + 1))
+                }
+                if (lastIndexOfADigit < formattedMeasure.length) {
+                    append(formattedMeasure.substring(lastIndexOfADigit + 1))
+                }
+            }
+        }
+    }
+
+    fun validatePercent(percent: Double?): Double? {
+        return percent?.let { if (it in 0.0..100.0) it else null }
+    }
+
+    fun validatePercent(percent: Int?): Int? {
+        return percent?.let { if (it in 0..100) it else null }
     }
 
     private val ARABIC_DIGITS = charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')

@@ -26,6 +26,8 @@ import androidx.lifecycle.viewModelScope
 import breezyweather.data.location.LocationRepository
 import breezyweather.data.weather.WeatherRepository
 import breezyweather.domain.location.model.Location
+import com.google.maps.android.SphericalUtil
+import com.google.maps.android.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,8 +42,13 @@ import org.breezyweather.common.extensions.launchIO
 import org.breezyweather.common.source.RefreshError
 import org.breezyweather.common.utils.helpers.AsyncHelper
 import org.breezyweather.common.utils.helpers.SnackbarHelper
+import org.breezyweather.domain.location.model.applyDefaultPreset
+import org.breezyweather.domain.location.model.isCloseTo
+import org.breezyweather.domain.settings.CurrentLocationStore
 import org.breezyweather.domain.settings.SettingsManager
 import org.breezyweather.sources.RefreshHelper
+import org.breezyweather.sources.SourceManager
+import org.breezyweather.sources.getReverseGeocodingSource
 import org.breezyweather.ui.main.utils.RefreshErrorType
 import org.breezyweather.ui.main.utils.StatementManager
 import java.util.Date
@@ -61,8 +68,10 @@ class MainActivityViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     val statementManager: StatementManager,
     private val refreshHelper: RefreshHelper,
+    private val sourceManager: SourceManager,
     private val locationRepository: LocationRepository,
     private val weatherRepository: WeatherRepository,
+    private val currentLocationStore: CurrentLocationStore,
     private val updateChecker: AppUpdateChecker,
 ) : BreezyViewModel(application), WeatherRequestCallback {
 
@@ -81,8 +90,14 @@ class MainActivityViewModel @Inject constructor(
     private val _dialogRefreshErrorDetails = MutableStateFlow(false)
     val dialogRefreshErrorDetails = _dialogRefreshErrorDetails.asStateFlow()
 
+    /**
+     * Selected location for the “Select sources” dialog in the location list
+     */
     private val _selectedLocation: MutableStateFlow<Location?> = MutableStateFlow(null)
     val selectedLocation = _selectedLocation.asStateFlow()
+
+    private val _locationListLoading = MutableStateFlow(false)
+    val locationListLoading = _locationListLoading.asStateFlow()
 
     private val _loading = MutableStateFlow(false)
     val loading = _loading.asStateFlow()
@@ -150,7 +165,7 @@ class MainActivityViewModel @Inject constructor(
     /**
      * @param location: If null, will create a location of type currentPosition
      */
-    fun openChooseWeatherSourcesDialog(location: Location?) {
+    fun openChooseWeatherSourcesDialog(location: Location) {
         _selectedLocation.value = location
         _dialogChooseWeatherSourcesOpen.value = true
     }
@@ -523,6 +538,10 @@ class MainActivityViewModel @Inject constructor(
 
         updateInnerData(valid)
         deleteLocation(location = location)
+        // If we no longer have any current position locations, clear the current location store data9
+        if (location.isCurrentPosition && !valid.any { it.isCurrentPosition }) {
+            currentLocationStore.clearCurrentLocation()
+        }
 
         return location
     }
@@ -586,23 +605,33 @@ class MainActivityViewModel @Inject constructor(
         callback: WeatherRequestCallback,
     ) {
         try {
-            val locationResult = refreshHelper.getLocation(context, location, false)
+            val locationPositionErrors = if (location.isCurrentPosition) {
+                refreshHelper.updateCurrentCoordinates(context, false)
+            } else {
+                emptyList()
+            }
 
+            val locationResult = refreshHelper.getLocation(context, location)
             if (locationResult.location.isUsable && !locationResult.location.needsGeocodeRefresh) {
+                val ignoreCaching = SphericalUtil.computeDistanceBetween(
+                    LatLng(locationResult.location.latitude, locationResult.location.longitude),
+                    LatLng(location.latitude, location.longitude)
+                ) > RefreshHelper.CACHING_DISTANCE_LIMIT
                 val weatherResult = refreshHelper.getWeather(
                     context,
                     locationResult.location,
                     location.longitude != locationResult.location.longitude ||
-                        location.latitude != locationResult.location.latitude
+                        location.latitude != locationResult.location.latitude,
+                    ignoreCaching
                 )
                 callback.onCompleted(
                     locationResult.location.copy(weather = weatherResult.weather),
-                    locationResult.errors + weatherResult.errors
+                    locationPositionErrors + locationResult.errors + weatherResult.errors
                 )
             } else {
                 callback.onCompleted(
                     locationResult.location,
-                    locationResult.errors
+                    locationPositionErrors + locationResult.errors
                 )
             }
         } catch (e: Throwable) {
@@ -629,6 +658,44 @@ class MainActivityViewModel @Inject constructor(
                         refreshHelper.refreshShortcuts(context, it)
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Does nothing when the location is invalid
+     */
+    fun askToAddLocation(
+        context: Context,
+        latitude: Double,
+        longitude: Double,
+    ) {
+        val location = Location(latitude = latitude, longitude = longitude)
+        if (validLocationList.value.firstOrNull { it.isCloseTo(location) } != null) {
+            SnackbarHelper.showSnackbar(context.getString(R.string.location_message_already_exists))
+        } else {
+            viewModelScope.launchIO {
+                _locationListLoading.value = true
+                try {
+                    val locationWithInfo = refreshHelper.requestReverseGeocoding(
+                        sourceManager.getReverseGeocodingSource(BuildConfig.DEFAULT_GEOCODING_SOURCE)!!,
+                        location,
+                        context
+                    )
+                    if (locationWithInfo.hasValidCountryCode) {
+                        openChooseWeatherSourcesDialog(
+                            locationWithInfo
+                                .copy(
+                                    // Allows the user to select a one-time address lookup source
+                                    needsGeocodeRefresh = true
+                                )
+                                .applyDefaultPreset(sourceManager)
+                        )
+                    }
+                } catch (_: Exception) {
+                    // Do nothing
+                }
+                _locationListLoading.value = false
             }
         }
     }

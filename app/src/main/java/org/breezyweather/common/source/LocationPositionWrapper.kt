@@ -20,17 +20,4 @@ package org.breezyweather.common.source
 data class LocationPositionWrapper(
     val latitude: Double,
     val longitude: Double,
-    val timeZone: String? = null,
-    val country: String? = null,
-    val countryCode: String? = null,
-    val admin1: String? = null,
-    val admin1Code: String? = null,
-    val admin2: String? = null,
-    val admin2Code: String? = null,
-    val admin3: String? = null,
-    val admin3Code: String? = null,
-    val admin4: String? = null,
-    val admin4Code: String? = null,
-    val city: String? = null,
-    val district: String? = null,
 )

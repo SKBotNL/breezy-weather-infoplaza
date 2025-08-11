@@ -36,6 +36,8 @@ import androidx.work.workDataOf
 import breezyweather.data.location.LocationRepository
 import breezyweather.data.weather.WeatherRepository
 import breezyweather.domain.location.model.Location
+import com.google.maps.android.SphericalUtil
+import com.google.maps.android.model.LatLng
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.CancellationException
@@ -55,6 +57,7 @@ import org.breezyweather.common.extensions.setForegroundSafely
 import org.breezyweather.common.extensions.withIOContext
 import org.breezyweather.common.extensions.workManager
 import org.breezyweather.common.source.LocationResult
+import org.breezyweather.common.source.RefreshError
 import org.breezyweather.common.source.WeatherResult
 import org.breezyweather.domain.location.model.getPlace
 import org.breezyweather.domain.settings.SettingsManager
@@ -212,6 +215,15 @@ class WeatherUpdateJob @AssistedInject constructor(
         val skippedUpdates = CopyOnWriteArrayList<Pair<Location, String?>>()
         val failedUpdates = CopyOnWriteArrayList<Pair<Location, String?>>()
 
+        /**
+         * Update coordinates if locations to update contains a current location
+         */
+        val updateCoordinatesErrors = if (locationsToUpdate.any { it.isCurrentPosition }) {
+            updateCoordinates()
+        } else {
+            emptyList()
+        }
+
         locationsToUpdate.forEach { location ->
             withUpdateNotification(
                 currentlyUpdatingLocation,
@@ -224,34 +236,33 @@ class WeatherUpdateJob @AssistedInject constructor(
                 } else {*/
                 try {
                     val locationResult = updateLocation(location)
-
                     locationResult.errors.forEach {
                         val shortMessage = it.getMessage(context, sourceManager)
                         if (it.error != RefreshErrorType.NETWORK_UNAVAILABLE &&
-                            it.error != RefreshErrorType.SERVER_TIMEOUT &&
-                            it.error != RefreshErrorType.ACCESS_LOCATION_PERMISSION_MISSING &&
-                            it.error != RefreshErrorType.LOCATION_ACCESS_OFF
+                            it.error != RefreshErrorType.SERVER_TIMEOUT
                         ) {
                             failedUpdates.add(locationResult.location to shortMessage)
                         } else {
-                            // Report this error only if we can’t refresh weather data
-                            if (!locationResult.location.isUsable &&
-                                (
-                                    it.error == RefreshErrorType.ACCESS_LOCATION_PERMISSION_MISSING ||
-                                        it.error == RefreshErrorType.LOCATION_ACCESS_OFF
-                                    )
-                            ) {
-                                failedUpdates.add(locationResult.location to shortMessage)
-                            } else {
-                                skippedUpdates.add(locationResult.location to shortMessage)
-                            }
+                            skippedUpdates.add(locationResult.location to shortMessage)
+                        }
+                    }
+                    if (!locationResult.location.isUsable) {
+                        // Report coordinate update errors only if we can’t re-use last known coordinates
+                        updateCoordinatesErrors.forEach {
+                            val shortMessage = it.getMessage(context, sourceManager)
+                            failedUpdates.add(locationResult.location to shortMessage)
                         }
                     }
                     if (locationResult.location.isUsable && !locationResult.location.needsGeocodeRefresh) {
+                        val ignoreCaching = SphericalUtil.computeDistanceBetween(
+                            LatLng(locationResult.location.latitude, locationResult.location.longitude),
+                            LatLng(location.latitude, location.longitude)
+                        ) > RefreshHelper.CACHING_DISTANCE_LIMIT
                         val weatherResult = updateWeather(
                             locationResult.location,
                             location.longitude != locationResult.location.longitude ||
-                                location.latitude != locationResult.location.latitude
+                                location.latitude != locationResult.location.latitude,
+                            ignoreCaching
                         )
                         newUpdates.add(
                             location to locationResult.location.copy(weather = weatherResult.weather)
@@ -294,8 +305,7 @@ class WeatherUpdateJob @AssistedInject constructor(
             }
 
             val location = locationList[0]
-            val indexOfFirstLocation =
-                newUpdates.firstOrNull { it.first.formattedId == location.formattedId }
+            val indexOfFirstLocation = newUpdates.firstOrNull { it.first.formattedId == location.formattedId }
 
             // Send alert and precipitation for the first location
             if (indexOfFirstLocation != null) {
@@ -307,7 +317,11 @@ class WeatherUpdateJob @AssistedInject constructor(
                 Notifications.checkAndSendPrecipitation(applicationContext, location)
             }
 
-            refreshHelper.broadcastDataIfNecessary(context, locationList)
+            refreshHelper.broadcastDataIfNecessary(
+                context,
+                locationList,
+                newUpdates.map { it.first.formattedId }.toTypedArray()
+            )
 
             // Inform main activity that we updated location
             newUpdates.forEach {
@@ -330,17 +344,22 @@ class WeatherUpdateJob @AssistedInject constructor(
     }
 
     /**
-     * Updates the current location.
+     * Updates the current location coordinates.
+     *
+     * @return errors if any
+     */
+    private suspend fun updateCoordinates(): List<RefreshError> {
+        return refreshHelper.updateCurrentCoordinates(context, true)
+    }
+
+    /**
+     * Updates the location with updated coordinates and reverse geocoding.
      *
      * @param location the location to update.
      * @return location updated.
      */
     private suspend fun updateLocation(location: Location): LocationResult {
-        return refreshHelper.getLocation(
-            context,
-            location,
-            true
-        )
+        return refreshHelper.getLocation(context, location)
     }
 
     /**
@@ -349,11 +368,16 @@ class WeatherUpdateJob @AssistedInject constructor(
      * @param location the location to update.
      * @return weather.
      */
-    private suspend fun updateWeather(location: Location, coordinatesChanged: Boolean): WeatherResult {
+    private suspend fun updateWeather(
+        location: Location,
+        coordinatesChanged: Boolean,
+        ignoreCaching: Boolean,
+    ): WeatherResult {
         return refreshHelper.getWeather(
             context,
             location,
-            coordinatesChanged
+            coordinatesChanged,
+            ignoreCaching
         )
     }
 

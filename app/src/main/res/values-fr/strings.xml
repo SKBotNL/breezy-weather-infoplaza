@@ -20,11 +20,15 @@
     <string name="humidity_dew_point">Humidité / Point de rosée</string>
     <string name="humidity_about">À propos de l’humidité relative</string>
     <string name="humidity_about_description">L’humidité relative, plus couramment appelée simplement humidité, correspond au pourcentage de vapeur d’eau présent dans l’air par rapport à la quantité maximale que l’air peut contenir à une température donnée.</string>
+    <!-- 40 to 90 %, %1$s = 40, %2$s = 90 % -->
+    <string name="humidity_from_to_number">%1$s à %2$s</string>
     <string name="dew_point">Point de rosée</string>
     <string name="dew_point_short">P. de rosée</string>
     <string name="dew_point_about">À propos du point de rosée</string>
     <!-- %s = 100 % -->
     <string name="dew_point_about_description">Le point de rosée est la température à laquelle il faudrait refroidir l’air pour atteindre une humidité relative de %s.</string>
+    <!-- 10 to 20°, %1$s = 10, %2$s = 20° -->
+    <string name="dew_point_from_to_number">%1$s à %2$s</string>
     <string name="sunshine">Ensoleillement</string>
     <string name="sunshine_duration">Durée d’ensoleillement</string>
     <string name="notification_channel_forecast">Prévisions</string>
@@ -51,6 +55,7 @@
     <string name="visibility_short">Visibilité</string>
     <string name="visibility_about">À propos de la visibilité</string>
     <string name="visibility_about_description">La visibilité indique la distance à laquelle des objets tels que des bâtiments et des collines peuvent être clairement distingués. Elle peut être affectée par les précipitations, le brouillard, la poussière, la fumée ou la brume.</string>
+    <string name="visibility_scale">Échelle de visibilité</string>
     <!-- 10 to 20 km, %1$s = 10, %2$s = 20 km -->
     <string name="visibility_from_to_number">%1$s à %2$s</string>
     <!-- Clear to Perfectly clear, %1$s = Clear, %2$s = Perfectly clear -->
@@ -65,6 +70,11 @@
     <string name="cloud_cover_short">Couverture</string>
     <string name="cloud_cover_about">À propos de la couverture nuageuse</string>
     <string name="cloud_cover_about_description">La couverture nuageuse désigne le pourcentage du ciel obscurci par les nuages, en moyenne. La couverture nuageuse est corrélée à la durée d’ensoleillement.</string>
+    <!-- 40 to 90 %, %1$s = 40, %2$s = 90 % -->
+    <string name="cloud_cover_from_to_number">%1$s à %2$s</string>
+    <!-- Partly cloudy to Clear, %1$s = Partly cloudy, %2$s = Cloudy -->
+    <string name="cloud_cover_from_to_description">%1$s à %2$s</string>
+    <string name="cloud_cover_scale">Échelle de couverture nuageuse</string>
     <string name="ceiling">Plafond nuageux</string>
     <string name="ceiling_short">Plafond</string>
     <string name="settings_icon_packs_get_more">Voir plus</string>
@@ -72,6 +82,7 @@
     <string name="action_restart">Redémarrer</string>
     <string name="action_more">Plus</string>
     <string name="action_edit">Modifier</string>
+    <string name="action_change">Changer</string>
     <string name="daily_yesterday">Hier</string>
     <string name="daily_today">Aujourd’hui</string>
     <string name="daily_tomorrow">Demain</string>
@@ -91,7 +102,7 @@
     <string name="temperature_real">Réel</string>
     <string name="temperature_real_details">La température réelle.</string>
     <string name="temperature_feels_like">Ressenti</string>
-    <string name="temperature_feels_like_short">Ressenti</string>
+    <string name="temperature_feels_like_with_unit">Ressenti %s</string>
     <string name="temperature_feels_like_details">La température telle qu’elle est perçue sous l’effet de l’humidité, du vent et/ou du soleil.</string>
     <string name="temperature_apparent">Ressentie</string>
     <string name="temperature_wind_chill">Refroidissement éolien</string>
@@ -234,7 +245,7 @@
     <string name="ephemeris_polar_night">Nuit polaire</string>
     <!-- Weather texts -->
     <string name="common_weather_text_clear_sky">Ciel dégagé</string>
-    <string name="common_weather_text_mainly_clear">Principalement dégagé</string>
+    <string name="common_weather_text_mostly_clear">Principalement dégagé</string>
     <string name="common_weather_text_overcast">Couvert</string>
     <string name="openmeteo_weather_text_depositing_rime_fog">Dépôt d’un brouillard de givre</string>
     <string name="common_weather_text_snow_grains">Neige en grains</string>
@@ -302,6 +313,7 @@
     <string name="weather_api_unauthorized_content">Pour certaines sources météo, vous devez fournir votre propre clé API. Si vous l’avez déjà fait, vérifiez qu’il n’y a pas d’erreur dans la clé fournie.</string>
     <string name="weather_api_key_required_missing_title">Clé API requise manquante</string>
     <string name="weather_api_key_required_missing_content">Pour utiliser cette source, vous devez fournir une clé API.</string>
+    <string name="weather_source_recommended">Recommandations</string>
     <string name="weather_source_continent_worldwide">Mondial</string>
     <string name="weather_source_continent_africa">Afrique</string>
     <string name="weather_source_continent_asia">Asie</string>
@@ -389,6 +401,8 @@
     <string name="message_multiple_refresh_errors">Mise à jour terminée avec erreurs</string>
     <string name="message_invalid_incomplete_data">Données invalides ou incomplètes reçues du serveur</string>
     <string name="message_outdated_server_data">Données obsolètes reçues du serveur</string>
+    <string name="message_incompatible_times_title">Horaires de prévisions incompatibles</string>
+    <string name="message_incompatible_times_content">Changez de source de prévisions ou de qualité de l’air pour que les horaires correspondent.</string>
     <string name="message_network_unavailable">Réseau non-disponible</string>
     <string name="message_server_insecure_title">Connexion sécurisée impossible</string>
     <string name="message_server_timeout">Délai imparti dépassé</string>
@@ -459,37 +473,33 @@
     <string name="air_quality_pm25">PM2,5</string>
     <string name="air_quality_pm25_voice">PM deux point cinq</string>
     <string name="air_quality_pm25_full">Particules respirables (&lt; %s)</string>
-    <string name="air_quality_pm25_about">À propos des particules inhalables (PM2.5)</string>
-    <string name="air_quality_pm25_index">Échelle de l’indice de qualité de l’air pour les PM2.5</string>
+    <string name="air_quality_pm25_about">À propos des particules inhalables (%s)</string>
+    <string name="air_quality_pm25_index">Échelle de l’indice de qualité de l’air pour les %s</string>
     <string name="air_quality_pm10">PM10</string>
     <string name="air_quality_pm10_voice">PM dix</string>
     <string name="air_quality_pm10_full">Particules inhalables (&lt; %s)</string>
-    <string name="air_quality_pm10_about">À propos des particules inhalables (PM10)</string>
-    <string name="air_quality_pm10_index">Échelle de l’indice de qualité de l’air pour les PM10</string>
+    <string name="air_quality_pm10_about">À propos des particules inhalables (%s)</string>
+    <string name="air_quality_pm10_index">Échelle de l’indice de qualité de l’air pour les %s</string>
     <string name="air_quality_pm_sources">Les principales sources sont les processus de combustion (centrales électriques, chauffage intérieur, gaz d’échappement des voitures, feux de forêt), les processus mécaniques (construction, poussière minérale, agriculture) et les particules biologiques (pollen, moisissures, bactéries, virus).</string>
-    <string name="air_quality_so2">SO₂</string>
     <string name="air_quality_so2_voice">Dioxyde de soufre</string>
-    <string name="air_quality_so2_full">Dioxyde de soufre (SO₂)</string>
-    <string name="air_quality_so2_about">À propos du dioxyde de soufre (SO₂)</string>
-    <string name="air_quality_so2_index">Échelle de l’indice de qualité de l’air pour le SO₂</string>
+    <string name="air_quality_so2_full">Dioxyde de soufre (%s)</string>
+    <string name="air_quality_so2_about">À propos du dioxyde de soufre (%s)</string>
+    <string name="air_quality_so2_index">Échelle de l’indice de qualité de l’air pour le %s</string>
     <string name="air_quality_so2_sources">Les principales sources sont les processus de combustion de combustibles contenant du soufre dans l’industrie, les transports et les centrales électriques.</string>
-    <string name="air_quality_no2">NO₂</string>
     <string name="air_quality_no2_voice">Dioxyde d’azote</string>
-    <string name="air_quality_no2_full">Dioxyde d’azote (NO₂)</string>
-    <string name="air_quality_no2_about">À propos du dioxyde d’azote (NO₂)</string>
-    <string name="air_quality_no2_index">Échelle de l’indice de qualité de l’air pour le NO₂</string>
+    <string name="air_quality_no2_full">Dioxyde d’azote (%s)</string>
+    <string name="air_quality_no2_about">À propos du dioxyde d’azote (%s)</string>
+    <string name="air_quality_no2_index">Échelle de l’indice de qualité de l’air pour le %s</string>
     <string name="air_quality_no2_sources">Les principales sources sont les processus de combustion de combustibles, tels que ceux utilisés dans l’industrie et les transports.</string>
-    <string name="air_quality_o3">O₃</string>
     <string name="air_quality_o3_voice">Ozone</string>
-    <string name="air_quality_o3_full">Ozone troposphérique (O₃)</string>
-    <string name="air_quality_o3_about">À propos de l’ozone troposphérique (O₃)</string>
-    <string name="air_quality_o3_index">Échelle de l’indice de qualité de l’air pour l’O₃</string>
+    <string name="air_quality_o3_full">Ozone troposphérique (%s)</string>
+    <string name="air_quality_o3_about">À propos de l’ozone troposphérique (%s)</string>
+    <string name="air_quality_o3_index">Échelle de l’indice de qualité de l’air pour l’%s</string>
     <string name="air_quality_o3_sources">L’ozone est créé par réaction chimique entre l’oxygène atmosphérique, les oxydes d’azote, le monoxyde de carbone et les composés organiques, en présence de la lumière du soleil.</string>
-    <string name="air_quality_co">CO</string>
     <string name="air_quality_co_voice">Monoxyde de carbone</string>
-    <string name="air_quality_co_full">Monoxyde de carbone (CO)</string>
-    <string name="air_quality_co_about">À propos du monoxyde de carbone (CO)</string>
-    <string name="air_quality_co_index">Échelle de l’indice de qualité de l’air pour le CO</string>
+    <string name="air_quality_co_full">Monoxyde de carbone (%s)</string>
+    <string name="air_quality_co_about">À propos du monoxyde de carbone (%s)</string>
+    <string name="air_quality_co_index">Échelle de l’indice de qualité de l’air pour le %s</string>
     <string name="air_quality_co_sources">Provient généralement de la combustion incomplète de combustibles carbonés, comme celle qui se produit dans les moteurs de voiture et les centrales électriques.</string>
     <string name="ephemeris_sunrise_at">Lever de soleil à %s</string>
     <string name="ephemeris_sunset_at">Coucher de soleil à %s</string>
@@ -608,25 +618,25 @@
     <string name="settings_notifications_forecast_time_today_title">Heure de notification pour les prévisions du jour</string>
     <string name="settings_notifications_forecast_tomorrow_title">Notification pour les prévisions du lendemain</string>
     <string name="settings_notifications_forecast_time_tomorrow_title">Heure de notification pour les prévisions du lendemain</string>
-    <string name="settings_widgets">Widgets &amp; Fond d’écran animé</string>
-    <string name="settings_widgets_summary">Définir le fond d’écran, configurer les widgets utilisés, notification widget</string>
-    <string name="settings_widgets_live_wallpaper_title">Fond d’écran animé</string>
-    <string name="settings_widgets_live_wallpaper_summary">Définir une animation météo comme fond d’écran</string>
-    <string name="settings_widgets_live_wallpaper_error">Impossible de lancer le sélecteur de fond d’écran. Vous pouvez toujours choisir le fond d’écran %s en choisissant “Fond d’écran animé” depuis le sélecteur de fond d’écran de votre écran d’accueil.</string>
-    <string name="settings_widgets_week_icon_mode_title">Icône à afficher dans les vues hebdomadaires</string>
-    <string name="settings_widgets_monochrome_icons_title">Icônes monochromes</string>
-    <string name="settings_widgets_section_widgets_in_use">Widgets utilisés</string>
-    <string name="settings_widgets_configure_widget_summary">Configurer ce widget</string>
-    <string name="settings_widgets_section_notification_widget">Notification widget</string>
-    <string name="settings_widgets_notification_permission_summary">Nécessaire pour afficher la notification widget. %s</string>
-    <string name="settings_widgets_notification_widget_title">Notification widget</string>
-    <string name="settings_widgets_notification_persistent_switch">Persistante</string>
-    <string name="settings_widgets_notification_style_title">Style</string>
-    <string name="settings_widgets_notification_temp_icon_switch">Température dans la barre d’état</string>
-    <string name="settings_widgets_notification_feels_like_switch">Utiliser la température ressentie</string>
-    <string name="settings_widgets_broadcast_title">Partage de données</string>
-    <string name="settings_widgets_broadcast_send_data_title">Envoyer des données %s</string>
-    <string name="settings_widgets_broadcast_send_data_summary_empty">Aucun paquet compatible trouvé</string>
+    <string name="settings_modules">Modules externes</string>
+    <string name="settings_modules_summary">Widgets, notification widget, fond d’écran, partage de données avec d’autres applis</string>
+    <string name="settings_modules_live_wallpaper_title">Fond d’écran animé</string>
+    <string name="settings_modules_live_wallpaper_summary">Définir une animation météo comme fond d’écran</string>
+    <string name="settings_modules_live_wallpaper_error">Impossible de lancer le sélecteur de fond d’écran. Vous pouvez toujours choisir le fond d’écran %s en choisissant “Fond d’écran animé” depuis le sélecteur de fond d’écran de votre écran d’accueil.</string>
+    <string name="settings_modules_week_icon_mode_title">Icône à afficher dans les vues hebdomadaires</string>
+    <string name="settings_modules_monochrome_icons_title">Icônes monochromes</string>
+    <string name="settings_modules_section_widgets_in_use">Widgets utilisés</string>
+    <string name="settings_modules_configure_widget_summary">Configurer ce widget</string>
+    <string name="settings_modules_section_notification_widget">Notification widget</string>
+    <string name="settings_modules_notification_permission_summary">Nécessaire pour afficher la notification widget. %s</string>
+    <string name="settings_modules_notification_widget_title">Notification widget</string>
+    <string name="settings_modules_notification_persistent_switch">Persistante</string>
+    <string name="settings_modules_notification_style_title">Style</string>
+    <string name="settings_modules_notification_temp_icon_switch">Température dans la barre d’état</string>
+    <string name="settings_modules_notification_feels_like_switch">Utiliser la température ressentie</string>
+    <string name="settings_modules_broadcast_title">Partage de données</string>
+    <string name="settings_modules_broadcast_send_data_title">Envoyer des données %s</string>
+    <string name="settings_modules_broadcast_send_data_summary_empty">Aucun paquet compatible trouvé</string>
     <string name="about_privacy_policy">Politique de confidentialité</string>
     <string name="settings_debug">Débogage</string>
     <string name="settings_debug_notification_permission">Nécessaire pour envoyer des notifications de journaux d’incident et d’échecs de mise à jour. %s</string>
@@ -671,6 +681,7 @@
     <string name="air_quality_level_6_harmless_exposure">&lt; 1 minute</string>
     <!-- Weather kind -->
     <string name="common_weather_text_partly_cloudy">Partiellement couvert</string>
+    <string name="common_weather_text_mostly_cloudy">Principalement couvert</string>
     <string name="common_weather_text_cloudy">Nuageux</string>
     <string name="common_weather_text_rain">Pluie</string>
     <string name="common_weather_text_snow">Neige</string>
@@ -712,6 +723,7 @@
     <string name="weather_source_accu_preference_hours_72">72 heures</string>
     <string name="weather_source_accu_preference_hours_120">120 heures</string>
     <string name="weather_source_accu_preference_hours_240">240 heures</string>
+    <string name="broadcast_source_breezy_weather_update_notifier">Notification des mises à jour d’emplacements %s</string>
     <string name="location_service_native">API native</string>
     <string name="settings_automatic">Automatique</string>
     <string name="notification_style_native">Natif</string>
@@ -738,6 +750,7 @@
     <string name="widget_subtitle_data_feels_like">Température ressentie</string>
     <string name="widget_subtitle_data_custom">Personnalisé</string>
     <string name="action_add_new_location">Ajouter un nouvel emplacement</string>
+    <string name="action_add_as_location">Ajouter comme emplacement</string>
     <string name="action_edit_location">Modifier cet emplacement</string>
     <string name="action_open_in_other_app">Ouvrir dans une autre app</string>
     <string name="action_open_in_other_app_description">Ouvrir cet emplacement dans une autre application</string>
@@ -815,6 +828,9 @@
     <string name="unit_mum_voice">Micromètres</string>
     <string name="notification_channel_alerts">Vigilances</string>
     <string name="about_matrix">Salon Matrix</string>
+    <!-- Content provider -->
+    <string name="content_provider_permission_label">Lire les données de Breezy Weather</string>
+    <string name="content_provider_permission_description">obtenir les informations météo de Breezy Weather, y compris les coordonnées de vos emplacements, tels que votre emplacement actuel si vous l’avez ajouté</string>
     <string name="null_data_text">N/A</string>
     <string name="colon_separator">\u0020:\u0020</string>
     <string name="notification_update_error">%d mise(s) à jour en échec</string>

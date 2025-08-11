@@ -41,6 +41,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.AnnotatedString
 import breezyweather.domain.location.model.Location
+import breezyweather.domain.weather.model.Daily
 import breezyweather.domain.weather.model.Hourly
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
@@ -72,7 +73,8 @@ import kotlin.math.min
 fun DetailsPressure(
     location: Location,
     hourlyList: ImmutableList<Hourly>,
-    theDay: Date,
+    daily: Daily,
+    defaultValue: Pair<Date, Double>?,
     modifier: Modifier = Modifier,
 ) {
     val mappedValues = remember(hourlyList) {
@@ -80,6 +82,26 @@ fun DetailsPressure(
             .filter { it.pressure != null }
             .associate { it.date.time to it.pressure!! }
             .toImmutableMap()
+    }
+    var activeItem: Pair<Date, Double>? by remember { mutableStateOf(null) }
+    val markerVisibilityListener = remember {
+        object : CartesianMarkerVisibilityListener {
+            override fun onShown(marker: CartesianMarker, targets: List<CartesianMarker.Target>) {
+                activeItem = targets.firstOrNull()?.let { target ->
+                    mappedValues.getOrElse(target.x.toLong()) { null }?.let {
+                        Pair(target.x.toLong().toDate(), it)
+                    }
+                }
+            }
+
+            override fun onUpdated(marker: CartesianMarker, targets: List<CartesianMarker.Target>) {
+                onShown(marker, targets)
+            }
+
+            override fun onHidden(marker: CartesianMarker) {
+                activeItem = null
+            }
+        }
     }
 
     LazyColumn(
@@ -89,9 +111,15 @@ fun DetailsPressure(
             vertical = dimensionResource(R.dimen.small_margin)
         )
     ) {
+        item {
+            PressureHeader(location, daily, activeItem, defaultValue)
+        }
+        item {
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.normal_margin)))
+        }
         if (mappedValues.size >= DetailScreen.CHART_MIN_COUNT) {
             item {
-                PressureChart(location, mappedValues, theDay)
+                PressureChart(location, mappedValues, daily, markerVisibilityListener)
             }
         } else {
             item {
@@ -116,23 +144,35 @@ fun DetailsPressure(
 }
 
 @Composable
-private fun PressureSummary(
-    pressure: Double,
+fun PressureHeader(
+    location: Location,
+    daily: Daily,
+    activeItem: Pair<Date, Double>?,
+    defaultValue: Pair<Date, Double>?,
 ) {
-    PressureItem(
-        header = {
-            TextFixedHeight(
-                text = stringResource(R.string.pressure_average),
-                style = MaterialTheme.typography.labelMedium
-            )
-        },
-        pressure = pressure
-    )
+    val context = LocalContext.current
+
+    if (activeItem != null) {
+        PressureItem(
+            header = activeItem.first.getFormattedTime(location, context, context.is12Hour),
+            pressure = activeItem.second
+        )
+    } else if (daily.pressure?.average != null) {
+        PressureItem(
+            header = daily.pressure?.average?.let { stringResource(R.string.pressure_average) },
+            pressure = daily.pressure?.average
+        )
+    } else {
+        PressureItem(
+            header = defaultValue?.first?.getFormattedTime(location, context, context.is12Hour),
+            pressure = defaultValue?.second
+        )
+    }
 }
 
 @Composable
 private fun PressureItem(
-    header: @Composable () -> Unit,
+    header: String?,
     pressure: Double?,
     modifier: Modifier = Modifier,
 ) {
@@ -142,7 +182,10 @@ private fun PressureItem(
     Column(
         modifier = modifier.fillMaxWidth()
     ) {
-        header()
+        TextFixedHeight(
+            text = header ?: "",
+            style = MaterialTheme.typography.labelMedium
+        )
         TextFixedHeight(
             text = pressure?.let {
                 UnitUtils.formatUnitsDifferentFontSize(
@@ -165,9 +208,11 @@ private fun PressureItem(
 private fun PressureChart(
     location: Location,
     mappedValues: ImmutableMap<Long, Double>,
-    theDay: Date,
+    daily: Daily,
+    markerVisibilityListener: CartesianMarkerVisibilityListener,
 ) {
     val context = LocalContext.current
+
     val pressureUnit = SettingsManager.getInstance(context).getPressureUnit(context)
     val chartStep = pressureUnit.chartStep
     val maxY = remember(mappedValues) {
@@ -181,9 +226,6 @@ private fun PressureChart(
             pressureUnit.getConvertedUnit(PressureUnit.NORMAL) - chartStep.times(1.6),
             pressureUnit.getConvertedUnit(mappedValues.values.min())
         ).roundDownToNearestMultiplier(chartStep)
-    }
-    val averagePressure = remember(mappedValues) {
-        mappedValues.values.average()
     }
 
     val modelProducer = remember { CartesianChartModelProducer() }
@@ -199,41 +241,10 @@ private fun PressureChart(
         }
     }
 
-    var activeMarkerTarget: CartesianMarker.Target? by remember { mutableStateOf(null) }
-    val markerVisibilityListener = object : CartesianMarkerVisibilityListener {
-        override fun onShown(marker: CartesianMarker, targets: List<CartesianMarker.Target>) {
-            activeMarkerTarget = targets.firstOrNull()
-        }
-
-        override fun onUpdated(marker: CartesianMarker, targets: List<CartesianMarker.Target>) {
-            activeMarkerTarget = targets.firstOrNull()
-        }
-
-        override fun onHidden(marker: CartesianMarker) {
-            activeMarkerTarget = null
-        }
-    }
-
-    activeMarkerTarget?.let {
-        mappedValues.getOrElse(it.x.toLong()) { null }?.let { pressure ->
-            PressureItem(
-                header = {
-                    TextFixedHeight(
-                        text = it.x.toLong().toDate().getFormattedTime(location, context, context.is12Hour),
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                },
-                pressure = pressure
-            )
-        }
-    } ?: PressureSummary(averagePressure)
-
-    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.normal_margin)))
-
     BreezyLineChart(
         location,
         modelProducer,
-        theDay,
+        daily.date,
         maxY,
         { _, value, _ -> pressureUnit.formatMeasure(context, value, isValueInDefaultUnit = false) },
         persistentListOf(

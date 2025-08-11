@@ -307,7 +307,9 @@ In general, a weather source can be considered for inclusion in the official rel
 | GeoNames           | ✅ included from v4.5.0                                                                     |              |
 | HERE               | ✅ included from v4.5.0                                                                     |              |
 | Natural Earth      | ✅ included from v5.0.3                                                                     |              |
+| NCDR               | ✅ included from v6.0.5-alpha                                                               |              |
 | NCEI               | ✅ included from v6.0.5-alpha                                                               |              |
+| NLSC               | ✅ included from v6.0.5-alpha                                                               |              |
 | Pirate Weather     | ✅ included from v5.0.0                                                                     |              |
 | Recosanté          | ✅ included from v5.1.1                                                                     |              |
 | WMO Severe Weather | ✅ included from v5.1.4                                                                     |              |

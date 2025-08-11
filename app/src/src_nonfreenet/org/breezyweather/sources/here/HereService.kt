@@ -18,8 +18,19 @@ package org.breezyweather.sources.here
 
 import android.content.Context
 import breezyweather.domain.location.model.Location
+import breezyweather.domain.location.model.LocationAddressInfo
 import breezyweather.domain.source.SourceContinent
 import breezyweather.domain.source.SourceFeature
+import breezyweather.domain.weather.model.Precipitation
+import breezyweather.domain.weather.model.PrecipitationProbability
+import breezyweather.domain.weather.model.UV
+import breezyweather.domain.weather.model.Wind
+import breezyweather.domain.weather.reference.WeatherCode
+import breezyweather.domain.weather.wrappers.CurrentWrapper
+import breezyweather.domain.weather.wrappers.DailyWrapper
+import breezyweather.domain.weather.wrappers.HalfDayWrapper
+import breezyweather.domain.weather.wrappers.HourlyWrapper
+import breezyweather.domain.weather.wrappers.TemperatureWrapper
 import breezyweather.domain.weather.wrappers.WeatherWrapper
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.reactivex.rxjava3.core.Observable
@@ -30,6 +41,7 @@ import org.breezyweather.common.exceptions.InvalidOrIncompleteDataException
 import org.breezyweather.common.exceptions.ReverseGeocodingException
 import org.breezyweather.common.extensions.codeWithCountry
 import org.breezyweather.common.extensions.currentLocale
+import org.breezyweather.common.extensions.plus
 import org.breezyweather.common.preference.EditTextPreference
 import org.breezyweather.common.preference.Preference
 import org.breezyweather.common.source.ConfigurableSource
@@ -37,6 +49,8 @@ import org.breezyweather.common.source.HttpSource
 import org.breezyweather.common.source.ReverseGeocodingSource
 import org.breezyweather.common.source.WeatherSource
 import org.breezyweather.domain.settings.SourceConfigStore
+import org.breezyweather.sources.here.json.HereGeocodingData
+import org.breezyweather.sources.here.json.HereWeatherData
 import retrofit2.Retrofit
 import javax.inject.Inject
 import javax.inject.Named
@@ -72,11 +86,11 @@ class HereService @Inject constructor(
     }
 
     private val weatherAttribution = "HERE"
-    override val reverseGeocodingAttribution = weatherAttribution
     override val supportedFeatures = mapOf(
         SourceFeature.FORECAST to weatherAttribution,
         SourceFeature.CURRENT to weatherAttribution,
-        SourceFeature.ALERT to weatherAttribution
+        SourceFeature.ALERT to weatherAttribution,
+        SourceFeature.REVERSE_GEOCODING to weatherAttribution
     )
     override val attributionLinks = mapOf(
         weatherAttribution to "https://www.here.com/"
@@ -146,12 +160,135 @@ class HereService @Inject constructor(
     }
 
     /**
+     * Returns current forecast
+     */
+    private fun getCurrentForecast(result: HereWeatherData?): CurrentWrapper? {
+        if (result == null) return null
+        return CurrentWrapper(
+            weatherText = result.description,
+            weatherCode = getWeatherCode(result.iconId),
+            temperature = TemperatureWrapper(
+                temperature = result.temperature,
+                feelsLike = result.comfort?.toDouble()
+            ),
+            wind = Wind(
+                degree = result.windDirection,
+                speed = result.windSpeed?.div(3.6)
+            ),
+            uV = UV(index = result.uvIndex?.toDouble()),
+            relativeHumidity = result.humidity?.toDouble(),
+            dewPoint = result.dewPoint,
+            pressure = result.barometerPressure,
+            visibility = result.visibility?.times(1000)
+        )
+    }
+
+    /**
+     * Returns daily forecast
+     */
+    private fun getDailyForecast(
+        dailySimpleForecasts: List<HereWeatherData>?,
+    ): List<DailyWrapper> {
+        if (dailySimpleForecasts.isNullOrEmpty()) return emptyList()
+        val dailyList: MutableList<DailyWrapper> = ArrayList(dailySimpleForecasts.size)
+        for (i in 0 until dailySimpleForecasts.size - 1) { // Skip last day
+            val dailyForecast = dailySimpleForecasts[i]
+
+            dailyList.add(
+                DailyWrapper(
+                    date = dailyForecast.time,
+                    day = HalfDayWrapper(
+                        temperature = TemperatureWrapper(
+                            temperature = if (!dailyForecast.highTemperature.isNullOrEmpty()) {
+                                dailyForecast.highTemperature.toDouble()
+                            } else {
+                                null
+                            }
+                        )
+                    ),
+                    night = HalfDayWrapper(
+                        // low temperature is actually from previous night,
+                        // so we try to get low temp from next day if available
+                        temperature = TemperatureWrapper(
+                            temperature = if (!dailySimpleForecasts.getOrNull(i + 1)?.lowTemperature.isNullOrEmpty()) {
+                                dailySimpleForecasts[i + 1].lowTemperature!!.toDouble()
+                            } else {
+                                null
+                            }
+                        )
+                    ),
+                    uV = UV(index = dailyForecast.uvIndex?.toDouble())
+                )
+            )
+        }
+        return dailyList
+    }
+
+    /**
+     * Returns hourly forecast
+     */
+    private fun getHourlyForecast(
+        hourlyResult: List<HereWeatherData>?,
+    ): List<HourlyWrapper> {
+        if (hourlyResult.isNullOrEmpty()) return emptyList()
+        return hourlyResult.map { result ->
+            HourlyWrapper(
+                date = result.time,
+                weatherText = result.description,
+                weatherCode = getWeatherCode(result.iconId),
+                temperature = TemperatureWrapper(
+                    temperature = result.temperature,
+                    feelsLike = result.comfort?.toDouble()
+                ),
+                precipitation = Precipitation(
+                    total = result.precipitation1H ?: (result.rainFall + result.snowFall),
+                    rain = result.rainFall,
+                    snow = result.snowFall
+                ),
+                precipitationProbability = PrecipitationProbability(
+                    total = result.precipitationProbability?.toDouble()
+                ),
+                wind = Wind(
+                    degree = result.windDirection,
+                    speed = result.windSpeed?.div(3.6)
+                ),
+                uV = UV(index = result.uvIndex?.toDouble()),
+                relativeHumidity = result.humidity?.toDouble(),
+                dewPoint = result.dewPoint,
+                pressure = result.barometerPressure,
+                visibility = result.visibility?.times(1000)
+            )
+        }
+    }
+
+    /**
+     * Returns weather code based on icon id
+     */
+    private fun getWeatherCode(icon: Int?): WeatherCode? {
+        return when (icon) {
+            1, 2, 13, 14 -> WeatherCode.CLEAR
+            3 -> WeatherCode.HAZE
+            4, 5, 15, 16 -> WeatherCode.PARTLY_CLOUDY
+            6 -> WeatherCode.PARTLY_CLOUDY
+            7, 17 -> WeatherCode.CLOUDY
+            8, 9, 10, 12 -> WeatherCode.FOG
+            11 -> WeatherCode.WIND
+            18, 19, 20, 32, 33, 34 -> WeatherCode.RAIN
+            21, 22, 23, 25, 26, 35 -> WeatherCode.THUNDERSTORM
+            24 -> WeatherCode.HAIL
+            27, 28 -> WeatherCode.SLEET
+            29, 30, 31 -> WeatherCode.SNOW
+            else -> null
+        }
+    }
+
+    /**
      * Returns cities matching a query
      */
     /*override fun requestLocationSearch(
         context: Context,
         query: String,
-    ): Observable<List<Location>> {
+    ): Observable<List<LocationAddressInfo>> {
         val apiKey = getApiKeyOrDefault()
         val languageCode = SettingsManager.getInstance(context).language.code
 
@@ -174,15 +311,16 @@ class HereService @Inject constructor(
     /**
      * Returns cities near provided coordinates
      */
-    override fun requestReverseGeocodingLocation(
+    override fun requestNearestLocation(
         context: Context,
-        location: Location,
-    ): Observable<List<Location>> {
+        latitude: Double,
+        longitude: Double,
+    ): Observable<List<LocationAddressInfo>> {
         val apiKey = getApiKeyOrDefault()
 
         return mRevGeocodingApi.revGeoCode(
             apiKey,
-            "${location.latitude},${location.longitude}",
+            "$latitude,$longitude",
             types = "city",
             limit = 20,
             context.currentLocale.codeWithCountry,
@@ -190,10 +328,32 @@ class HereService @Inject constructor(
         ).map {
             if (it.items == null) {
                 throw ReverseGeocodingException()
-            } else {
-                convert(location, it.items)
+            }
+
+            it.items.map { item ->
+                convertLocation(item)
             }
         }
+    }
+
+    /**
+     * Converts here.com geocoding result into a list of locations
+     */
+    private fun convertLocation(
+        item: HereGeocodingData,
+    ): LocationAddressInfo {
+        return LocationAddressInfo(
+            latitude = item.position.lat,
+            longitude = item.position.lng,
+            timeZoneId = item.timeZone.name,
+            country = item.address.countryName,
+            countryCode = item.address.countryCode,
+            admin1 = item.address.state,
+            admin1Code = item.address.stateCode,
+            admin2 = item.address.county,
+            city = item.address.city,
+            cityCode = item.id
+        )
     }
 
     // CONFIG

@@ -32,6 +32,8 @@ import org.breezyweather.common.preference.Preference
 import org.breezyweather.common.source.ConfigurableSource
 import org.breezyweather.common.source.HttpSource
 import org.breezyweather.common.source.WeatherSource
+import org.breezyweather.common.source.WeatherSource.Companion.PRIORITY_HIGHEST
+import org.breezyweather.common.source.WeatherSource.Companion.PRIORITY_NONE
 import org.breezyweather.domain.settings.SourceConfigStore
 import org.breezyweather.sources.atmo.json.AtmoPointResult
 import retrofit2.Retrofit
@@ -83,12 +85,22 @@ abstract class AtmoService : HttpSource(), WeatherSource, ConfigurableSource {
             isLocationInRegion(location)
     }
 
+    override fun getFeaturePriorityForLocation(
+        location: Location,
+        feature: SourceFeature,
+    ): Int {
+        return when {
+            isFeatureSupportedForLocation(location, feature) -> PRIORITY_HIGHEST
+            else -> PRIORITY_NONE
+        }
+    }
+
     override fun requestWeather(
         context: Context,
         location: Location,
         requestedFeatures: List<SourceFeature>,
     ): Observable<WeatherWrapper> {
-        val calendar = Date().toCalendarWithTimeZone(location.javaTimeZone).apply {
+        val calendar = Date().toCalendarWithTimeZone(location.timeZone).apply {
             add(Calendar.DAY_OF_YEAR, 1)
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)

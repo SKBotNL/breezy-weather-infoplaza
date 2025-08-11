@@ -26,6 +26,7 @@ import android.os.Build
 import android.text.format.DateFormat
 import android.text.format.DateUtils
 import breezyweather.domain.location.model.Location
+import breezyweather.domain.weather.reference.Month
 import org.breezyweather.BreezyWeather
 import org.breezyweather.common.basic.models.options.appearance.CalendarHelper
 import org.breezyweather.common.utils.helpers.LogHelper
@@ -62,7 +63,7 @@ fun Date.getRelativeTime(context: Context): String {
             DateUtils.MINUTE_IN_MILLIS,
             DateUtils.FORMAT_ABBREV_RELATIVE
         ) as String
-    } catch (ignored: Exception) {
+    } catch (_: Exception) {
         if (BreezyWeather.instance.debugMode) {
             LogHelper.log(msg = "Reflection of relative time failed")
         }
@@ -86,7 +87,7 @@ fun Date.getFormattedDate(
     context: Context? = null,
     withBestPattern: Boolean = false,
 ): String {
-    val locale = context?.currentLocale ?: Locale("en", "001")
+    val locale = context?.currentLocale ?: Locale.Builder().setLanguage("en").setRegion("001").build()
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
         SimpleDateFormat(
             if (withBestPattern) {
@@ -96,11 +97,11 @@ fun Date.getFormattedDate(
             },
             locale
         ).apply {
-            timeZone = location?.timeZone?.let { TimeZone.getTimeZone(it) } ?: TimeZone.getDefault()
+            timeZone = location?.timeZone?.let { TimeZone.getTimeZone(it.id) } ?: TimeZone.getDefault()
         }.format(this)
     } else {
         @Suppress("DEPRECATION")
-        getFormattedDate(pattern, location?.javaTimeZone, locale)
+        getFormattedDate(pattern, location?.timeZone, locale)
     }
 }
 
@@ -134,7 +135,7 @@ fun Date.getFormattedMediumDayAndMonth(
     location: Location,
     context: Context?,
 ): String {
-    val locale = context?.currentLocale ?: Locale("en", "001")
+    val locale = context?.currentLocale ?: Locale.Builder().setLanguage("en").setRegion("001").build()
     return getFormattedDate("d MMM", location, context, withBestPattern = true).capitalize(locale)
 }
 
@@ -142,7 +143,7 @@ fun Date.getFormattedFullDayAndMonth(
     location: Location,
     context: Context?,
 ): String {
-    val locale = context?.currentLocale ?: Locale("en", "001")
+    val locale = context?.currentLocale ?: Locale.Builder().setLanguage("en").setRegion("001").build()
     return getFormattedDate("d MMMM", location, context, withBestPattern = true).capitalize(locale)
 }
 
@@ -151,7 +152,7 @@ fun getShortWeekdayDayMonth(
 ): String {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
         DateTimePatternGenerator.getInstance(
-            context?.currentLocale ?: Locale("en", "001")
+            context?.currentLocale ?: Locale.Builder().setLanguage("en").setRegion("001").build()
         ).getBestPattern("EEE d MMM")
     } else {
         "EEE d MMM"
@@ -163,7 +164,7 @@ fun getLongWeekdayDayMonth(
 ): String {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
         DateTimePatternGenerator.getInstance(
-            context?.currentLocale ?: Locale("en", "001")
+            context?.currentLocale ?: Locale.Builder().setLanguage("en").setRegion("001").build()
         ).getBestPattern("EEEE d MMMM")
     } else {
         "EEEE d MMMM"
@@ -171,7 +172,7 @@ fun getLongWeekdayDayMonth(
 }
 
 fun Date.getWeek(location: Location, context: Context?, full: Boolean = false): String {
-    val locale = context?.currentLocale ?: Locale("en", "001")
+    val locale = context?.currentLocale ?: Locale.Builder().setLanguage("en").setRegion("001").build()
     return getFormattedDate(if (full) "EEEE" else "E", location, context).capitalize(locale)
 }
 
@@ -216,7 +217,7 @@ fun Date.getFormattedMediumDayAndMonthInAdditionalCalendar(
                     },
                     uLocale
                 ).apply {
-                    timeZone = location?.timeZone?.let { TimeZone.getTimeZone(it) } ?: TimeZone.getDefault()
+                    timeZone = location?.timeZone?.let { TimeZone.getTimeZone(it.id) } ?: TimeZone.getDefault()
                 }.format(this)
             } else {
                 null
@@ -232,7 +233,7 @@ fun Date.getFormattedMediumDayAndMonthInAdditionalCalendar(
 fun Date.toCalendar(location: Location): Calendar {
     return Calendar.getInstance().also {
         it.time = this
-        it.timeZone = location.javaTimeZone
+        it.timeZone = location.timeZone
     }
 }
 
@@ -259,4 +260,8 @@ fun Calendar.getDayOfMonth(twoDigits: Boolean = false): String {
 
 fun Date.getIsoFormattedDate(location: Location): String {
     return toCalendar(location).getIsoFormattedDate()
+}
+
+fun Date.getCalendarMonth(location: Location): Month {
+    return Month.fromCalendarMonth(toCalendarWithTimeZone(location.timeZone)[Calendar.MONTH])
 }

@@ -16,6 +16,7 @@
 
 package breezyweather.domain.weather.model
 
+import breezyweather.domain.weather.reference.WeatherCode
 import breezyweather.domain.weather.wrappers.HalfDayWrapper
 import java.io.Serializable
 
@@ -31,25 +32,23 @@ data class HalfDay(
     /**
      * A long description of the weather condition. Used as a half-day summary
      */
-    val weatherPhase: String? = null,
+    val weatherSummary: String? = null,
     val weatherCode: WeatherCode? = null,
     val temperature: Temperature? = null,
     val precipitation: Precipitation? = null,
     val precipitationProbability: PrecipitationProbability? = null,
     val precipitationDuration: PrecipitationDuration? = null,
     val wind: Wind? = null,
-    val cloudCover: Int? = null,
 ) : Serializable {
 
     fun toHalfDayWrapper() = HalfDayWrapper(
         weatherText = this.weatherText,
-        weatherPhase = this.weatherPhase,
+        weatherSummary = this.weatherSummary,
         weatherCode = this.weatherCode,
         temperature = this.temperature?.toTemperatureWrapper(),
         precipitation = this.precipitation,
         precipitationProbability = this.precipitationProbability,
         precipitationDuration = this.precipitationDuration,
-        wind = this.wind,
-        cloudCover = this.cloudCover
+        wind = this.wind
     )
 }

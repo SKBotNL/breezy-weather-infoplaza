@@ -21,25 +21,38 @@ import breezyweather.domain.weather.model.AirQuality
 import breezyweather.domain.weather.model.Astro
 import breezyweather.domain.weather.model.Current
 import breezyweather.domain.weather.model.Daily
+import breezyweather.domain.weather.model.DailyCloudCover
+import breezyweather.domain.weather.model.DailyDewPoint
+import breezyweather.domain.weather.model.DailyPressure
+import breezyweather.domain.weather.model.DailyRelativeHumidity
+import breezyweather.domain.weather.model.DailyVisibility
 import breezyweather.domain.weather.model.DegreeDay
 import breezyweather.domain.weather.model.HalfDay
 import breezyweather.domain.weather.model.Hourly
 import breezyweather.domain.weather.model.MoonPhase
-import breezyweather.domain.weather.model.Normals
 import breezyweather.domain.weather.model.Pollen
 import breezyweather.domain.weather.model.Precipitation
 import breezyweather.domain.weather.model.PrecipitationProbability
 import breezyweather.domain.weather.model.Temperature
 import breezyweather.domain.weather.model.UV
 import breezyweather.domain.weather.model.Weather
-import breezyweather.domain.weather.model.WeatherCode
 import breezyweather.domain.weather.model.Wind
+import breezyweather.domain.weather.reference.WeatherCode
 import breezyweather.domain.weather.wrappers.CurrentWrapper
 import breezyweather.domain.weather.wrappers.HourlyWrapper
-import breezyweather.domain.weather.wrappers.TemperatureWrapper
 import breezyweather.domain.weather.wrappers.WeatherWrapper
+import org.breezyweather.common.basic.models.options.basic.UnitUtils
+import org.breezyweather.common.basic.models.options.unit.CLOUD_COVER_BKN
+import org.breezyweather.common.basic.models.options.unit.CLOUD_COVER_FEW
+import org.breezyweather.common.basic.models.options.unit.DistanceUnit
+import org.breezyweather.common.basic.models.options.unit.DurationUnit
+import org.breezyweather.common.basic.models.options.unit.PrecipitationIntensityUnit
+import org.breezyweather.common.basic.models.options.unit.PrecipitationUnit
+import org.breezyweather.common.basic.models.options.unit.PressureUnit
+import org.breezyweather.common.basic.models.options.unit.SpeedUnit
+import org.breezyweather.common.basic.models.options.unit.TemperatureUnit
+import org.breezyweather.common.extensions.ensurePositive
 import org.breezyweather.common.extensions.getIsoFormattedDate
-import org.breezyweather.common.extensions.median
 import org.breezyweather.common.extensions.toCalendarWithTimeZone
 import org.breezyweather.domain.weather.index.PollutantIndex
 import org.breezyweather.ui.theme.weatherView.WeatherViewController
@@ -145,20 +158,6 @@ internal fun completeNewWeatherWithPreviousData(
 }
 
 /**
- * Get normals from an old weather object
- * Only normals still valid will be returned
- * @param location Location containing old weather data
- */
-internal fun getNormalsFromWeather(
-    location: Location,
-): Normals? {
-    return location.weather?.normals?.let { normals ->
-        val cal = Date().toCalendarWithTimeZone(location.javaTimeZone)
-        if (normals.month == cal[Calendar.MONTH] + 1) normals else null
-    }
-}
-
-/**
  * MERGE MAIN WEATHER DATA WITH SECONDARY WEATHER DATA
  */
 
@@ -197,42 +196,67 @@ internal fun convertDailyWrapperToDailyList(
  * - Apparent temperature
  * - Wind chill temperature
  * - Wet bulb temperature
+ *
+ * Also ensures all values are valid
  */
 internal fun computeMissingHourlyData(
     hourlyList: List<HourlyWrapper>?,
 ): List<Hourly>? {
     return hourlyList?.map { hourly ->
+        val temp = TemperatureUnit.validateValue(hourly.temperature?.temperature)
+        val feelsLike = TemperatureUnit.validateValue(hourly.temperature?.feelsLike)
+        val wind = SpeedUnit.validateWind(hourly.wind)
+        val precipitation = hourly.precipitation?.copy(
+            total = PrecipitationIntensityUnit.validateValue(hourly.precipitation!!.total),
+            thunderstorm = PrecipitationIntensityUnit.validateValue(hourly.precipitation!!.thunderstorm),
+            rain = PrecipitationIntensityUnit.validateValue(hourly.precipitation!!.rain),
+            snow = PrecipitationIntensityUnit.validateValue(hourly.precipitation!!.snow),
+            ice = PrecipitationIntensityUnit.validateValue(hourly.precipitation!!.ice)
+        )
+        val precipitationProbability = hourly.precipitationProbability?.copy(
+            total = UnitUtils.validatePercent(hourly.precipitationProbability!!.total),
+            thunderstorm = UnitUtils.validatePercent(hourly.precipitationProbability!!.thunderstorm),
+            rain = UnitUtils.validatePercent(hourly.precipitationProbability!!.rain),
+            snow = UnitUtils.validatePercent(hourly.precipitationProbability!!.snow),
+            ice = UnitUtils.validatePercent(hourly.precipitationProbability!!.ice)
+        )
+        val cloudCover = UnitUtils.validatePercent(hourly.cloudCover)
+        val visibility = DistanceUnit.validateValue(hourly.visibility)
         val weatherCode = hourly.weatherCode ?: getHalfDayWeatherCodeFromHourlyList(
             listOf(hourly.toHourly()),
-            hourly.precipitation,
-            hourly.precipitationProbability,
-            hourly.wind,
-            hourly.cloudCover,
-            hourly.visibility
+            precipitation,
+            precipitationProbability,
+            wind,
+            cloudCover,
+            visibility
         )
-        val relativeHumidity = hourly.relativeHumidity
-            ?: computeRelativeHumidity(hourly.temperature?.temperature, hourly.dewPoint)
-        val dewPoint = hourly.dewPoint
-            ?: computeDewPoint(hourly.temperature?.temperature, hourly.relativeHumidity)
+        val relativeHumidity = UnitUtils.validatePercent(hourly.relativeHumidity)
+            ?: computeRelativeHumidity(temp, TemperatureUnit.validateValue(hourly.dewPoint))
+        val dewPoint = TemperatureUnit.validateValue(hourly.dewPoint)
+            ?: computeDewPoint(temp, relativeHumidity)
 
         hourly.toHourly().copy(
-            weatherCode = weatherCode,
             weatherText = if (hourly.weatherText.isNullOrEmpty()) {
                 weatherCode?.let { WeatherViewController.getWeatherText(it) }
             } else {
                 hourly.weatherText
             },
+            weatherCode = weatherCode,
+            temperature = Temperature(
+                temperature = temp,
+                sourceFeelsLike = feelsLike,
+                computedApparent = computeApparentTemperature(temp, relativeHumidity, wind?.speed),
+                computedWindChill = computeWindChillTemperature(temp, wind?.speed),
+                computedHumidex = computeHumidex(temp, dewPoint)
+            ),
+            precipitation = precipitation,
+            precipitationProbability = precipitationProbability,
+            wind = wind,
             relativeHumidity = relativeHumidity,
             dewPoint = dewPoint,
-            temperature = hourly.temperature?.toTemperature(
-                computedApparent = computeApparentTemperature(
-                    hourly.temperature!!.temperature,
-                    relativeHumidity,
-                    hourly.wind?.speed
-                ),
-                computedWindChill = computeWindChillTemperature(hourly.temperature!!.temperature, hourly.wind?.speed),
-                computedHumidex = computeHumidex(hourly.temperature!!.temperature, dewPoint)
-            )
+            pressure = PressureUnit.validateValue(hourly.pressure),
+            cloudCover = cloudCover,
+            visibility = visibility
         )
     }
 }
@@ -566,15 +590,35 @@ internal fun completeDailyListFromHourlyList(
             } else {
                 null
             },
-            uV = if (daily.uV?.index != null) {
+            uV = if (daily.uV?.index?.ensurePositive() != null) {
                 daily.uV
             } else {
                 getDailyUVFromHourlyList(hourlyListByDay.getOrElse(theDayFormatted) { null })
             },
-            sunshineDuration = daily.sunshineDuration
+            sunshineDuration = DurationUnit.validateDailyValue(daily.sunshineDuration)
                 ?: getSunshineDuration(
                     hourlySunshine.filter { it.key.getIsoFormattedDate(location) == theDayFormatted }.values
-                )
+                ),
+            relativeHumidity = getDailyRelativeHumidity(
+                daily.relativeHumidity,
+                hourlyListByDay.getOrElse(theDayFormatted) { null }?.mapNotNull { it.relativeHumidity }
+            ),
+            dewPoint = getDailyDewPoint(
+                daily.dewPoint,
+                hourlyListByDay.getOrElse(theDayFormatted) { null }?.mapNotNull { it.dewPoint }
+            ),
+            pressure = getDailyPressure(
+                daily.pressure,
+                hourlyListByDay.getOrElse(theDayFormatted) { null }?.mapNotNull { it.pressure }
+            ),
+            cloudCover = getDailyCloudCover(
+                daily.cloudCover,
+                hourlyListByDay.getOrElse(theDayFormatted) { null }?.mapNotNull { it.cloudCover }
+            ),
+            visibility = getDailyVisibility(
+                daily.visibility,
+                hourlyListByDay.getOrElse(theDayFormatted) { null }?.mapNotNull { it.visibility }
+            )
         )
     }
 }
@@ -756,7 +800,7 @@ private fun getHourlyListByHalfDay(
                 "night" to mutableListOf()
             )
         }
-        if (theDayShifted.toCalendarWithTimeZone(location.javaTimeZone).get(Calendar.HOUR_OF_DAY) < 12) {
+        if (theDayShifted.toCalendarWithTimeZone(location.timeZone).get(Calendar.HOUR_OF_DAY) < 12) {
             // 06:00 to 17:59 is the day (12 because we shifted by 6 hours)
             hourlyByHalfDay[theDayFormatted]!!["day"]!!.add(hourly)
         } else {
@@ -794,38 +838,56 @@ private fun completeHalfDayFromHourlyList(
 
     val newHalfDay = initialHalfDay ?: HalfDay()
 
-    val extremeTemperature = if (newHalfDay.temperature?.temperature == null ||
-        newHalfDay.temperature!!.computedApparent == null ||
-        newHalfDay.temperature!!.computedWindChill == null ||
-        newHalfDay.temperature!!.computedHumidex == null
-    ) {
-        getHalfDayTemperatureFromHourlyList(newHalfDay.temperature, halfDayHourlyList, isDay)
+    val initialTemperature = Temperature(
+        temperature = TemperatureUnit.validateValue(newHalfDay.temperature?.temperature),
+        sourceFeelsLike = TemperatureUnit.validateValue(newHalfDay.temperature?.sourceFeelsLike)
+    )
+    val extremeTemperature = if (initialTemperature.temperature == null || initialTemperature.sourceFeelsLike == null) {
+        getHalfDayTemperatureFromHourlyList(initialTemperature, halfDayHourlyList, isDay)
     } else {
-        newHalfDay.temperature
+        // No need to compute alternative feels like if real temp. and source feels like are there
+        initialTemperature
     }
 
-    val totalPrecipitation = if (newHalfDay.precipitation?.total == null) {
+    val initialPrecipitation = newHalfDay.precipitation?.copy(
+        total = PrecipitationUnit.validateValue(newHalfDay.precipitation!!.total),
+        thunderstorm = PrecipitationUnit.validateValue(newHalfDay.precipitation!!.thunderstorm),
+        rain = PrecipitationUnit.validateValue(newHalfDay.precipitation!!.rain),
+        snow = PrecipitationUnit.validateValue(newHalfDay.precipitation!!.snow),
+        ice = PrecipitationUnit.validateValue(newHalfDay.precipitation!!.ice)
+    )
+    val totalPrecipitation = if (initialPrecipitation?.total == null) {
         getHalfDayPrecipitationFromHourlyList(halfDayHourlyList)
     } else {
-        newHalfDay.precipitation
+        initialPrecipitation
     }
 
-    val maxPrecipitationProbability = if (newHalfDay.precipitationProbability?.total == null) {
+    val initialPrecipitationProbability = newHalfDay.precipitationProbability?.copy(
+        total = UnitUtils.validatePercent(newHalfDay.precipitationProbability!!.total),
+        thunderstorm = UnitUtils.validatePercent(newHalfDay.precipitationProbability!!.thunderstorm),
+        rain = UnitUtils.validatePercent(newHalfDay.precipitationProbability!!.rain),
+        snow = UnitUtils.validatePercent(newHalfDay.precipitationProbability!!.snow),
+        ice = UnitUtils.validatePercent(newHalfDay.precipitationProbability!!.ice)
+    )
+    val maxPrecipitationProbability = if (initialPrecipitationProbability?.total == null) {
         getHalfDayPrecipitationProbabilityFromHourlyList(halfDayHourlyList)
     } else {
-        newHalfDay.precipitationProbability
+        initialPrecipitationProbability
     }
 
-    val maxWind = if (newHalfDay.wind?.speed == null) {
+    val precipitationDuration = newHalfDay.precipitationDuration?.copy(
+        total = DurationUnit.validateHalfDayValue(newHalfDay.precipitationDuration!!.total),
+        thunderstorm = DurationUnit.validateHalfDayValue(newHalfDay.precipitationDuration!!.thunderstorm),
+        rain = DurationUnit.validateHalfDayValue(newHalfDay.precipitationDuration!!.rain),
+        snow = DurationUnit.validateHalfDayValue(newHalfDay.precipitationDuration!!.snow),
+        ice = DurationUnit.validateHalfDayValue(newHalfDay.precipitationDuration!!.ice)
+    )
+
+    val initialWind = SpeedUnit.validateWind(newHalfDay.wind)
+    val maxWind = if (initialWind?.speed == null) {
         getHalfDayWindFromHourlyList(halfDayHourlyList)
     } else {
-        newHalfDay.wind
-    }
-
-    val avgCloudCover = if (newHalfDay.precipitationProbability?.total == null) {
-        getHalfDayCloudCoverFromHourlyList(halfDayHourlyList)
-    } else {
-        newHalfDay.cloudCover
+        initialWind
     }
 
     val halfDayWeatherCode = newHalfDay.weatherCode ?: getHalfDayWeatherCodeFromHourlyList(
@@ -833,7 +895,7 @@ private fun completeHalfDayFromHourlyList(
         totalPrecipitation,
         maxPrecipitationProbability,
         maxWind,
-        avgCloudCover,
+        getHalfDayCloudCoverFromHourlyList(halfDayHourlyList),
         getHalfDayAvgVisibilityFromHourlyList(halfDayHourlyList)
     )
     /*if (BreezyWeather.instance.debugMode) {
@@ -848,25 +910,25 @@ private fun completeHalfDayFromHourlyList(
     } else {
         newHalfDay.weatherText
     }
-    val halfDayWeatherPhase = if (newHalfDay.weatherPhase.isNullOrEmpty()) {
+    val halfDayweatherSummary = if (newHalfDay.weatherSummary.isNullOrEmpty()) {
         if (newHalfDay.weatherText.isNullOrEmpty()) {
             halfDayWeatherTextFromCode
         } else {
             newHalfDay.weatherText
         }
     } else {
-        newHalfDay.weatherPhase
+        newHalfDay.weatherSummary
     }
 
     return newHalfDay.copy(
         weatherText = halfDayWeatherText,
-        weatherPhase = halfDayWeatherPhase,
+        weatherSummary = halfDayweatherSummary,
         weatherCode = halfDayWeatherCode,
         temperature = extremeTemperature,
         precipitation = totalPrecipitation,
         precipitationProbability = maxPrecipitationProbability,
-        wind = maxWind,
-        cloudCover = avgCloudCover
+        precipitationDuration = precipitationDuration,
+        wind = maxWind
     )
 }
 
@@ -894,8 +956,6 @@ private fun getHalfDayWeatherCodeFromHourlyList(
     val maxVisibilityHaze = 5000 // in m
     val maxVisibilityFog = 1000 // in m
     val maxWindSpeedWindy = 10.0 // in m/s
-    val minCloudCoverPartlyCloudy = 37.5 // in %
-    val minCloudCoverCloudy = 75.0 // in %
 
     // If total precipitation is greater than 1 mm
     // and max probability is greater than 30 % (assume 100 % if not reported)
@@ -976,8 +1036,8 @@ private fun getHalfDayWeatherCodeFromHourlyList(
 
     // It’s not raining, it’s not windy, and it’s not mysterious. Just cloudy
     if (avgCloudCover != null) {
-        if (avgCloudCover > minCloudCoverCloudy) return WeatherCode.CLOUDY
-        if (avgCloudCover > minCloudCoverPartlyCloudy) return WeatherCode.PARTLY_CLOUDY
+        if (avgCloudCover > CLOUD_COVER_BKN) return WeatherCode.CLOUDY
+        if (avgCloudCover > CLOUD_COVER_FEW) return WeatherCode.PARTLY_CLOUDY
         return WeatherCode.CLEAR
     }
 
@@ -1008,7 +1068,8 @@ private fun getHalfDayTemperatureFromHourlyList(
 ): Temperature {
     val newTemperature = initialTemperature ?: Temperature()
 
-    var temperatureTemperature = newTemperature.temperature
+    var temperatureTemperature = TemperatureUnit.validateValue(newTemperature.temperature)
+    var temperatureSourceFeelsLike = TemperatureUnit.validateValue(newTemperature.sourceFeelsLike)
     var temperatureApparent = newTemperature.computedApparent
     var temperatureWindChill = newTemperature.computedWindChill
     var temperatureComputedHumidex = newTemperature.computedHumidex
@@ -1019,6 +1080,20 @@ private fun getHalfDayTemperatureFromHourlyList(
             halfDayHourlyListTemperature.maxOrNull()
         } else {
             halfDayHourlyListTemperature.minOrNull()
+        }
+    }
+    if (temperatureSourceFeelsLike == null) {
+        val halfDayHourlyListSourceFeelsLike = halfDayHourlyList.mapNotNull {
+            it.temperature?.sourceFeelsLike
+        }
+        temperatureSourceFeelsLike = if (halfDayHourlyListSourceFeelsLike.size == halfDayHourlyList.size) {
+            if (isDay) {
+                halfDayHourlyListSourceFeelsLike.maxOrNull()
+            } else {
+                halfDayHourlyListSourceFeelsLike.minOrNull()
+            }
+        } else {
+            null
         }
     }
     if (temperatureApparent == null) {
@@ -1049,6 +1124,7 @@ private fun getHalfDayTemperatureFromHourlyList(
     }
     return newTemperature.copy(
         temperature = temperatureTemperature,
+        sourceFeelsLike = temperatureSourceFeelsLike,
         computedApparent = temperatureApparent,
         computedWindChill = temperatureWindChill,
         computedHumidex = temperatureComputedHumidex
@@ -1245,6 +1321,86 @@ private fun getSunshineDuration(
     }
 }
 
+fun getDailyRelativeHumidity(
+    initialDailyRelativeHumidity: DailyRelativeHumidity?,
+    values: List<Double>?,
+): DailyRelativeHumidity? {
+    if (values.isNullOrEmpty()) return initialDailyRelativeHumidity
+
+    return DailyRelativeHumidity(
+        average = UnitUtils.validatePercent(initialDailyRelativeHumidity?.average)
+            ?: values.average(),
+        min = UnitUtils.validatePercent(initialDailyRelativeHumidity?.min)
+            ?: values.min(),
+        max = UnitUtils.validatePercent(initialDailyRelativeHumidity?.max)
+            ?: values.max()
+    )
+}
+
+fun getDailyDewPoint(
+    initialDailyDewPoint: DailyDewPoint?,
+    values: List<Double>?,
+): DailyDewPoint? {
+    if (values.isNullOrEmpty()) return initialDailyDewPoint
+
+    return DailyDewPoint(
+        average = TemperatureUnit.validateValue(initialDailyDewPoint?.average)
+            ?: values.average(),
+        min = TemperatureUnit.validateValue(initialDailyDewPoint?.min)
+            ?: values.min(),
+        max = TemperatureUnit.validateValue(initialDailyDewPoint?.max)
+            ?: values.max()
+    )
+}
+
+fun getDailyPressure(
+    initialDailyPressure: DailyPressure?,
+    values: List<Double>?,
+): DailyPressure? {
+    if (values.isNullOrEmpty()) return initialDailyPressure
+
+    return DailyPressure(
+        average = PressureUnit.validateValue(initialDailyPressure?.average)
+            ?: values.average(),
+        min = PressureUnit.validateValue(initialDailyPressure?.min)
+            ?: values.min(),
+        max = PressureUnit.validateValue(initialDailyPressure?.max)
+            ?: values.max()
+    )
+}
+
+fun getDailyCloudCover(
+    initialDailyCloudCover: DailyCloudCover?,
+    values: List<Int>?,
+): DailyCloudCover? {
+    if (values.isNullOrEmpty()) return initialDailyCloudCover
+
+    return DailyCloudCover(
+        average = UnitUtils.validatePercent(initialDailyCloudCover?.average)
+            ?: values.average().roundToInt(),
+        min = UnitUtils.validatePercent(initialDailyCloudCover?.min)
+            ?: values.min(),
+        max = UnitUtils.validatePercent(initialDailyCloudCover?.max)
+            ?: values.max()
+    )
+}
+
+fun getDailyVisibility(
+    initialDailyVisibility: DailyVisibility?,
+    values: List<Double>?,
+): DailyVisibility? {
+    if (values.isNullOrEmpty()) return initialDailyVisibility
+
+    return DailyVisibility(
+        average = DistanceUnit.validateValue(initialDailyVisibility?.average)
+            ?: values.average(),
+        min = DistanceUnit.validateValue(initialDailyVisibility?.min)
+            ?: values.min(),
+        max = DistanceUnit.validateValue(initialDailyVisibility?.max)
+            ?: values.max()
+    )
+}
+
 /**
  * HOURLY FROM DAILY
  */
@@ -1276,7 +1432,7 @@ internal fun completeHourlyListFromDailyList(
             hourly.copy(
                 airQuality = hourlyAirQuality.getOrElse(hourly.date) { null },
                 isDaylight = isDaylight(daily.second?.riseDate, daily.second?.setDate, hourly.date),
-                uV = if (hourly.uV?.index != null) {
+                uV = if (hourly.uV?.index?.ensurePositive() != null) {
                     hourly.uV
                 } else {
                     getCurrentUVFromDayMax(
@@ -1284,7 +1440,7 @@ internal fun completeHourlyListFromDailyList(
                         hourly.date,
                         daily.second?.riseDate,
                         daily.second?.setDate,
-                        location.javaTimeZone
+                        location.timeZone
                     )
                 }
             )
@@ -1385,13 +1541,13 @@ internal fun completeCurrentFromHourlyData(
     val newCurrent = initialCurrent ?: CurrentWrapper()
     if (hourly == null) {
         return newCurrent.toCurrent(
-            uV = if (newCurrent.uV?.index == null && todayDaily != null) {
+            uV = if (newCurrent.uV?.index?.ensurePositive() == null && todayDaily != null) {
                 getCurrentUVFromDayMax(
                     todayDaily.uV?.index,
                     Date(),
                     todayDaily.sun?.riseDate,
                     todayDaily.sun?.setDate,
-                    location.javaTimeZone
+                    location.timeZone
                 )
             } else {
                 newCurrent.uV
@@ -1399,36 +1555,36 @@ internal fun completeCurrentFromHourlyData(
         )
     }
 
-    val newWind = if (newCurrent.wind?.speed != null || hourly.wind?.speed == null) {
-        newCurrent.wind
-    } else {
-        hourly.wind
-    }
-    val newRelativeHumidity = newCurrent.relativeHumidity ?: hourly.relativeHumidity
-    val newDewPoint = newCurrent.dewPoint ?: if (newCurrent.relativeHumidity != null ||
-        newCurrent.temperature?.temperature != null
-    ) {
-        // If current data is available, we compute this over hourly dewpoint
-        computeDewPoint(newCurrent.temperature?.temperature ?: hourly.temperature?.temperature, newRelativeHumidity)
-    } else {
-        // Already calculated earlier
-        hourly.dewPoint
-    }
+    val initialTemp = TemperatureUnit.validateValue(newCurrent.temperature?.temperature)
+    val initialFeelsLike = TemperatureUnit.validateValue(newCurrent.temperature?.feelsLike)
+    val initialWind = SpeedUnit.validateWind(newCurrent.wind)
+    val newWind = if (initialWind?.speed != null || hourly.wind?.speed == null) initialWind else hourly.wind
+    val newRelativeHumidity = UnitUtils.validatePercent(newCurrent.relativeHumidity)
+        ?: hourly.relativeHumidity
+    val newDewPoint = TemperatureUnit.validateValue(newCurrent.dewPoint)
+        ?: if (newRelativeHumidity != null || initialTemp != null) {
+            // If current data is available, we compute this over hourly dewpoint
+            computeDewPoint(initialTemp ?: hourly.temperature?.temperature, newRelativeHumidity)
+        } else {
+            // Already calculated earlier
+            hourly.dewPoint
+        }
     val newTemperature = completeCurrentTemperatureFromHourly(
-        newCurrent.temperature,
+        initialTemp,
+        initialFeelsLike,
         hourly.temperature,
         newWind?.speed,
         newRelativeHumidity,
         newDewPoint
     )
     return newCurrent.toCurrent(
-        uV = if (newCurrent.uV?.index == null && todayDaily != null) {
+        uV = if (newCurrent.uV?.index?.ensurePositive() == null && todayDaily != null) {
             getCurrentUVFromDayMax(
                 todayDaily.uV?.index,
                 Date(),
                 todayDaily.sun?.riseDate,
                 todayDaily.sun?.setDate,
-                location.javaTimeZone
+                location.timeZone
             )
         } else {
             newCurrent.uV
@@ -1449,45 +1605,28 @@ internal fun completeCurrentFromHourlyData(
         airQuality = currentAirQuality ?: hourly.airQuality,
         relativeHumidity = newRelativeHumidity,
         dewPoint = newDewPoint,
-        pressure = newCurrent.pressure ?: hourly.pressure,
-        cloudCover = newCurrent.cloudCover ?: hourly.cloudCover,
-        visibility = newCurrent.visibility ?: hourly.visibility
+        pressure = PressureUnit.validateValue(newCurrent.pressure) ?: hourly.pressure,
+        cloudCover = UnitUtils.validatePercent(newCurrent.cloudCover) ?: hourly.cloudCover,
+        visibility = DistanceUnit.validateValue(newCurrent.visibility) ?: hourly.visibility,
+        ceiling = newCurrent.ceiling?.ensurePositive()
     )
 }
 
 private fun completeCurrentTemperatureFromHourly(
-    initialTemperature: TemperatureWrapper?,
+    initialTemp: Double?,
+    initialFeelsLike: Double?,
     hourlyTemperature: Temperature?,
     windSpeed: Double?,
     relativeHumidity: Double?,
     dewPoint: Double?,
 ): Temperature? {
-    if (initialTemperature == null) return hourlyTemperature
+    if (initialTemp == null) return hourlyTemperature
 
     return Temperature(
-        temperature = initialTemperature.temperature ?: hourlyTemperature?.temperature,
-        sourceFeelsLike = initialTemperature.feelsLike ?: hourlyTemperature?.sourceFeelsLike,
-        computedApparent = initialTemperature.temperature?.let {
-            computeApparentTemperature(it, relativeHumidity, windSpeed)
-        } ?: hourlyTemperature?.computedApparent,
-        computedWindChill = initialTemperature.temperature?.let {
-            computeWindChillTemperature(it, windSpeed)
-        } ?: hourlyTemperature?.computedWindChill,
-        computedHumidex = initialTemperature.temperature?.let {
-            computeHumidex(it, dewPoint)
-        } ?: hourlyTemperature?.computedHumidex
-    )
-}
-
-internal fun completeNormalsFromDaily(
-    normals: Normals?,
-    dailyForecast: List<Daily>,
-): Normals? {
-    if (normals?.month != null && normals.isValid) return normals
-    if (dailyForecast.isEmpty()) return null
-
-    return Normals(
-        daytimeTemperature = dailyForecast.mapNotNull { it.day?.temperature?.temperature }.toTypedArray().median,
-        nighttimeTemperature = dailyForecast.mapNotNull { it.night?.temperature?.temperature }.toTypedArray().median
+        temperature = initialTemp,
+        sourceFeelsLike = initialFeelsLike ?: hourlyTemperature?.sourceFeelsLike,
+        computedApparent = computeApparentTemperature(initialTemp, relativeHumidity, windSpeed),
+        computedWindChill = computeWindChillTemperature(initialTemp, windSpeed),
+        computedHumidex = computeHumidex(initialTemp, dewPoint)
     )
 }

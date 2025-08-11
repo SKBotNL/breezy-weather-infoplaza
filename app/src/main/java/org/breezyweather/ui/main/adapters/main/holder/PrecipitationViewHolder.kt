@@ -21,7 +21,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import breezyweather.domain.location.model.Location
-import breezyweather.domain.weather.model.WeatherCode
+import breezyweather.domain.weather.reference.WeatherCode
 import org.breezyweather.R
 import org.breezyweather.common.basic.BreezyActivity
 import org.breezyweather.common.basic.models.options.appearance.DetailScreen
@@ -53,7 +53,7 @@ class PrecipitationViewHolder(parent: ViewGroup) : AbstractMainCardViewHolder(
 
         val talkBackBuilder = StringBuilder(context.getString(R.string.precipitation))
         location.weather?.let { weather ->
-            val cal = Date().toCalendarWithTimeZone(location.javaTimeZone)
+            val cal = Date().toCalendarWithTimeZone(location.timeZone)
             val currentHour = cal[Calendar.HOUR_OF_DAY]
 
             // Early morning

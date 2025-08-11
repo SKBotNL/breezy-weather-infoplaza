@@ -18,11 +18,15 @@ package breezyweather.data.weather
 
 import breezyweather.domain.weather.model.AirQuality
 import breezyweather.domain.weather.model.Alert
-import breezyweather.domain.weather.model.AlertSeverity
 import breezyweather.domain.weather.model.Astro
 import breezyweather.domain.weather.model.Base
 import breezyweather.domain.weather.model.Current
 import breezyweather.domain.weather.model.Daily
+import breezyweather.domain.weather.model.DailyCloudCover
+import breezyweather.domain.weather.model.DailyDewPoint
+import breezyweather.domain.weather.model.DailyPressure
+import breezyweather.domain.weather.model.DailyRelativeHumidity
+import breezyweather.domain.weather.model.DailyVisibility
 import breezyweather.domain.weather.model.DegreeDay
 import breezyweather.domain.weather.model.HalfDay
 import breezyweather.domain.weather.model.Hourly
@@ -36,8 +40,10 @@ import breezyweather.domain.weather.model.PrecipitationProbability
 import breezyweather.domain.weather.model.Temperature
 import breezyweather.domain.weather.model.UV
 import breezyweather.domain.weather.model.Weather
-import breezyweather.domain.weather.model.WeatherCode
 import breezyweather.domain.weather.model.Wind
+import breezyweather.domain.weather.reference.AlertSeverity
+import breezyweather.domain.weather.reference.Month
+import breezyweather.domain.weather.reference.WeatherCode
 import java.util.Date
 
 object WeatherMapper {
@@ -51,6 +57,8 @@ object WeatherMapper {
         minutelyUpdateTime: Long?,
         alertsUpdateTime: Long?,
         normalsUpdateTime: Long?,
+        normalsUpdateLatitude: Double,
+        normalsUpdateLongitude: Double,
         weatherText: String?,
         weatherCode: WeatherCode?,
         temperature: Double?,
@@ -76,9 +84,6 @@ object WeatherMapper {
         ceiling: Double?,
         dailyForecast: String?,
         hourlyForecast: String?,
-        normalsMonth: Long?,
-        normalsDaytimeTemperature: Double?,
-        normalsNighttimeTemperature: Double?,
     ): Weather = Weather(
         Base(
             refreshTime?.let { Date(it) },
@@ -88,7 +93,9 @@ object WeatherMapper {
             pollenUpdateTime?.let { Date(it) },
             minutelyUpdateTime?.let { Date(it) },
             alertsUpdateTime?.let { Date(it) },
-            normalsUpdateTime?.let { Date(it) }
+            normalsUpdateTime?.let { Date(it) },
+            normalsUpdateLatitude,
+            normalsUpdateLongitude
         ),
         Current(
             weatherText,
@@ -122,18 +129,13 @@ object WeatherMapper {
             ceiling,
             dailyForecast,
             hourlyForecast
-        ),
-        Normals(
-            normalsMonth?.toInt(),
-            normalsDaytimeTemperature,
-            normalsNighttimeTemperature
         )
     )
 
     fun mapDaily(
         date: Long,
         daytimeWeatherText: String?,
-        daytimeWeatherPhase: String?,
+        daytimeweatherSummary: String?,
         daytimeWeatherCode: WeatherCode?,
         daytimeTemperature: Double?,
         daytimeSourceFeelsLikeTemperature: Double?,
@@ -158,9 +160,8 @@ object WeatherMapper {
         daytimeWindDegree: Double?,
         daytimeWindSpeed: Double?,
         daytimeWindGusts: Double?,
-        daytimeCloudCover: Long?,
         nighttimeWeatherText: String?,
-        nighttimeWeatherPhase: String?,
+        nighttimeweatherSummary: String?,
         nighttimeWeatherCode: WeatherCode?,
         nighttimeTemperature: Double?,
         nighttimeSourceFeelsLikeTemperature: Double?,
@@ -185,7 +186,6 @@ object WeatherMapper {
         nighttimeWindDegree: Double?,
         nighttimeWindSpeed: Double?,
         nighttimeWindGusts: Double?,
-        nighttimeCloudCover: Long?,
         degreeDayHeating: Double?,
         degreeDayCooling: Double?,
         sunRiseDate: Long?,
@@ -224,10 +224,27 @@ object WeatherMapper {
         willow: Long?,
         uvIndex: Double?,
         sunshineDuration: Double?,
+        relativeHumidityAverage: Double?,
+        relativeHumidityMin: Double?,
+        relativeHumidityMax: Double?,
+        dewpointAverage: Double?,
+        dewpointMin: Double?,
+        dewpointMax: Double?,
+        pressureAverage: Double?,
+        pressureMin: Double?,
+        pressureMax: Double?,
+        cloudCoverAverage: Long?,
+        cloudCoverMin: Long?,
+        cloudCoverMax: Long?,
+        visibilityAverage: Double?,
+        visibilityMin: Double?,
+        visibilityMax: Double?,
     ): Daily = Daily(
         Date(date),
         HalfDay(
-            daytimeWeatherText, daytimeWeatherPhase, daytimeWeatherCode,
+            daytimeWeatherText,
+            daytimeweatherSummary,
+            daytimeWeatherCode,
             Temperature(
                 daytimeTemperature,
                 sourceFeelsLike = daytimeSourceFeelsLikeTemperature,
@@ -260,12 +277,11 @@ object WeatherMapper {
                 daytimeWindDegree,
                 daytimeWindSpeed,
                 daytimeWindGusts
-            ),
-            daytimeCloudCover?.toInt()
+            )
         ),
         HalfDay(
             nighttimeWeatherText,
-            nighttimeWeatherPhase,
+            nighttimeweatherSummary,
             nighttimeWeatherCode,
             Temperature(
                 nighttimeTemperature,
@@ -299,8 +315,7 @@ object WeatherMapper {
                 nighttimeWindDegree,
                 nighttimeWindSpeed,
                 nighttimeWindGusts
-            ),
-            nighttimeCloudCover?.toInt()
+            )
         ),
         DegreeDay(degreeDayHeating, degreeDayCooling),
         Astro(sunRiseDate?.let { Date(it) }, sunSetDate?.let { Date(it) }),
@@ -339,7 +354,32 @@ object WeatherMapper {
             willow = willow?.toInt()
         ),
         UV(uvIndex),
-        sunshineDuration
+        sunshineDuration,
+        relativeHumidity = DailyRelativeHumidity(
+            average = relativeHumidityAverage,
+            min = relativeHumidityMin,
+            max = relativeHumidityMax
+        ),
+        dewPoint = DailyDewPoint(
+            average = dewpointAverage,
+            min = dewpointMin,
+            max = dewpointMax
+        ),
+        pressure = DailyPressure(
+            average = pressureAverage,
+            min = pressureMin,
+            max = pressureMax
+        ),
+        cloudCover = DailyCloudCover(
+            average = cloudCoverAverage?.toInt(),
+            min = cloudCoverMin?.toInt(),
+            max = cloudCoverMax?.toInt()
+        ),
+        visibility = DailyVisibility(
+            average = visibilityAverage,
+            min = visibilityMin,
+            max = visibilityMax
+        )
     )
 
     fun mapHourly(
@@ -454,5 +494,16 @@ object WeatherMapper {
         Date(date),
         minuteInterval.toInt(),
         intensity
+    )
+
+    fun mapNormals(
+        month: Long,
+        daytimeTemperature: Double?,
+        nighttimeTemperature: Double?,
+    ): Map<Month, Normals> = mapOf(
+        Month.of(month.toInt()) to Normals(
+            daytimeTemperature,
+            nighttimeTemperature
+        )
     )
 }

@@ -106,6 +106,14 @@ enum class PressureUnit(
             "US" -> INCH_OF_MERCURY
             else -> HECTOPASCAL
         }
+
+        fun validateValue(pressure: Double?): Double? {
+            return pressure?.let { if (it in 800.0..1200.0) it else null }
+        }
+
+        fun getUnit(id: String): PressureUnit? {
+            return PressureUnit.entries.firstOrNull { it.id == id }
+        }
     }
 
     override val valueArrayId = R.array.pressure_unit_values

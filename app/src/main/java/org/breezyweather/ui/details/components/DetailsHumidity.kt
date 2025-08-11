@@ -39,6 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import breezyweather.domain.location.model.Location
+import breezyweather.domain.weather.model.Daily
 import breezyweather.domain.weather.model.Hourly
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
@@ -60,6 +61,9 @@ import org.breezyweather.common.extensions.roundDownToNearestMultiplier
 import org.breezyweather.common.extensions.roundUpToNearestMultiplier
 import org.breezyweather.common.extensions.toDate
 import org.breezyweather.domain.settings.SettingsManager
+import org.breezyweather.domain.weather.model.getFullLabel
+import org.breezyweather.domain.weather.model.getRangeContentDescriptionSummary
+import org.breezyweather.domain.weather.model.getRangeSummary
 import org.breezyweather.ui.common.charts.BreezyLineChart
 import org.breezyweather.ui.settings.preference.bottomInsetItem
 import java.util.Date
@@ -68,7 +72,9 @@ import java.util.Date
 fun DetailsHumidity(
     location: Location,
     hourlyList: ImmutableList<Hourly>,
-    theDay: Date,
+    daily: Daily,
+    defaultHumidityValue: Pair<Date, Double>?,
+    defaultDewPointValue: Pair<Date, Double>?,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -78,11 +84,52 @@ fun DetailsHumidity(
             .associate { it.date.time to it.relativeHumidity!! }
             .toImmutableMap()
     }
+    var activeHumidityItem: Pair<Date, Double>? by remember { mutableStateOf(null) }
+    val humidityMarkerVisibilityListener = remember {
+        object : CartesianMarkerVisibilityListener {
+            override fun onShown(marker: CartesianMarker, targets: List<CartesianMarker.Target>) {
+                activeHumidityItem = targets.firstOrNull()?.let { target ->
+                    mappedHumidityValues.getOrElse(target.x.toLong()) { null }?.let {
+                        Pair(target.x.toLong().toDate(), it)
+                    }
+                }
+            }
+
+            override fun onUpdated(marker: CartesianMarker, targets: List<CartesianMarker.Target>) {
+                onShown(marker, targets)
+            }
+
+            override fun onHidden(marker: CartesianMarker) {
+                activeHumidityItem = null
+            }
+        }
+    }
+
     val mappedDewPointValues = remember(hourlyList) {
         hourlyList
             .filter { it.dewPoint != null }
             .associate { it.date.time to it.dewPoint!! }
             .toImmutableMap()
+    }
+    var activeDewPointItem: Pair<Date, Double>? by remember { mutableStateOf(null) }
+    val dewPointMarkerVisibilityListener = remember {
+        object : CartesianMarkerVisibilityListener {
+            override fun onShown(marker: CartesianMarker, targets: List<CartesianMarker.Target>) {
+                activeDewPointItem = targets.firstOrNull()?.let { target ->
+                    mappedDewPointValues.getOrElse(target.x.toLong()) { null }?.let {
+                        Pair(target.x.toLong().toDate(), it)
+                    }
+                }
+            }
+
+            override fun onUpdated(marker: CartesianMarker, targets: List<CartesianMarker.Target>) {
+                onShown(marker, targets)
+            }
+
+            override fun onHidden(marker: CartesianMarker) {
+                activeDewPointItem = null
+            }
+        }
     }
 
     LazyColumn(
@@ -92,9 +139,15 @@ fun DetailsHumidity(
             vertical = dimensionResource(R.dimen.small_margin)
         )
     ) {
+        item {
+            HumidityHeader(location, daily, activeHumidityItem, defaultHumidityValue)
+        }
+        item {
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.normal_margin)))
+        }
         if (mappedHumidityValues.size >= DetailScreen.CHART_MIN_COUNT) {
             item {
-                HumidityChart(location, mappedHumidityValues, theDay)
+                HumidityChart(location, mappedHumidityValues, daily, humidityMarkerVisibilityListener)
             }
         } else {
             item {
@@ -123,9 +176,15 @@ fun DetailsHumidity(
         item {
             Spacer(modifier = Modifier.height(dimensionResource(R.dimen.normal_margin)))
         }
+        item {
+            DewPointHeader(location, daily, activeDewPointItem, defaultDewPointValue)
+        }
+        item {
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.normal_margin)))
+        }
         if (mappedDewPointValues.size >= DetailScreen.CHART_MIN_COUNT) {
             item {
-                DewPointChart(location, mappedDewPointValues, theDay)
+                DewPointChart(location, mappedDewPointValues, daily, dewPointMarkerVisibilityListener)
             }
         } else {
             item {
@@ -148,19 +207,59 @@ fun DetailsHumidity(
 }
 
 @Composable
-private fun HumiditySummary(
-    relativeHumidity: Double?,
+fun HumidityHeader(
+    location: Location,
+    daily: Daily,
+    activeItem: Pair<Date, Double>?,
+    defaultValue: Pair<Date, Double>?,
 ) {
-    HumidityItem(
-        header = {
-            TextFixedHeight(
-                text = "",
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.clearAndSetSemantics {}
-            )
-        },
-        relativeHumidity = relativeHumidity
-    )
+    val context = LocalContext.current
+
+    if (activeItem != null) {
+        HumidityItem(
+            header = {
+                TextFixedHeight(
+                    text = activeItem.first.getFormattedTime(location, context, context.is12Hour),
+                    style = MaterialTheme.typography.labelMedium
+                )
+            },
+            relativeHumidity = activeItem.second
+        )
+    } else if (daily.relativeHumidity?.min != null && daily.relativeHumidity!!.max != null) {
+        HumiditySummary(location, daily)
+    } else {
+        HumidityItem(
+            header = {
+                TextFixedHeight(
+                    text = defaultValue?.first?.getFormattedTime(location, context, context.is12Hour) ?: "",
+                    style = MaterialTheme.typography.labelMedium
+                )
+            },
+            relativeHumidity = defaultValue?.second
+        )
+    }
+}
+
+@Composable
+private fun HumiditySummary(
+    location: Location,
+    daily: Daily,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+
+    Column(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        TextFixedHeight(
+            text = daily.getFullLabel(location, context),
+            style = MaterialTheme.typography.labelMedium
+        )
+        TextFixedHeight(
+            text = daily.relativeHumidity?.getRangeSummary(context) ?: "",
+            style = MaterialTheme.typography.displaySmall
+        )
+    }
 }
 
 @Composable
@@ -188,9 +287,11 @@ private fun HumidityItem(
 private fun HumidityChart(
     location: Location,
     mappedValues: ImmutableMap<Long, Double>,
-    theDay: Date,
+    daily: Daily,
+    markerVisibilityListener: CartesianMarkerVisibilityListener,
 ) {
     val context = LocalContext.current
+
     val maxY = 100.0
 
     val endAxisValueFormatter = CartesianValueFormatter { _, value, _ ->
@@ -210,41 +311,10 @@ private fun HumidityChart(
         }
     }
 
-    var activeMarkerTarget: CartesianMarker.Target? by remember { mutableStateOf(null) }
-    val markerVisibilityListener = object : CartesianMarkerVisibilityListener {
-        override fun onShown(marker: CartesianMarker, targets: List<CartesianMarker.Target>) {
-            activeMarkerTarget = targets.firstOrNull()
-        }
-
-        override fun onUpdated(marker: CartesianMarker, targets: List<CartesianMarker.Target>) {
-            activeMarkerTarget = targets.firstOrNull()
-        }
-
-        override fun onHidden(marker: CartesianMarker) {
-            activeMarkerTarget = null
-        }
-    }
-
-    activeMarkerTarget?.let {
-        mappedValues.getOrElse(it.x.toLong()) { null }?.let { relativeHumidity ->
-            HumidityItem(
-                header = {
-                    TextFixedHeight(
-                        text = it.x.toLong().toDate().getFormattedTime(location, context, context.is12Hour),
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                },
-                relativeHumidity = relativeHumidity
-            )
-        }
-    } ?: HumiditySummary(null)
-
-    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.normal_margin)))
-
     BreezyLineChart(
         location,
         modelProducer,
-        theDay,
+        daily.date,
         maxY,
         endAxisValueFormatter,
         persistentListOf(
@@ -278,19 +348,66 @@ private fun HumidityChart(
 }
 
 @Composable
-private fun DewPointSummary(
-    dewPoint: Double?,
+fun DewPointHeader(
+    location: Location,
+    daily: Daily,
+    activeItem: Pair<Date, Double>?,
+    defaultValue: Pair<Date, Double>?,
 ) {
-    DewPointItem(
-        header = {
-            TextFixedHeight(
-                text = "",
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.clearAndSetSemantics {}
-            )
-        },
-        dewPoint = dewPoint
-    )
+    val context = LocalContext.current
+
+    if (activeItem != null) {
+        DewPointItem(
+            header = {
+                TextFixedHeight(
+                    text = activeItem.first.getFormattedTime(location, context, context.is12Hour),
+                    style = MaterialTheme.typography.labelMedium
+                )
+            },
+            dewPoint = activeItem.second
+        )
+    } else if (daily.dewPoint?.min != null && daily.dewPoint!!.max != null) {
+        DewPointSummary(location, daily)
+    } else {
+        DewPointItem(
+            header = {
+                TextFixedHeight(
+                    text = defaultValue?.first?.getFormattedTime(location, context, context.is12Hour) ?: "",
+                    style = MaterialTheme.typography.labelMedium
+                )
+            },
+            dewPoint = defaultValue?.second
+        )
+    }
+}
+
+@Composable
+private fun DewPointSummary(
+    location: Location,
+    daily: Daily,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    val temperatureUnit = SettingsManager.getInstance(context).getTemperatureUnit(context)
+
+    Column(
+        modifier = modifier.fillMaxWidth()
+    ) {
+        TextFixedHeight(
+            text = daily.getFullLabel(location, context),
+            style = MaterialTheme.typography.labelMedium
+        )
+        TextFixedHeight(
+            text = daily.dewPoint?.getRangeSummary(context, temperatureUnit) ?: "",
+            style = MaterialTheme.typography.displaySmall,
+            modifier = Modifier
+                .clearAndSetSemantics {
+                    daily.dewPoint?.getRangeContentDescriptionSummary(context, temperatureUnit)?.let {
+                        contentDescription = it
+                    }
+                }
+        )
+    }
 }
 
 @Composable
@@ -325,9 +442,11 @@ private fun DewPointItem(
 private fun DewPointChart(
     location: Location,
     mappedValues: ImmutableMap<Long, Double>,
-    theDay: Date,
+    daily: Daily,
+    markerVisibilityListener: CartesianMarkerVisibilityListener,
 ) {
     val context = LocalContext.current
+
     val temperatureUnit = SettingsManager.getInstance(context).getTemperatureUnit(context)
     val step = temperatureUnit.chartStep
     val maxY = remember(mappedValues) {
@@ -350,41 +469,10 @@ private fun DewPointChart(
         }
     }
 
-    var activeMarkerTarget: CartesianMarker.Target? by remember { mutableStateOf(null) }
-    val markerVisibilityListener = object : CartesianMarkerVisibilityListener {
-        override fun onShown(marker: CartesianMarker, targets: List<CartesianMarker.Target>) {
-            activeMarkerTarget = targets.firstOrNull()
-        }
-
-        override fun onUpdated(marker: CartesianMarker, targets: List<CartesianMarker.Target>) {
-            activeMarkerTarget = targets.firstOrNull()
-        }
-
-        override fun onHidden(marker: CartesianMarker) {
-            activeMarkerTarget = null
-        }
-    }
-
-    activeMarkerTarget?.let {
-        mappedValues.getOrElse(it.x.toLong()) { null }?.let { dewPoint ->
-            DewPointItem(
-                header = {
-                    TextFixedHeight(
-                        text = it.x.toLong().toDate().getFormattedTime(location, context, context.is12Hour),
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                },
-                dewPoint = dewPoint
-            )
-        }
-    } ?: DewPointSummary(null)
-
-    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.normal_margin)))
-
     BreezyLineChart(
         location,
         modelProducer,
-        theDay,
+        daily.date,
         maxY,
         { _, value, _ -> temperatureUnit.formatMeasure(context, value, isValueInDefaultUnit = false) },
         persistentListOf(

@@ -38,8 +38,8 @@ import org.breezyweather.common.extensions.plus
 import org.breezyweather.common.preference.EditTextPreference
 import org.breezyweather.common.preference.ListPreference
 import org.breezyweather.common.source.ConfigurableSource
+import org.breezyweather.common.source.FeatureSource
 import org.breezyweather.common.source.LocationSource
-import org.breezyweather.common.source.WeatherSource
 import org.breezyweather.common.source.getName
 import org.breezyweather.domain.settings.SettingsManager
 import org.breezyweather.ui.common.composables.AlertDialogLink
@@ -67,7 +67,7 @@ import java.text.Collator
 fun WeatherSourcesSettingsScreen(
     context: Context,
     onNavigateBack: () -> Unit,
-    configuredWorldwideSources: ImmutableList<WeatherSource>,
+    configuredWorldwideSources: ImmutableList<FeatureSource>,
     configurableSources: ImmutableList<ConfigurableSource>,
     modifier: Modifier = Modifier,
 ) {

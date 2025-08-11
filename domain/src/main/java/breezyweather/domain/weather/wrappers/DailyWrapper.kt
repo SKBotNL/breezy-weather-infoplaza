@@ -18,8 +18,12 @@ package breezyweather.domain.weather.wrappers
 
 import breezyweather.domain.weather.model.AirQuality
 import breezyweather.domain.weather.model.Daily
+import breezyweather.domain.weather.model.DailyCloudCover
+import breezyweather.domain.weather.model.DailyDewPoint
+import breezyweather.domain.weather.model.DailyPressure
+import breezyweather.domain.weather.model.DailyRelativeHumidity
+import breezyweather.domain.weather.model.DailyVisibility
 import breezyweather.domain.weather.model.DegreeDay
-import breezyweather.domain.weather.model.HalfDay
 import breezyweather.domain.weather.model.Pollen
 import breezyweather.domain.weather.model.UV
 import java.util.Date
@@ -37,6 +41,11 @@ data class DailyWrapper(
      * Sunshine duration in hours (ex: 0.5 means 30 min)
      */
     val sunshineDuration: Double? = null,
+    val relativeHumidity: DailyRelativeHumidity? = null,
+    val dewPoint: DailyDewPoint? = null,
+    val pressure: DailyPressure? = null,
+    val cloudCover: DailyCloudCover? = null,
+    val visibility: DailyVisibility? = null,
 ) {
     fun toDaily(
         airQuality: AirQuality? = null,
@@ -49,6 +58,11 @@ data class DailyWrapper(
         airQuality = airQuality,
         pollen = pollen,
         uV = this.uV,
-        sunshineDuration = this.sunshineDuration
+        sunshineDuration = this.sunshineDuration,
+        relativeHumidity = this.relativeHumidity,
+        dewPoint = this.dewPoint,
+        pressure = this.pressure,
+        cloudCover = this.cloudCover,
+        visibility = this.visibility
     )
 }

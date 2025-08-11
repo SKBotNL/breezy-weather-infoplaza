@@ -27,6 +27,8 @@ import android.hardware.SensorManager
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
+import android.os.Parcel
 import android.os.PowerManager
 import android.provider.Settings
 import android.view.WindowManager
@@ -106,3 +108,13 @@ fun Context.openApplicationDetailsSettings() {
         )
     )
 }
+
+val Bundle.sizeInBytes: Int
+    get() {
+        val parcel = Parcel.obtain()
+        parcel.writeBundle(this)
+
+        return parcel.dataSize().also {
+            parcel.recycle()
+        }
+    }

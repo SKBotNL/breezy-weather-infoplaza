@@ -28,8 +28,11 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import io.reactivex.rxjava3.core.Observable
 import org.breezyweather.common.extensions.code
 import org.breezyweather.common.extensions.currentLocale
+import org.breezyweather.common.extensions.getCountryName
 import org.breezyweather.common.source.HttpSource
 import org.breezyweather.common.source.WeatherSource
+import org.breezyweather.common.source.WeatherSource.Companion.PRIORITY_HIGHEST
+import org.breezyweather.common.source.WeatherSource.Companion.PRIORITY_NONE
 import org.breezyweather.sources.epdhk.xml.EpdHkConcentrationsResult
 import retrofit2.Retrofit
 import java.text.SimpleDateFormat
@@ -50,7 +53,7 @@ class EpdHkService @Inject constructor(
                 else -> "EPD"
             }
         } +
-            " (${Locale(context.currentLocale.code, "HK").displayCountry})"
+            " (${context.currentLocale.getCountryName("HK")})"
     }
     override val continent = SourceContinent.ASIA
     override val privacyPolicyUrl by lazy {
@@ -94,15 +97,24 @@ class EpdHkService @Inject constructor(
         return location.countryCode.equals("HK", ignoreCase = true)
     }
 
+    override fun getFeaturePriorityForLocation(
+        location: Location,
+        feature: SourceFeature,
+    ): Int {
+        return when {
+            isFeatureSupportedForLocation(location, feature) -> PRIORITY_HIGHEST
+            else -> PRIORITY_NONE
+        }
+    }
+
     override fun requestWeather(
         context: Context,
         location: Location,
         requestedFeatures: List<SourceFeature>,
     ): Observable<WeatherWrapper> {
-        val concentrations = mApi.getConcentrations().execute().body()
-        return Observable.just(
-            convert(location, concentrations)
-        )
+        return mApi.getConcentrations().map {
+            convert(location, it)
+        }
     }
 
     private fun convert(

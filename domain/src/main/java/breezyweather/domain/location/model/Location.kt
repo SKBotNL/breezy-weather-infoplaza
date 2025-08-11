@@ -17,29 +17,17 @@
 
 package breezyweather.domain.location.model
 
-import android.os.Build
 import android.os.Parcel
 import android.os.Parcelable
 import breezyweather.domain.weather.model.Weather
 import java.util.Locale
-import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.pow
-import kotlin.math.sin
-import kotlin.math.sqrt
+import java.util.TimeZone
 
 data class Location(
-    val cityId: String? = null,
-
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
-    val timeZone: String = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        android.icu.util.TimeZone.getDefault().id
-    } else {
-        java.util.TimeZone.getDefault().id
-    },
+    val timeZone: TimeZone = TimeZone.getTimeZone("GMT"),
 
-    val customName: String? = null,
     val country: String = "",
     val countryCode: String? = null,
     val admin1: String? = null,
@@ -51,9 +39,15 @@ data class Location(
     val admin4: String? = null,
     val admin4Code: String? = null,
     val city: String = "",
+    val cityId: String? = null,
     val district: String? = null,
 
+    val needsGeocodeRefresh: Boolean = false,
+
+    val customName: String? = null,
+
     val weather: Weather? = null,
+
     val forecastSource: String = "openmeteo",
     val currentSource: String? = null,
     val airQualitySource: String? = null,
@@ -65,8 +59,6 @@ data class Location(
 
     val isCurrentPosition: Boolean = false,
 
-    val needsGeocodeRefresh: Boolean = false,
-
     /**
      * "accu": {"cityId": "230"}
      * "nws": {"gridId": "8", "gridX": "20", "gridY": "30"}
@@ -74,8 +66,6 @@ data class Location(
      */
     val parameters: Map<String, Map<String, String>> = emptyMap(),
 ) : Parcelable {
-
-    val javaTimeZone: java.util.TimeZone = java.util.TimeZone.getTimeZone(timeZone)
 
     val formattedId: String
         get() = if (isCurrentPosition) {
@@ -96,7 +86,7 @@ data class Location(
         parcel.writeString(cityId)
         parcel.writeDouble(latitude)
         parcel.writeDouble(longitude)
-        parcel.writeString(timeZone)
+        parcel.writeString(timeZone.id)
         parcel.writeString(customName)
         parcel.writeString(country)
         parcel.writeString(countryCode)
@@ -128,7 +118,7 @@ data class Location(
         cityId = parcel.readString(),
         latitude = parcel.readDouble(),
         longitude = parcel.readDouble(),
-        timeZone = parcel.readString()!!,
+        timeZone = TimeZone.getTimeZone(parcel.readString()!!),
         customName = parcel.readString(),
         country = parcel.readString()!!,
         countryCode = parcel.readString(),
@@ -280,33 +270,92 @@ data class Location(
             return builder.toString()
         }
 
-    fun isCloseTo(location: Location): Boolean {
-        if (cityId == location.cityId) {
-            return true
-        }
-        if (isEquals(admin1, location.admin1) &&
-            isEquals(admin2, location.admin2) &&
-            isEquals(admin3, location.admin3) &&
-            isEquals(admin4, location.admin4) &&
-            isEquals(city, location.city)
-        ) {
-            return true
-        }
-        return if (isEquals(admin1, location.admin1) &&
-            isEquals(admin2, location.admin2) &&
-            isEquals(admin3, location.admin3) &&
-            isEquals(admin4, location.admin4) &&
-            cityAndDistrict == location.cityAndDistrict
-        ) {
-            true
-        } else {
-            distance(this, location) < (20 * 1000)
-        }
+    fun toLocationWithAddressInfo(
+        currentLocale: Locale,
+        locationAddressInfo: LocationAddressInfo,
+        overwriteCoordinates: Boolean,
+    ): Location {
+        return copy(
+            latitude = if (overwriteCoordinates &&
+                locationAddressInfo.latitude != null &&
+                locationAddressInfo.longitude != null
+            ) {
+                locationAddressInfo.latitude
+            } else {
+                latitude
+            },
+            longitude = if (overwriteCoordinates &&
+                locationAddressInfo.latitude != null &&
+                locationAddressInfo.longitude != null
+            ) {
+                locationAddressInfo.longitude
+            } else {
+                longitude
+            },
+            timeZone = TimeZone.getTimeZone(locationAddressInfo.timeZoneId ?: "GMT"),
+            country = if (locationAddressInfo.country.isNullOrEmpty() && !locationAddressInfo.country.isNullOrEmpty()) {
+                Locale.Builder()
+                    .setLanguage(currentLocale.language)
+                    .setRegion(countryCode)
+                    .build()
+                    .displayCountry
+            } else {
+                locationAddressInfo.country ?: ""
+            },
+            countryCode = locationAddressInfo.countryCode,
+            admin1 = locationAddressInfo.admin1 ?: "",
+            admin1Code = locationAddressInfo.admin1Code ?: "",
+            admin2 = locationAddressInfo.admin2 ?: "",
+            admin2Code = locationAddressInfo.admin2Code ?: "",
+            admin3 = locationAddressInfo.admin3 ?: "",
+            admin3Code = locationAddressInfo.admin3Code ?: "",
+            admin4 = locationAddressInfo.admin4 ?: "",
+            admin4Code = locationAddressInfo.admin4Code ?: "",
+            city = locationAddressInfo.city ?: "",
+            cityId = locationAddressInfo.cityCode ?: "",
+            district = locationAddressInfo.district ?: "",
+            needsGeocodeRefresh = false
+        )
     }
+
+    /**
+     * It is not intended to be used by the reverse geocoding source
+     * You're supposed to call the LocationAddressInfo constructor
+     *
+     * Currently only used by Natural Earth Service for a very special case
+     * Use with precaution!
+     */
+    // @Delicate
+    fun toAddressInfo(): LocationAddressInfo {
+        return LocationAddressInfo(
+            latitude = latitude,
+            longitude = longitude,
+            timeZoneId = timeZone.id,
+            country = country,
+            countryCode = countryCode ?: "",
+            admin1 = admin1,
+            admin1Code = admin1Code,
+            admin2 = admin2,
+            admin2Code = admin2Code,
+            admin3 = admin3,
+            admin3Code = admin3Code,
+            admin4 = admin4,
+            admin4Code = admin4Code,
+            city = city,
+            cityCode = cityId,
+            district = district
+        )
+    }
+
+    val hasValidCountryCode: Boolean
+        get() {
+            return !countryCode.isNullOrEmpty() && countryCode.matches(Regex("[A-Za-z]{2}"))
+        }
 
     companion object {
 
         const val CURRENT_POSITION_ID = "CURRENT_POSITION"
+        const val CLOSE_DISTANCE = 5000 // 5 km
 
         fun isEquals(a: String?, b: String?): Boolean {
             return if (a.isNullOrEmpty() && b.isNullOrEmpty()) {
@@ -328,44 +377,6 @@ data class Location(
             override fun newArray(size: Int): Array<Location?> {
                 return arrayOfNulls(size)
             }
-        }
-
-        fun distance(location1: Location, location2: Location): Double {
-            return distance(
-                location1.latitude,
-                location1.longitude,
-                location2.latitude,
-                location2.longitude
-            )
-        }
-
-        /**
-         * Adapted from https://stackoverflow.com/questions/3694380/calculating-distance-between-two-points-using-latitude-longitude
-         *
-         * Calculate distance between two points in latitude and longitude taking
-         * into account height difference. Uses Haversine method as its base.
-         *
-         * @returns Distance in Meters
-         */
-        fun distance(
-            lat1: Double,
-            lon1: Double,
-            lat2: Double,
-            lon2: Double,
-        ): Double {
-            val r = 6371 // Radius of the earth
-
-            val latDistance = Math.toRadians(lat2 - lat1)
-            val lonDistance = Math.toRadians(lon2 - lon1)
-            val a = sin(latDistance / 2) *
-                sin(latDistance / 2) +
-                (cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) * sin(lonDistance / 2) * sin(lonDistance / 2))
-            val c = 2 * atan2(sqrt(a), sqrt(1 - a))
-            var distance = r * c * 1000 // convert to meters
-
-            distance = distance.pow(2.0)
-
-            return sqrt(distance)
         }
     }
 }

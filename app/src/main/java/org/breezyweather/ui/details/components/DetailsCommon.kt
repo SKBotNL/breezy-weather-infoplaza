@@ -39,6 +39,7 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
@@ -181,7 +182,7 @@ fun NighttimeLabelWithInfo(
     val coroutineScope = rememberCoroutineScope()
 
     TooltipBox(
-        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(),
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
         tooltip = {
             PlainTooltip { Text(stringResource(R.string.nighttime_details)) }
         },
@@ -219,33 +220,84 @@ fun NighttimeLabelWithInfo(
 
 @Composable
 fun DetailsSectionHeader(
+    sectionName: AnnotatedString,
+    subtitle: AnnotatedString? = null,
+    modifier: Modifier = Modifier,
+) {
+    DetailsSectionHeader(
+        section = {
+            Text(
+                text = sectionName,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier
+                    .padding(
+                        bottom = if (subtitle == null) dimensionResource(R.dimen.small_margin) else 0.dp
+                    )
+            )
+        },
+        subtitle = subtitle?.let {
+            {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .padding(
+                            bottom = dimensionResource(R.dimen.small_margin)
+                        )
+                )
+            }
+        },
+        modifier = modifier
+    )
+}
+
+@Composable
+fun DetailsSectionHeader(
     sectionName: String,
     subtitle: String? = null,
+    modifier: Modifier = Modifier,
+) {
+    DetailsSectionHeader(
+        section = {
+            Text(
+                text = sectionName,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier
+                    .padding(
+                        bottom = if (subtitle == null) dimensionResource(R.dimen.small_margin) else 0.dp
+                    )
+            )
+        },
+        subtitle = subtitle?.let {
+            {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .padding(
+                            bottom = dimensionResource(R.dimen.small_margin)
+                        )
+                )
+            }
+        },
+        modifier = modifier
+    )
+}
+
+@Composable
+internal fun DetailsSectionHeader(
+    section: @Composable () -> Unit,
+    subtitle: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
             .padding(start = dimensionResource(R.dimen.normal_margin))
     ) {
-        Text(
-            text = sectionName,
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier
-                .padding(
-                    bottom = if (subtitle == null) dimensionResource(R.dimen.small_margin) else 0.dp
-                )
-        )
-        subtitle?.let {
-            Text(
-                text = it,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .padding(
-                        bottom = dimensionResource(R.dimen.small_margin)
-                    )
-            )
-        }
+        section()
+        subtitle?.invoke()
     }
 }
 
