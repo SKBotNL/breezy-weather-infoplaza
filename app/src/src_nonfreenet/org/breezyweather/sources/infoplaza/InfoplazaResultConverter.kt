@@ -25,6 +25,7 @@ import breezyweather.domain.weather.model.PrecipitationProbability
 import breezyweather.domain.weather.model.UV
 import breezyweather.domain.weather.model.WeatherCode
 import breezyweather.domain.weather.model.Wind
+import breezyweather.domain.weather.reference.AlertSeverity
 import breezyweather.domain.weather.wrappers.DailyWrapper
 import breezyweather.domain.weather.wrappers.HalfDayWrapper
 import breezyweather.domain.weather.wrappers.HourlyWrapper
@@ -183,7 +184,7 @@ internal fun getPollen(dailyResult: List<InfoplazaForecastDaily>?): PollenWrappe
 
 internal fun getAlert(adviceResult: InfoplazaAdviceResult): List<Alert> {
     val severity = when (adviceResult.animationId) {
-        5 -> AlertSeverity.MINOR
+        5 -> AlertSeverity.MODERATE
         6 -> AlertSeverity.SEVERE
         7 -> AlertSeverity.EXTREME
         else -> return emptyList()
