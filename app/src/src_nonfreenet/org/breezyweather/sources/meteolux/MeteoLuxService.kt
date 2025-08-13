@@ -47,12 +47,15 @@ import org.breezyweather.common.source.WeatherSource.Companion.PRIORITY_HIGHEST
 import org.breezyweather.common.source.WeatherSource.Companion.PRIORITY_NONE
 import org.breezyweather.sources.getWindDegree
 import org.breezyweather.sources.meteolux.json.MeteoLuxWeatherResult
+import org.breezyweather.unit.precipitation.Precipitation.Companion.centimeters
+import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
 import retrofit2.Retrofit
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Inject
 import javax.inject.Named
+import kotlin.time.Duration.Companion.hours
 
 class MeteoLuxService @Inject constructor(
     @ApplicationContext context: Context,
@@ -205,8 +208,8 @@ class MeteoLuxService @Inject constructor(
                             feelsLike = it.temperatureMax?.felt
                         ),
                         precipitation = Precipitation(
-                            rain = getRangeMax(it.rain),
-                            snow = getRangeMax(it.snow)?.times(10.0) // convert cm to mm
+                            rain = getRangeMax(it.rain)?.millimeters,
+                            snow = getRangeMax(it.snow)?.centimeters
                         ),
                         wind = Wind(
                             degree = getWindDegree(it.wind?.direction),
@@ -230,7 +233,7 @@ class MeteoLuxService @Inject constructor(
                     uV = UV(
                         index = it.uvIndex
                     ),
-                    sunshineDuration = it.sunshine
+                    sunshineDuration = it.sunshine?.hours
                 )
             )
         }
@@ -255,8 +258,8 @@ class MeteoLuxService @Inject constructor(
                         feelsLike = it.temperature?.felt
                     ),
                     precipitation = Precipitation(
-                        rain = getRangeMax(it.rain),
-                        snow = getRangeMax(it.snow)?.times(10) // convert cm to mm
+                        rain = getRangeMax(it.rain)?.millimeters,
+                        snow = getRangeMax(it.snow)?.centimeters
                     ),
                     wind = Wind(
                         degree = getWindDegree(it.wind?.direction),

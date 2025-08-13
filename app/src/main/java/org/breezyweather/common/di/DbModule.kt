@@ -28,8 +28,13 @@ import breezyweather.data.AndroidDatabaseHandler
 import breezyweather.data.Dailys
 import breezyweather.data.Database
 import breezyweather.data.DatabaseHandler
+import breezyweather.data.DistanceColumnAdapter
+import breezyweather.data.DurationColumnAdapter
 import breezyweather.data.Hourlys
 import breezyweather.data.Locations
+import breezyweather.data.Minutelys
+import breezyweather.data.PrecipitationColumnAdapter
+import breezyweather.data.PressureColumnAdapter
 import breezyweather.data.TimeZoneColumnAdapter
 import breezyweather.data.WeatherCodeColumnAdapter
 import breezyweather.data.Weathers
@@ -86,14 +91,54 @@ class DbModule {
                 timezoneAdapter = TimeZoneColumnAdapter
             ),
             weathersAdapter = Weathers.Adapter(
-                weather_codeAdapter = WeatherCodeColumnAdapter
+                weather_codeAdapter = WeatherCodeColumnAdapter,
+                pressureAdapter = PressureColumnAdapter,
+                visibilityAdapter = DistanceColumnAdapter,
+                ceilingAdapter = DistanceColumnAdapter
             ),
             dailysAdapter = Dailys.Adapter(
                 daytime_weather_codeAdapter = WeatherCodeColumnAdapter,
-                nighttime_weather_codeAdapter = WeatherCodeColumnAdapter
+                daytime_total_precipitationAdapter = PrecipitationColumnAdapter,
+                daytime_thunderstorm_precipitationAdapter = PrecipitationColumnAdapter,
+                daytime_rain_precipitationAdapter = PrecipitationColumnAdapter,
+                daytime_snow_precipitationAdapter = PrecipitationColumnAdapter,
+                daytime_ice_precipitationAdapter = PrecipitationColumnAdapter,
+                daytime_total_precipitation_durationAdapter = DurationColumnAdapter,
+                daytime_thunderstorm_precipitation_durationAdapter = DurationColumnAdapter,
+                daytime_rain_precipitation_durationAdapter = DurationColumnAdapter,
+                daytime_snow_precipitation_durationAdapter = DurationColumnAdapter,
+                daytime_ice_precipitation_durationAdapter = DurationColumnAdapter,
+                nighttime_weather_codeAdapter = WeatherCodeColumnAdapter,
+                nighttime_total_precipitationAdapter = PrecipitationColumnAdapter,
+                nighttime_thunderstorm_precipitationAdapter = PrecipitationColumnAdapter,
+                nighttime_rain_precipitationAdapter = PrecipitationColumnAdapter,
+                nighttime_snow_precipitationAdapter = PrecipitationColumnAdapter,
+                nighttime_ice_precipitationAdapter = PrecipitationColumnAdapter,
+                nighttime_total_precipitation_durationAdapter = DurationColumnAdapter,
+                nighttime_thunderstorm_precipitation_durationAdapter = DurationColumnAdapter,
+                nighttime_rain_precipitation_durationAdapter = DurationColumnAdapter,
+                nighttime_snow_precipitation_durationAdapter = DurationColumnAdapter,
+                nighttime_ice_precipitation_durationAdapter = DurationColumnAdapter,
+                sunshine_durationAdapter = DurationColumnAdapter,
+                pressure_averageAdapter = PressureColumnAdapter,
+                pressure_maxAdapter = PressureColumnAdapter,
+                pressure_minAdapter = PressureColumnAdapter,
+                visibility_averageAdapter = DistanceColumnAdapter,
+                visibility_maxAdapter = DistanceColumnAdapter,
+                visibility_minAdapter = DistanceColumnAdapter
             ),
             hourlysAdapter = Hourlys.Adapter(
-                weather_codeAdapter = WeatherCodeColumnAdapter
+                weather_codeAdapter = WeatherCodeColumnAdapter,
+                total_precipitationAdapter = PrecipitationColumnAdapter,
+                thunderstorm_precipitationAdapter = PrecipitationColumnAdapter,
+                rain_precipitationAdapter = PrecipitationColumnAdapter,
+                snow_precipitationAdapter = PrecipitationColumnAdapter,
+                ice_precipitationAdapter = PrecipitationColumnAdapter,
+                pressureAdapter = PressureColumnAdapter,
+                visibilityAdapter = DistanceColumnAdapter
+            ),
+            minutelysAdapter = Minutelys.Adapter(
+                precipitation_intensityAdapter = PrecipitationColumnAdapter
             ),
             alertsAdapter = Alerts.Adapter(
                 severityAdapter = AlertSeverityColumnAdapter

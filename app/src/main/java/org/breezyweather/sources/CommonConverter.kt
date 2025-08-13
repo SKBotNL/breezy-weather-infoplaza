@@ -44,11 +44,6 @@ import breezyweather.domain.weather.wrappers.WeatherWrapper
 import org.breezyweather.common.basic.models.options.basic.UnitUtils
 import org.breezyweather.common.basic.models.options.unit.CLOUD_COVER_BKN
 import org.breezyweather.common.basic.models.options.unit.CLOUD_COVER_FEW
-import org.breezyweather.common.basic.models.options.unit.DistanceUnit
-import org.breezyweather.common.basic.models.options.unit.DurationUnit
-import org.breezyweather.common.basic.models.options.unit.PrecipitationIntensityUnit
-import org.breezyweather.common.basic.models.options.unit.PrecipitationUnit
-import org.breezyweather.common.basic.models.options.unit.PressureUnit
 import org.breezyweather.common.basic.models.options.unit.SpeedUnit
 import org.breezyweather.common.basic.models.options.unit.TemperatureUnit
 import org.breezyweather.common.extensions.ensurePositive
@@ -56,6 +51,14 @@ import org.breezyweather.common.extensions.getIsoFormattedDate
 import org.breezyweather.common.extensions.toCalendarWithTimeZone
 import org.breezyweather.domain.weather.index.PollutantIndex
 import org.breezyweather.ui.theme.weatherView.WeatherViewController
+import org.breezyweather.unit.distance.Distance
+import org.breezyweather.unit.distance.Distance.Companion.meters
+import org.breezyweather.unit.duration.toValidDailyOrNull
+import org.breezyweather.unit.duration.toValidHalfDayOrNull
+import org.breezyweather.unit.precipitation.Precipitation.Companion.micrometers
+import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
+import org.breezyweather.unit.pressure.Pressure
+import org.breezyweather.unit.pressure.Pressure.Companion.pascals
 import org.shredzone.commons.suncalc.MoonIllumination
 import org.shredzone.commons.suncalc.MoonTimes
 import org.shredzone.commons.suncalc.SunTimes
@@ -68,8 +71,10 @@ import kotlin.math.ln
 import kotlin.math.log10
 import kotlin.math.pow
 import kotlin.math.roundToInt
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.nanoseconds
 
 /**
  * /!\ WARNING /!\
@@ -207,11 +212,11 @@ internal fun computeMissingHourlyData(
         val feelsLike = TemperatureUnit.validateValue(hourly.temperature?.feelsLike)
         val wind = SpeedUnit.validateWind(hourly.wind)
         val precipitation = hourly.precipitation?.copy(
-            total = PrecipitationIntensityUnit.validateValue(hourly.precipitation!!.total),
-            thunderstorm = PrecipitationIntensityUnit.validateValue(hourly.precipitation!!.thunderstorm),
-            rain = PrecipitationIntensityUnit.validateValue(hourly.precipitation!!.rain),
-            snow = PrecipitationIntensityUnit.validateValue(hourly.precipitation!!.snow),
-            ice = PrecipitationIntensityUnit.validateValue(hourly.precipitation!!.ice)
+            total = hourly.precipitation!!.total?.toValidHourlyOrNull(),
+            thunderstorm = hourly.precipitation!!.thunderstorm?.toValidHourlyOrNull(),
+            rain = hourly.precipitation!!.rain?.toValidHourlyOrNull(),
+            snow = hourly.precipitation!!.snow?.toValidHourlyOrNull(),
+            ice = hourly.precipitation!!.ice?.toValidHourlyOrNull()
         )
         val precipitationProbability = hourly.precipitationProbability?.copy(
             total = UnitUtils.validatePercent(hourly.precipitationProbability!!.total),
@@ -221,7 +226,7 @@ internal fun computeMissingHourlyData(
             ice = UnitUtils.validatePercent(hourly.precipitationProbability!!.ice)
         )
         val cloudCover = UnitUtils.validatePercent(hourly.cloudCover)
-        val visibility = DistanceUnit.validateValue(hourly.visibility)
+        val visibility = hourly.visibility?.toValidOrNull()
         val weatherCode = hourly.weatherCode ?: getHalfDayWeatherCodeFromHourlyList(
             listOf(hourly.toHourly()),
             precipitation,
@@ -254,7 +259,7 @@ internal fun computeMissingHourlyData(
             wind = wind,
             relativeHumidity = relativeHumidity,
             dewPoint = dewPoint,
-            pressure = PressureUnit.validateValue(hourly.pressure),
+            pressure = hourly.pressure?.toValidOrNull(),
             cloudCover = cloudCover,
             visibility = visibility
         )
@@ -531,7 +536,7 @@ internal fun completeDailyListFromHourlyList(
     hourlyList: List<Hourly>,
     hourlyAirQuality: Map<Date, AirQuality>,
     hourlyPollen: Map<Date, Pollen>,
-    hourlySunshine: Map<Date, Double?>,
+    hourlySunshine: Map<Date, Duration?>,
     currentPollen: Pollen?,
     location: Location,
 ): List<Daily> {
@@ -595,7 +600,7 @@ internal fun completeDailyListFromHourlyList(
             } else {
                 getDailyUVFromHourlyList(hourlyListByDay.getOrElse(theDayFormatted) { null })
             },
-            sunshineDuration = DurationUnit.validateDailyValue(daily.sunshineDuration)
+            sunshineDuration = daily.sunshineDuration?.toValidDailyOrNull()
                 ?: getSunshineDuration(
                     hourlySunshine.filter { it.key.getIsoFormattedDate(location) == theDayFormatted }.values
                 ),
@@ -850,11 +855,11 @@ private fun completeHalfDayFromHourlyList(
     }
 
     val initialPrecipitation = newHalfDay.precipitation?.copy(
-        total = PrecipitationUnit.validateValue(newHalfDay.precipitation!!.total),
-        thunderstorm = PrecipitationUnit.validateValue(newHalfDay.precipitation!!.thunderstorm),
-        rain = PrecipitationUnit.validateValue(newHalfDay.precipitation!!.rain),
-        snow = PrecipitationUnit.validateValue(newHalfDay.precipitation!!.snow),
-        ice = PrecipitationUnit.validateValue(newHalfDay.precipitation!!.ice)
+        total = newHalfDay.precipitation!!.total?.toValidHalfDayOrNull(),
+        thunderstorm = newHalfDay.precipitation!!.thunderstorm?.toValidHalfDayOrNull(),
+        rain = newHalfDay.precipitation!!.rain?.toValidHalfDayOrNull(),
+        snow = newHalfDay.precipitation!!.snow?.toValidHalfDayOrNull(),
+        ice = newHalfDay.precipitation!!.ice?.toValidHalfDayOrNull()
     )
     val totalPrecipitation = if (initialPrecipitation?.total == null) {
         getHalfDayPrecipitationFromHourlyList(halfDayHourlyList)
@@ -876,11 +881,11 @@ private fun completeHalfDayFromHourlyList(
     }
 
     val precipitationDuration = newHalfDay.precipitationDuration?.copy(
-        total = DurationUnit.validateHalfDayValue(newHalfDay.precipitationDuration!!.total),
-        thunderstorm = DurationUnit.validateHalfDayValue(newHalfDay.precipitationDuration!!.thunderstorm),
-        rain = DurationUnit.validateHalfDayValue(newHalfDay.precipitationDuration!!.rain),
-        snow = DurationUnit.validateHalfDayValue(newHalfDay.precipitationDuration!!.snow),
-        ice = DurationUnit.validateHalfDayValue(newHalfDay.precipitationDuration!!.ice)
+        total = newHalfDay.precipitationDuration!!.total?.toValidHalfDayOrNull(),
+        thunderstorm = newHalfDay.precipitationDuration!!.thunderstorm?.toValidHalfDayOrNull(),
+        rain = newHalfDay.precipitationDuration!!.rain?.toValidHalfDayOrNull(),
+        snow = newHalfDay.precipitationDuration!!.snow?.toValidHalfDayOrNull(),
+        ice = newHalfDay.precipitationDuration!!.ice?.toValidHalfDayOrNull()
     )
 
     val initialWind = SpeedUnit.validateWind(newHalfDay.wind)
@@ -949,34 +954,34 @@ private fun getHalfDayWeatherCodeFromHourlyList(
     maxPrecipitationProbability: PrecipitationProbability?,
     maxWind: Wind?,
     avgCloudCover: Int?,
-    avgVisibility: Double?,
+    avgVisibility: Distance?,
 ): WeatherCode? {
-    val minPrecipIntensity = 1.0 // in mm
+    val minPrecipIntensity = 1.0.millimeters // in mm
     val minPrecipProbability = 30.0 // in %
-    val maxVisibilityHaze = 5000 // in m
-    val maxVisibilityFog = 1000 // in m
+    val maxVisibilityHaze = 5000.meters
+    val maxVisibilityFog = 1000.meters
     val maxWindSpeedWindy = 10.0 // in m/s
 
     // If total precipitation is greater than 1 mm
     // and max probability is greater than 30 % (assume 100 % if not reported)
-    if ((totPrecipitation?.total ?: 0.0) > minPrecipIntensity &&
+    if ((totPrecipitation?.total ?: 0.0.millimeters) > minPrecipIntensity &&
         (maxPrecipitationProbability?.total ?: 100.0) > minPrecipProbability
     ) {
         val isRain =
             maxPrecipitationProbability?.rain?.let { it > minPrecipProbability }
-                ?: totPrecipitation!!.rain?.let { it > 0 }
+                ?: totPrecipitation!!.rain?.let { it.value > 0 }
                 ?: false
         val isSnow =
             maxPrecipitationProbability?.snow?.let { it > minPrecipProbability }
-                ?: totPrecipitation!!.snow?.let { it > 0 }
+                ?: totPrecipitation!!.snow?.let { it.value > 0 }
                 ?: false
         val isIce =
             maxPrecipitationProbability?.ice?.let { it > minPrecipProbability }
-                ?: totPrecipitation!!.ice?.let { it > 0 }
+                ?: totPrecipitation!!.ice?.let { it.value > 0 }
                 ?: false
         val isThunder =
             maxPrecipitationProbability?.thunderstorm?.let { it > minPrecipProbability }
-                ?: totPrecipitation!!.thunderstorm?.let { it > 0 }
+                ?: totPrecipitation!!.thunderstorm?.let { it.value > 0 }
                 ?: false
 
         if (isRain || isSnow || isIce || isThunder) {
@@ -1147,27 +1152,27 @@ private fun getHalfDayPrecipitationFromHourlyList(
 
     return Precipitation(
         total = if (halfDayHourlyListPrecipitationTotal.isNotEmpty()) {
-            halfDayHourlyListPrecipitationTotal.sum()
+            halfDayHourlyListPrecipitationTotal.sumOf { it.value }.micrometers
         } else {
             null
         },
         thunderstorm = if (halfDayHourlyListPrecipitationThunderstorm.isNotEmpty()) {
-            halfDayHourlyListPrecipitationThunderstorm.sum()
+            halfDayHourlyListPrecipitationThunderstorm.sumOf { it.value }.micrometers
         } else {
             null
         },
         rain = if (halfDayHourlyListPrecipitationRain.isNotEmpty()) {
-            halfDayHourlyListPrecipitationRain.sum()
+            halfDayHourlyListPrecipitationRain.sumOf { it.value }.micrometers
         } else {
             null
         },
         snow = if (halfDayHourlyListPrecipitationSnow.isNotEmpty()) {
-            halfDayHourlyListPrecipitationSnow.sum()
+            halfDayHourlyListPrecipitationSnow.sumOf { it.value }.micrometers
         } else {
             null
         },
         ice = if (halfDayHourlyListPrecipitationIce.isNotEmpty()) {
-            halfDayHourlyListPrecipitationIce.sum()
+            halfDayHourlyListPrecipitationIce.sumOf { it.value }.micrometers
         } else {
             null
         }
@@ -1227,9 +1232,9 @@ private fun getHalfDayCloudCoverFromHourlyList(
 
 private fun getHalfDayAvgVisibilityFromHourlyList(
     halfDayHourlyList: List<Hourly>,
-): Double? {
+): Distance? {
     // average() would return NaN when called for an empty list
-    return halfDayHourlyList.mapNotNull { it.visibility }.takeIf { it.isNotEmpty() }?.average()
+    return halfDayHourlyList.mapNotNull { it.visibility?.inMeters }.takeIf { it.isNotEmpty() }?.average()?.meters
 }
 
 /**
@@ -1307,12 +1312,12 @@ private fun getDailyUVFromHourlyList(
  * @param hourlyList hourly list for that day
  */
 private fun getSunshineDuration(
-    hourlyList: Collection<Double?>?,
-): Double? {
+    hourlyList: Collection<Duration?>?,
+): Duration? {
     return if (hourlyList != null) {
         val hourlyWithSunshine = hourlyList.filterNotNull()
         if (hourlyWithSunshine.isNotEmpty()) {
-            hourlyWithSunshine.sum()
+            hourlyWithSunshine.sumOf { it.inWholeNanoseconds }.nanoseconds
         } else {
             null
         }
@@ -1355,17 +1360,17 @@ fun getDailyDewPoint(
 
 fun getDailyPressure(
     initialDailyPressure: DailyPressure?,
-    values: List<Double>?,
+    values: List<Pressure>?,
 ): DailyPressure? {
     if (values.isNullOrEmpty()) return initialDailyPressure
 
     return DailyPressure(
-        average = PressureUnit.validateValue(initialDailyPressure?.average)
-            ?: values.average(),
-        min = PressureUnit.validateValue(initialDailyPressure?.min)
-            ?: values.min(),
-        max = PressureUnit.validateValue(initialDailyPressure?.max)
-            ?: values.max()
+        average = initialDailyPressure?.average?.toValidOrNull()
+            ?: values.map { it.value }.average().pascals,
+        min = initialDailyPressure?.min?.toValidOrNull()
+            ?: values.minOfOrNull { it.value }?.pascals,
+        max = initialDailyPressure?.max?.toValidOrNull()
+            ?: values.maxOfOrNull { it.value }?.pascals
     )
 }
 
@@ -1387,17 +1392,17 @@ fun getDailyCloudCover(
 
 fun getDailyVisibility(
     initialDailyVisibility: DailyVisibility?,
-    values: List<Double>?,
+    values: List<Distance>?,
 ): DailyVisibility? {
     if (values.isNullOrEmpty()) return initialDailyVisibility
 
     return DailyVisibility(
-        average = DistanceUnit.validateValue(initialDailyVisibility?.average)
-            ?: values.average(),
-        min = DistanceUnit.validateValue(initialDailyVisibility?.min)
-            ?: values.min(),
-        max = DistanceUnit.validateValue(initialDailyVisibility?.max)
-            ?: values.max()
+        average = initialDailyVisibility?.average?.toValidOrNull()
+            ?: values.map { it.value }.average().meters,
+        min = initialDailyVisibility?.min?.toValidOrNull()
+            ?: values.minOfOrNull { it.value }?.meters,
+        max = initialDailyVisibility?.max?.toValidOrNull()
+            ?: values.maxOfOrNull { it.value }?.meters
     )
 }
 
@@ -1605,10 +1610,10 @@ internal fun completeCurrentFromHourlyData(
         airQuality = currentAirQuality ?: hourly.airQuality,
         relativeHumidity = newRelativeHumidity,
         dewPoint = newDewPoint,
-        pressure = PressureUnit.validateValue(newCurrent.pressure) ?: hourly.pressure,
+        pressure = newCurrent.pressure?.toValidOrNull() ?: hourly.pressure,
         cloudCover = UnitUtils.validatePercent(newCurrent.cloudCover) ?: hourly.cloudCover,
-        visibility = DistanceUnit.validateValue(newCurrent.visibility) ?: hourly.visibility,
-        ceiling = newCurrent.ceiling?.ensurePositive()
+        visibility = newCurrent.visibility?.toValidOrNull() ?: hourly.visibility,
+        ceiling = newCurrent.ceiling?.toValidOrNull()
     )
 }
 

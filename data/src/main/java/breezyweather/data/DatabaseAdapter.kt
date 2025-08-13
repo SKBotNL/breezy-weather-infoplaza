@@ -20,8 +20,16 @@ package breezyweather.data
 import app.cash.sqldelight.ColumnAdapter
 import breezyweather.domain.weather.reference.AlertSeverity
 import breezyweather.domain.weather.reference.WeatherCode
+import org.breezyweather.unit.distance.Distance
+import org.breezyweather.unit.distance.Distance.Companion.meters
+import org.breezyweather.unit.precipitation.Precipitation
+import org.breezyweather.unit.precipitation.Precipitation.Companion.micrometers
+import org.breezyweather.unit.pressure.Pressure
+import org.breezyweather.unit.pressure.Pressure.Companion.pascals
 import java.util.Date
 import java.util.TimeZone
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.nanoseconds
 
 object DateColumnAdapter : ColumnAdapter<Date, Long> {
     override fun decode(databaseValue: Long): Date = Date(databaseValue)
@@ -57,4 +65,28 @@ object AlertSeverityColumnAdapter : ColumnAdapter<AlertSeverity, Long> {
     override fun decode(databaseValue: Long): AlertSeverity = AlertSeverity.getInstance(databaseValue.toInt())
 
     override fun encode(value: AlertSeverity): Long = value.id.toLong()
+}
+
+object DistanceColumnAdapter : ColumnAdapter<Distance, Long> {
+    override fun decode(databaseValue: Long): Distance = databaseValue.meters
+
+    override fun encode(value: Distance): Long = value.value
+}
+
+object PrecipitationColumnAdapter : ColumnAdapter<Precipitation, Long> {
+    override fun decode(databaseValue: Long): Precipitation = databaseValue.micrometers
+
+    override fun encode(value: Precipitation): Long = value.value
+}
+
+object PressureColumnAdapter : ColumnAdapter<Pressure, Long> {
+    override fun decode(databaseValue: Long): Pressure = databaseValue.pascals
+
+    override fun encode(value: Pressure): Long = value.value
+}
+
+object DurationColumnAdapter : ColumnAdapter<Duration, Long> {
+    override fun decode(databaseValue: Long): Duration = databaseValue.nanoseconds
+
+    override fun encode(value: Duration): Long = value.inWholeNanoseconds
 }

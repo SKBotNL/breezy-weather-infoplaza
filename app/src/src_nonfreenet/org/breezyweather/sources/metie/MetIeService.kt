@@ -48,6 +48,8 @@ import org.breezyweather.sources.metie.json.MetIeHourly
 import org.breezyweather.sources.metie.json.MetIeLocationResult
 import org.breezyweather.sources.metie.json.MetIeWarning
 import org.breezyweather.sources.metie.json.MetIeWarningResult
+import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
+import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
 import retrofit2.Retrofit
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -200,14 +202,14 @@ class MetIeService @Inject constructor(
                     temperature = result.temperature?.toDouble()
                 ),
                 precipitation = Precipitation(
-                    total = result.rainfall?.toDoubleOrNull()
+                    total = result.rainfall?.toDoubleOrNull()?.millimeters
                 ),
                 wind = Wind(
                     degree = result.windDirection?.toDoubleOrNull(),
                     speed = result.windSpeed?.div(3.6)
                 ),
                 relativeHumidity = result.humidity?.toDoubleOrNull(),
-                pressure = result.pressure?.toDoubleOrNull()
+                pressure = result.pressure?.toDoubleOrNull()?.hectopascals
             )
         }
     }
@@ -216,12 +218,12 @@ class MetIeService @Inject constructor(
         if (warnings == null) return null
         if (warnings.isEmpty()) return emptyList()
 
-        val region = if (MetIeService.regionsMapping.containsKey(location.admin2)) {
+        val region = if (regionsMapping.containsKey(location.admin2)) {
             location.admin2
         } else {
             location.parameters.getOrElse("metie") { null }?.getOrElse("region") { null }
         }
-        val eiRegion = region?.let { MetIeService.regionsMapping.getOrElse(region) { null } }
+        val eiRegion = region?.let { regionsMapping.getOrElse(region) { null } }
 
         return warnings
             .filter {

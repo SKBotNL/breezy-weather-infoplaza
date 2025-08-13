@@ -51,7 +51,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import io.reactivex.rxjava3.core.Observable
 import org.breezyweather.BuildConfig
 import org.breezyweather.R
-import org.breezyweather.common.basic.models.options.unit.PrecipitationUnit
 import org.breezyweather.common.exceptions.InvalidLocationException
 import org.breezyweather.common.extensions.code
 import org.breezyweather.common.extensions.codeWithCountry
@@ -86,6 +85,16 @@ import org.breezyweather.sources.accu.preferences.AccuDaysPreference
 import org.breezyweather.sources.accu.preferences.AccuHoursPreference
 import org.breezyweather.sources.accu.preferences.AccuPortalPreference
 import org.breezyweather.sources.openmeteo.OpenMeteoService.Companion.COPERNICUS_POLLEN_BBOX
+import org.breezyweather.unit.distance.Distance
+import org.breezyweather.unit.distance.Distance.Companion.feet
+import org.breezyweather.unit.distance.Distance.Companion.kilometers
+import org.breezyweather.unit.distance.Distance.Companion.meters
+import org.breezyweather.unit.distance.Distance.Companion.miles
+import org.breezyweather.unit.precipitation.Precipitation.Companion.centimeters
+import org.breezyweather.unit.precipitation.Precipitation.Companion.inches
+import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
+import org.breezyweather.unit.precipitation.PrecipitationUnit
+import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
 import retrofit2.Retrofit
 import java.util.Calendar
 import java.util.Date
@@ -93,6 +102,7 @@ import java.util.TimeZone
 import javax.inject.Inject
 import javax.inject.Named
 import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -415,10 +425,10 @@ class AccuService @Inject constructor(
             uV = UV(index = currentResult.UVIndex?.toDouble()),
             relativeHumidity = currentResult.RelativeHumidity?.toDouble(),
             dewPoint = currentResult.DewPoint?.Metric?.Value,
-            pressure = currentResult.Pressure?.Metric?.Value,
+            pressure = currentResult.Pressure?.Metric?.Value?.hectopascals,
             cloudCover = currentResult.CloudCover,
-            visibility = currentResult.Visibility?.Metric?.Value?.times(1000),
-            ceiling = currentResult.Ceiling?.Metric?.Value,
+            visibility = currentResult.Visibility?.Metric?.Value?.kilometers,
+            ceiling = currentResult.Ceiling?.Metric?.Value?.meters,
             dailyForecast = dailyResult?.Headline?.Text,
             hourlyForecast = minuteResult?.Summary?.LongPhrase
         )
@@ -440,10 +450,10 @@ class AccuService @Inject constructor(
                         feelsLike = getTemperatureInCelsius(forecasts.RealFeelTemperature?.Maximum)
                     ),
                     precipitation = Precipitation(
-                        total = getQuantityInMillimeters(forecasts.Day?.TotalLiquid),
-                        rain = getQuantityInMillimeters(forecasts.Day?.Rain),
-                        snow = getQuantityInMillimeters(forecasts.Day?.Snow),
-                        ice = getQuantityInMillimeters(forecasts.Day?.Ice)
+                        total = getQuantity(forecasts.Day?.TotalLiquid),
+                        rain = getQuantity(forecasts.Day?.Rain),
+                        snow = getQuantity(forecasts.Day?.Snow),
+                        ice = getQuantity(forecasts.Day?.Ice)
                     ),
                     precipitationProbability = PrecipitationProbability(
                         total = forecasts.Day?.PrecipitationProbability?.toDouble(),
@@ -453,10 +463,10 @@ class AccuService @Inject constructor(
                         ice = forecasts.Day?.IceProbability?.toDouble()
                     ),
                     precipitationDuration = PrecipitationDuration(
-                        total = forecasts.Day?.HoursOfPrecipitation,
-                        rain = forecasts.Day?.HoursOfRain,
-                        snow = forecasts.Day?.HoursOfSnow,
-                        ice = forecasts.Day?.HoursOfIce
+                        total = forecasts.Day?.HoursOfPrecipitation?.hours,
+                        rain = forecasts.Day?.HoursOfRain?.hours,
+                        snow = forecasts.Day?.HoursOfSnow?.hours,
+                        ice = forecasts.Day?.HoursOfIce?.hours
                     ),
                     wind = Wind(
                         degree = forecasts.Day?.Wind?.Direction?.Degrees?.toDouble(),
@@ -473,10 +483,10 @@ class AccuService @Inject constructor(
                         feelsLike = getTemperatureInCelsius(forecasts.RealFeelTemperature?.Minimum)
                     ),
                     precipitation = Precipitation(
-                        total = getQuantityInMillimeters(forecasts.Night?.TotalLiquid),
-                        rain = getQuantityInMillimeters(forecasts.Night?.Rain),
-                        snow = getQuantityInMillimeters(forecasts.Night?.Snow),
-                        ice = getQuantityInMillimeters(forecasts.Night?.Ice)
+                        total = getQuantity(forecasts.Night?.TotalLiquid),
+                        rain = getQuantity(forecasts.Night?.Rain),
+                        snow = getQuantity(forecasts.Night?.Snow),
+                        ice = getQuantity(forecasts.Night?.Ice)
                     ),
                     precipitationProbability = PrecipitationProbability(
                         total = forecasts.Night?.PrecipitationProbability?.toDouble(),
@@ -486,10 +496,10 @@ class AccuService @Inject constructor(
                         ice = forecasts.Night?.IceProbability?.toDouble()
                     ),
                     precipitationDuration = PrecipitationDuration(
-                        total = forecasts.Night?.HoursOfPrecipitation,
-                        rain = forecasts.Night?.HoursOfRain,
-                        snow = forecasts.Night?.HoursOfSnow,
-                        ice = forecasts.Night?.HoursOfIce
+                        total = forecasts.Night?.HoursOfPrecipitation?.hours,
+                        rain = forecasts.Night?.HoursOfRain?.hours,
+                        snow = forecasts.Night?.HoursOfSnow?.hours,
+                        ice = forecasts.Night?.HoursOfIce?.hours
                     ),
                     wind = Wind(
                         degree = forecasts.Night?.Wind?.Direction?.Degrees?.toDouble(),
@@ -502,7 +512,7 @@ class AccuService @Inject constructor(
                     cooling = getDegreeDayInCelsius(forecasts.DegreeDaySummary?.Cooling)
                 ),
                 uV = getDailyUV(forecasts.AirAndPollen),
-                sunshineDuration = forecasts.HoursOfSun
+                sunshineDuration = forecasts.HoursOfSun?.hours
             )
         }
     }
@@ -563,10 +573,10 @@ class AccuService @Inject constructor(
                     feelsLike = getTemperatureInCelsius(result.RealFeelTemperature)
                 ),
                 precipitation = Precipitation(
-                    total = getQuantityInMillimeters(result.TotalLiquid),
-                    rain = getQuantityInMillimeters(result.Rain),
-                    snow = getQuantityInMillimeters(result.Snow),
-                    ice = getQuantityInMillimeters(result.Ice)
+                    total = getQuantity(result.TotalLiquid),
+                    rain = getQuantity(result.Rain),
+                    snow = getQuantity(result.Snow),
+                    ice = getQuantity(result.Ice)
                 ),
                 precipitationProbability = PrecipitationProbability(
                     total = result.PrecipitationProbability?.toDouble(),
@@ -584,7 +594,7 @@ class AccuService @Inject constructor(
                 relativeHumidity = result.RelativeHumidity?.toDouble(),
                 dewPoint = getTemperatureInCelsius(result.DewPoint),
                 cloudCover = result.CloudCover,
-                visibility = getDistanceInMeters(result.Visibility)
+                visibility = getDistance(result.Visibility)
             )
         }
     }
@@ -684,7 +694,7 @@ class AccuService @Inject constructor(
                             1.minutes.inWholeMilliseconds
                         ).toDouble().roundToInt()
                 },
-                precipitationIntensity = Minutely.dbzToPrecipitationIntensity(interval.Dbz)
+                precipitationIntensity = Minutely.dbzToPrecipitationIntensity(interval.Dbz)?.millimeters
             )
         }
     }
@@ -762,20 +772,20 @@ class AccuService @Inject constructor(
         }
     }
 
-    private fun getDistanceInMeters(value: AccuValue?): Double? {
+    private fun getDistance(value: AccuValue?): Distance? {
         return when (value?.UnitType) {
-            2 -> value.Value?.times(1609.344) // mi
-            0 -> value.Value?.div(3.28084) // ft
-            6 -> value.Value?.times(1000) // km
-            else -> value?.Value // m
+            2 -> value.Value?.miles
+            0 -> value.Value?.feet
+            6 -> value.Value?.kilometers
+            else -> value?.Value?.meters
         }
     }
 
-    private fun getQuantityInMillimeters(value: AccuValue?): Double? {
+    private fun getQuantity(value: AccuValue?): org.breezyweather.unit.precipitation.Precipitation? {
         return when (value?.UnitType) {
-            1 -> value.Value?.times(25.4) // in
-            4 -> value.Value?.times(10) // cm
-            else -> value?.Value // mm
+            1 -> value.Value?.inches
+            4 -> value.Value?.centimeters
+            else -> value?.Value?.millimeters
         }
     }
 

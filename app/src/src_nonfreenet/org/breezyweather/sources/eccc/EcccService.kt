@@ -57,12 +57,15 @@ import org.breezyweather.sources.eccc.json.EcccRegionalNormalsMetric
 import org.breezyweather.sources.eccc.json.EcccResult
 import org.breezyweather.sources.eccc.json.EcccUnit
 import org.breezyweather.sources.getWindDegree
+import org.breezyweather.unit.distance.Distance.Companion.kilometers
+import org.breezyweather.unit.pressure.Pressure.Companion.kilopascals
 import retrofit2.Retrofit
 import java.util.Calendar
 import java.util.Date
 import java.util.Objects
 import javax.inject.Inject
 import javax.inject.Named
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.seconds
 
 class EcccService @Inject constructor(
@@ -200,8 +203,8 @@ class EcccService @Inject constructor(
             ),
             relativeHumidity = result.humidity?.toDoubleOrNull(),
             dewPoint = getNonEmptyMetric(result.dewpoint),
-            pressure = getNonEmptyMetric(result.pressure)?.times(10),
-            visibility = getNonEmptyMetric(result.visibility)?.times(1000)
+            pressure = getNonEmptyMetric(result.pressure)?.kilopascals,
+            visibility = getNonEmptyMetric(result.visibility)?.kilometers
         )
     }
 
@@ -275,7 +278,7 @@ class EcccService @Inject constructor(
                                     total = nighttime.precip?.toDoubleOrNull()
                                 )
                             ),
-                            sunshineDuration = daytime?.sun?.value?.toDoubleOrNull()
+                            sunshineDuration = daytime?.sun?.value?.toDoubleOrNull()?.hours
                         )
                     )
                 }

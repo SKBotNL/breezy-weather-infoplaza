@@ -863,6 +863,7 @@
     <string name="settings_unavailable_no_animations">Unavailable, enable animations in Android settings first</string>
     <string name="settings_automatic">Automatic</string>
     <string name="settings_follow_system">Follow system</string>
+    <string name="settings_regional_preference">Regional preference</string>
     <string name="settings_none">None</string>
     <string name="settings_color_day_night">Day / Night</string>
     <!-- Used as "Follow app preference/setting", NOT as in "Follow us on Facebook". Keep it short or translate it “Automatic” if too complicated -->
@@ -888,58 +889,16 @@
     <string name="unit_mph_voice">Miles per hour</string>
     <string name="unit_ftps">ft/s</string>
     <string name="unit_ftps_voice">Feet per second</string>
-    <string name="unit_mm">mm</string>
-    <string name="unit_mm_voice">Millimeters</string>
-    <string name="unit_cm">cm</string>
-    <string name="unit_cm_voice">Centimeters</string>
-    <string name="unit_in">inch</string>
-    <string name="unit_in_voice">Inches</string>
-    <string name="unit_lpsqm">L/m²</string>
-    <string name="unit_lpsqm_voice">Liters per square meter</string>
-    <string name="unit_mmph">mm/h</string>
-    <string name="unit_mmph_voice">Millimeters per hour</string>
-    <string name="unit_cmph">cm/h</string>
-    <string name="unit_cmph_voice">Centimeters per hour</string>
-    <string name="unit_inph">inch/h</string>
-    <string name="unit_inph_voice">Inches per hour</string>
-    <string name="unit_lpsqmph">L/m²/h</string>
-    <string name="unit_lpsqmph_voice">Liters per square meter per hour</string>
     <string name="unit_celsius">°C</string>
     <string name="unit_celsius_short">°</string>
     <string name="unit_fahrenheit">°F</string>
     <string name="unit_fahrenheit_short">°</string>
     <string name="unit_kelvin">K</string>
     <string name="unit_kelvin_short">K</string>
-    <string name="unit_km">km</string>
-    <string name="unit_km_voice">Kilometers</string>
-    <string name="unit_m">m</string>
-    <string name="unit_m_voice">Meters</string>
-    <string name="unit_mi">mi</string>
-    <string name="unit_mi_voice">Miles</string>
-    <string name="unit_nmi">nmi</string>
-    <string name="unit_nmi_voice">Nautical miles</string>
-    <string name="unit_ft">ft</string>
-    <string name="unit_ft_voice">Feet</string>
-    <string name="unit_mb">mb</string>
-    <string name="unit_mb_voice">Millibars</string>
-    <string name="unit_kpa">kPa</string>
-    <string name="unit_kpa_voice">Kilopascals</string>
-    <string name="unit_hpa">hPa</string>
-    <string name="unit_hpa_voice">Hectopascals</string>
-    <string name="unit_atm">atm</string>
-    <string name="unit_atm_voice">Atmospheres</string>
-    <string name="unit_mmhg">mmHg</string>
-    <string name="unit_mmhg_voice">Millimeters of mercury</string>
-    <string name="unit_inhg">inHg</string>
-    <string name="unit_inhg_voice">Inches of mercury</string>
-    <string name="unit_kgfpsqcm">kgf/cm²</string>
-    <string name="unit_kgfpsqcm_voice">Kilogram force per square centimeter</string>
     <string name="unit_mugpcum">μg/m³</string>
     <string name="unit_mugpcum_voice">Micrograms per cubic meter</string>
     <string name="unit_mgpcum">mg/m³</string>
     <string name="unit_mgpcum_voice">Milligrams per cubic meter</string>
-    <string name="unit_h">h</string>
-    <string name="unit_h_voice">hours</string>
     <string name="unit_ppcm">/m³</string>
     <string name="unit_ppcm_voice">Per cubic meter</string>
     <string name="unit_mum">µm</string>
@@ -1350,5 +1309,4 @@
     <string name="colon_separator" translatable="false">:\u0020</string>
     <string name="dot_separator" translatable="false">\u0020•\u0020</string>
     <string name="parenthesis" translatable="false">%1$s (%2$s)</string>
-    <string name="comma_separator" translatable="false">,\u0020</string>
 </resources>

@@ -64,6 +64,11 @@ import org.breezyweather.sources.nws.json.NwsValueDoubleContainer
 import org.breezyweather.sources.nws.json.NwsValueIntContainer
 import org.breezyweather.sources.nws.json.NwsValueWeatherContainer
 import org.breezyweather.sources.nws.json.NwsValueWeatherValue
+import org.breezyweather.unit.distance.Distance.Companion.meters
+import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
+import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
+import org.breezyweather.unit.pressure.Pressure.Companion.inchesOfMercury
+import org.breezyweather.unit.pressure.Pressure.Companion.pascals
 import retrofit2.Retrofit
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -276,7 +281,7 @@ class NwsService @Inject constructor(
                 relativeHumidity = it.relativeHumidity?.value,
                 dewPoint = it.dewpoint?.value,
                 pressure = if (it.seaLevelPressure != null) {
-                    it.seaLevelPressure.value?.div(100.0)
+                    it.seaLevelPressure.value?.pascals
                 } else {
                     computeMeanSeaLevelPressure(
                         barometricPressure = it.barometricPressure?.value?.div(100.0),
@@ -284,9 +289,9 @@ class NwsService @Inject constructor(
                         temperature = it.temperature?.value,
                         humidity = it.relativeHumidity?.value,
                         latitude = currentResult.geometry?.coordinates?.getOrNull(1)
-                    )
+                    )?.hectopascals
                 },
-                visibility = it.visibility?.value
+                visibility = it.visibility?.value?.meters
             )
         }
     }
@@ -436,9 +441,9 @@ class NwsService @Inject constructor(
                     feelsLike = apparentTemperatureForecastList.getOrElse(it) { null }
                 ),
                 precipitation = Precipitation(
-                    total = quantitativePrecipitationForecastList.getOrElse(it) { null },
-                    snow = snowfallAmountForecastList.getOrElse(it) { null },
-                    ice = iceAccumulationForecastList.getOrElse(it) { null }
+                    total = quantitativePrecipitationForecastList.getOrElse(it) { null }?.millimeters,
+                    snow = snowfallAmountForecastList.getOrElse(it) { null }?.millimeters,
+                    ice = iceAccumulationForecastList.getOrElse(it) { null }?.millimeters
                 ),
                 precipitationProbability = PrecipitationProbability(
                     total = probabilityOfPrecipitationForecastList.getOrElse(it) { null }?.toDouble(),
@@ -451,10 +456,9 @@ class NwsService @Inject constructor(
                 ),
                 relativeHumidity = relativeHumidityList.getOrElse(it) { null }?.toDouble(),
                 dewPoint = dewpointForecastList.getOrElse(it) { null },
-                // Pressure is given in inHg - convert to hPa with conventional multiple
-                pressure = pressureForecastList.getOrElse(it) { null }?.times(33.86389),
+                pressure = pressureForecastList.getOrElse(it) { null }?.inchesOfMercury,
                 cloudCover = skyCoverForecastList.getOrElse(it) { null },
-                visibility = visibilityForecastList.getOrElse(it) { null }
+                visibility = visibilityForecastList.getOrElse(it) { null }?.meters
             )
         }
     }
@@ -834,7 +838,9 @@ class NwsService @Inject constructor(
         weather?.attributes?.forEachIndexed { i, attr ->
             separator = when {
                 i == 0 -> ""
-                (i > 0) && (i < weather.attributes.size - 1) -> context.getString(R.string.comma_separator)
+                (i > 0) && (i < weather.attributes.size - 1) -> {
+                    context.getString(org.breezyweather.unit.R.string.locale_separator)
+                }
                 else -> context.getString(R.string.nws_weather_text_separator_and)
             }
             when (attr) {

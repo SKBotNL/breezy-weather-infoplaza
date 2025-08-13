@@ -32,7 +32,9 @@ import io.reactivex.rxjava3.core.Observable
 import kotlinx.coroutines.rx3.rxObservable
 import org.breezyweather.common.extensions.toCalendarWithTimeZone
 import org.breezyweather.common.source.WeatherSource
-import org.breezyweather.common.utils.helpers.LogHelper
+import org.breezyweather.unit.distance.Distance.Companion.meters
+import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
+import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
 import java.util.Calendar
 import java.util.Date
 import java.util.TimeZone
@@ -138,8 +140,8 @@ class DebugService @Inject constructor() : WeatherSource {
             ),
             uV = UV(index = Math.random().times(12)),
             dewPoint = Math.random().times(10).plus(5),
-            pressure = Math.random().times(100).plus(963),
-            visibility = Math.random().times(50000).roundToInt().toDouble(),
+            pressure = Math.random().times(100).plus(963).hectopascals,
+            visibility = Math.random().times(50000).meters,
             cloudCover = Math.random().times(100).roundToInt()
         )
     }
@@ -169,7 +171,7 @@ class DebugService @Inject constructor() : WeatherSource {
     private fun generateMinutelyList(times: Int, interval: Int = 15): List<Minutely> {
         val currentDate = Date()
         return buildList {
-            add(Minutely(currentDate, interval, Random.nextDouble().times(20)))
+            add(Minutely(currentDate, interval, Random.nextDouble().times(20).millimeters))
             if (times > 1) {
                 for (i in 1..<times) {
                     val date = Date(currentDate.time + (i * interval).minutes.inWholeMilliseconds)
@@ -183,7 +185,7 @@ class DebugService @Inject constructor() : WeatherSource {
                                 } else {
                                     if (it > 10) null else it
                                 }
-                            }
+                            }?.millimeters
                         )
                     )
                 }

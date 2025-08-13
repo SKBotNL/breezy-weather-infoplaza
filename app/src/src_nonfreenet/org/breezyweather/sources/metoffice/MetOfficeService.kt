@@ -48,6 +48,9 @@ import org.breezyweather.domain.settings.SourceConfigStore
 import org.breezyweather.sources.metoffice.json.MetOfficeDaily
 import org.breezyweather.sources.metoffice.json.MetOfficeForecast
 import org.breezyweather.sources.metoffice.json.MetOfficeHourly
+import org.breezyweather.unit.distance.Distance.Companion.meters
+import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
+import org.breezyweather.unit.pressure.Pressure.Companion.pascals
 import retrofit2.Retrofit
 import javax.inject.Inject
 import javax.inject.Named
@@ -175,8 +178,8 @@ class MetOfficeService @Inject constructor(
                     feelsLike = result.feelsLikeTemperature
                 ),
                 precipitation = Precipitation(
-                    total = result.totalPrecipAmount,
-                    snow = result.totalSnowAmount
+                    total = result.totalPrecipAmount?.millimeters,
+                    snow = result.totalSnowAmount?.millimeters
                 ),
                 precipitationProbability = PrecipitationProbability(
                     total = result.probOfPrecipitation?.toDouble()
@@ -191,8 +194,8 @@ class MetOfficeService @Inject constructor(
                 ),
                 relativeHumidity = result.screenRelativeHumidity,
                 dewPoint = result.screenDewPointTemperature,
-                pressure = result.mslp?.toDouble()?.div(100), // pa -> mb
-                visibility = result.visibility?.toDouble()
+                pressure = result.mslp?.toDouble()?.pascals,
+                visibility = result.visibility?.toDouble()?.meters
             )
         }
     }

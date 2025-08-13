@@ -51,6 +51,8 @@ import org.breezyweather.common.source.WeatherSource.Companion.PRIORITY_HIGHEST
 import org.breezyweather.common.source.WeatherSource.Companion.PRIORITY_NONE
 import org.breezyweather.sources.geosphereat.json.GeoSphereAtTimeseriesResult
 import org.breezyweather.sources.geosphereat.json.GeoSphereAtWarningsResult
+import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
+import org.breezyweather.unit.pressure.Pressure.Companion.pascals
 import retrofit2.Retrofit
 import java.util.Date
 import javax.inject.Inject
@@ -338,11 +340,14 @@ class GeoSphereAtService @Inject constructor(
                 ),
                 precipitation = Precipitation(
                     total = hourlyResult.features[0].properties!!.parameters!!.rrAcc?.data?.getOrNull(i)
-                        .minus(hourlyResult.features[0].properties!!.parameters!!.rrAcc?.data?.getOrNull(i - 1)),
+                        .minus(hourlyResult.features[0].properties!!.parameters!!.rrAcc?.data?.getOrNull(i - 1))
+                        ?.millimeters,
                     rain = hourlyResult.features[0].properties!!.parameters!!.rainAcc?.data?.getOrNull(i)
-                        .minus(hourlyResult.features[0].properties!!.parameters!!.rainAcc?.data?.getOrNull(i - 1)),
+                        .minus(hourlyResult.features[0].properties!!.parameters!!.rainAcc?.data?.getOrNull(i - 1))
+                        ?.millimeters,
                     snow = hourlyResult.features[0].properties!!.parameters!!.snowAcc?.data?.getOrNull(i)
                         .minus(hourlyResult.features[0].properties!!.parameters!!.snowAcc?.data?.getOrNull(i - 1))
+                        ?.millimeters
                 ),
                 wind = if (windSpeed != null) {
                     Wind(
@@ -354,7 +359,7 @@ class GeoSphereAtService @Inject constructor(
                     null
                 },
                 relativeHumidity = hourlyResult.features[0].properties!!.parameters!!.rh2m?.data?.getOrNull(i),
-                pressure = hourlyResult.features[0].properties!!.parameters!!.sp?.data?.getOrNull(i)?.div(100),
+                pressure = hourlyResult.features[0].properties!!.parameters!!.sp?.data?.getOrNull(i)?.pascals,
                 cloudCover = hourlyResult.features[0].properties!!.parameters!!.tcc?.data?.getOrNull(i)?.times(100)
                     ?.roundToInt()
             )
@@ -381,6 +386,7 @@ class GeoSphereAtService @Inject constructor(
                  */
                 precipitationIntensity = nowcastResult.features[0].properties!!.parameters!!.rr!!.data!!.getOrNull(i)
                     ?.times(4)
+                    ?.millimeters
             )
         }
     }

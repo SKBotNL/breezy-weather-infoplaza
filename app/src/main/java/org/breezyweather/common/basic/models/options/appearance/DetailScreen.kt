@@ -78,12 +78,8 @@ enum class DetailScreen(
                             location.weather?.hourlyForecast?.any {
                                 (it.relativeHumidity ?: 0.0) > 0.0 || (it.dewPoint ?: 0.0) != 0.0
                             } == true
-                        TAG_PRESSURE -> location.weather?.dailyForecast?.any {
-                            (it.pressure?.average ?: 0.0) > 0.0
-                        } == true ||
-                            location.weather?.hourlyForecast?.any {
-                                (it.pressure ?: 0.0) > 0.0
-                            } == true
+                        TAG_PRESSURE -> location.weather?.dailyForecast?.any { it.pressure?.average != null } == true ||
+                            location.weather?.hourlyForecast?.any { it.pressure != null } == true
                         TAG_CLOUD_COVER -> location.weather?.dailyForecast?.any {
                             (it.cloudCover?.min ?: 0) > 0 || (it.cloudCover?.max ?: 0) > 0
                         } == true ||
@@ -91,11 +87,9 @@ enum class DetailScreen(
                                 (it.cloudCover ?: 0) > 0
                             } == true
                         TAG_VISIBILITY -> location.weather?.dailyForecast?.any {
-                            (it.visibility?.min ?: 0.0) > 0.0 || (it.visibility?.max ?: 0.0) > 0.0
+                            it.visibility?.min != null || it.visibility?.max != null
                         } == true ||
-                            location.weather?.hourlyForecast?.any {
-                                (it.visibility ?: 0.0) > 0.0
-                            } == true
+                            location.weather?.hourlyForecast?.any { it.visibility != null } == true
                         TAG_SUN_MOON -> true // Should always be computed, no need to check
                     }
                 }.toImmutableList()
@@ -120,7 +114,7 @@ enum class DetailScreen(
             if (builder.isNotEmpty() && builder[0] == ',') {
                 builder.deleteCharAt(0)
             }
-            return builder.toString().replace(",", context.getString(R.string.comma_separator))
+            return builder.toString().replace(",", context.getString(org.breezyweather.unit.R.string.locale_separator))
         }
     }
 

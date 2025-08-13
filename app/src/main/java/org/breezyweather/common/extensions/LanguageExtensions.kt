@@ -83,15 +83,7 @@ val Locale.isChinese: Boolean
 // There is no way to access the script used, so assume Taiwan, Hong Kong and Macao
 val Locale.isTraditionalChinese: Boolean
     get() = isChinese &&
-        !country.isNullOrEmpty() &&
-        (
-            country.equals("TW", ignoreCase = true) ||
-                country.equals("HK", ignoreCase = true) ||
-                country.equals("MO", ignoreCase = true)
-            )
-
-val Locale.isIndian: Boolean
-    get() = language.equals("hi", ignoreCase = true) || language.equals("mr", ignoreCase = true)
+        arrayOf("TW", "HK", "MO").any { country.equals(it, ignoreCase = true) }
 
 fun Locale.getCountryName(countryCode: String): String {
     return Locale.Builder()

@@ -49,7 +49,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import breezyweather.domain.location.model.Location
 import breezyweather.domain.weather.model.Daily
 import breezyweather.domain.weather.model.Hourly
-import breezyweather.domain.weather.model.Precipitation
 import breezyweather.domain.weather.model.PrecipitationDuration
 import breezyweather.domain.weather.model.PrecipitationProbability
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
@@ -68,7 +67,8 @@ import kotlinx.collections.immutable.toImmutableMap
 import org.breezyweather.R
 import org.breezyweather.common.basic.models.options.appearance.DetailScreen
 import org.breezyweather.common.basic.models.options.basic.UnitUtils
-import org.breezyweather.common.basic.models.options.unit.DurationUnit
+import org.breezyweather.common.extensions.formatMeasure
+import org.breezyweather.common.extensions.formatTime
 import org.breezyweather.common.extensions.getFormattedTime
 import org.breezyweather.common.extensions.is12Hour
 import org.breezyweather.common.extensions.roundUpToNearestMultiplier
@@ -77,8 +77,14 @@ import org.breezyweather.domain.settings.SettingsManager
 import org.breezyweather.ui.common.charts.BreezyBarChart
 import org.breezyweather.ui.common.charts.BreezyLineChart
 import org.breezyweather.ui.settings.preference.bottomInsetItem
+import org.breezyweather.unit.formatting.UnitWidth
+import org.breezyweather.unit.precipitation.Precipitation
+import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
+import org.breezyweather.unit.precipitation.toPrecipitation
 import java.util.Date
 import kotlin.math.max
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
 
 @Composable
 fun DetailsPrecipitation(
@@ -93,7 +99,9 @@ fun DetailsPrecipitation(
             .associate { it.date.time to it.precipitation!!.total!! }
             .toImmutableMap()
     }
-    var activeQuantityItem: Pair<Date, Double>? by remember { mutableStateOf(null) }
+    var activeQuantityItem: Pair<Date, org.breezyweather.unit.precipitation.Precipitation>? by remember {
+        mutableStateOf(null)
+    }
     val quantityMarkerVisibilityListener = remember {
         object : CartesianMarkerVisibilityListener {
             override fun onShown(marker: CartesianMarker, targets: List<CartesianMarker.Target>) {
@@ -210,8 +218,8 @@ fun DetailsPrecipitation(
                 )
             }
         }
-        if ((daily.day?.precipitationDuration?.total ?: 0.0) > 0.0 ||
-            (daily.night?.precipitationDuration?.total ?: 0.0) > 0.0
+        if ((daily.day?.precipitationDuration?.total?.inWholeMinutes ?: 0) > 0 ||
+            (daily.night?.precipitationDuration?.total?.inWholeMinutes ?: 0) > 0
         ) {
             item {
                 DetailsSectionDivider()
@@ -240,7 +248,7 @@ fun DetailsPrecipitation(
 fun PrecipitationHeader(
     location: Location,
     daily: Daily,
-    activeItem: Pair<Date, Double>?,
+    activeItem: Pair<Date, Precipitation>?,
 ) {
     val context = LocalContext.current
 
@@ -260,7 +268,7 @@ fun PrecipitationHeader(
 @Composable
 private fun PrecipitationItem(
     header: @Composable () -> Unit,
-    precipitation: Double?,
+    precipitation: Precipitation?,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -273,7 +281,7 @@ private fun PrecipitationItem(
         TextFixedHeight(
             text = precipitation?.let { prec ->
                 UnitUtils.formatUnitsDifferentFontSize(
-                    formattedMeasure = precipitationUnit.formatMeasure(context, prec),
+                    formattedMeasure = prec.formatMeasure(context, precipitationUnit),
                     fontSize = MaterialTheme.typography.headlineSmall.fontSize
                 )
             } ?: AnnotatedString(""),
@@ -281,7 +289,7 @@ private fun PrecipitationItem(
             modifier = Modifier
                 .clearAndSetSemantics {
                     precipitation?.let { prec ->
-                        contentDescription = precipitationUnit.formatContentDescription(context, prec)
+                        contentDescription = prec.formatMeasure(context, precipitationUnit, unitWidth = UnitWidth.LONG)
                     }
                 }
         )
@@ -290,8 +298,8 @@ private fun PrecipitationItem(
 
 @Composable
 private fun PrecipitationSummary(
-    daytimePrecipitation: Precipitation?,
-    nighttimePrecipitation: Precipitation?,
+    daytimePrecipitation: breezyweather.domain.weather.model.Precipitation?,
+    nighttimePrecipitation: breezyweather.domain.weather.model.Precipitation?,
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.small_margin)),
@@ -330,7 +338,7 @@ private fun PrecipitationSummary(
 @Composable
 internal fun PrecipitationChart(
     location: Location,
-    mappedValues: ImmutableMap<Long, Double>,
+    mappedValues: ImmutableMap<Long, Precipitation>,
     daily: Daily,
     markerVisibilityListener: CartesianMarkerVisibilityListener,
 ) {
@@ -340,11 +348,9 @@ internal fun PrecipitationChart(
     val step = precipitationUnit.chartStep
     val maxY = remember(mappedValues) {
         max(
-            Precipitation.PRECIPITATION_HOURLY_HEAVY,
-            mappedValues.values.max()
-        ).let {
-            precipitationUnit.getConvertedUnit(it)
-        }.roundUpToNearestMultiplier(step)
+            breezyweather.domain.weather.model.Precipitation.PRECIPITATION_HOURLY_HEAVY,
+            mappedValues.values.maxOf { it.inMillimeters }
+        ).millimeters.toDouble(precipitationUnit).roundUpToNearestMultiplier(step)
     }
 
     val modelProducer = remember { CartesianChartModelProducer() }
@@ -354,7 +360,7 @@ internal fun PrecipitationChart(
             columnSeries {
                 series(
                     x = mappedValues.keys,
-                    y = mappedValues.values.map { precipitationUnit.getConvertedUnit(it) }
+                    y = mappedValues.values.map { it.toDouble(precipitationUnit) }
                 )
             }
         }
@@ -365,7 +371,7 @@ internal fun PrecipitationChart(
         modelProducer,
         daily.date,
         maxY,
-        { _, value, _ -> precipitationUnit.formatMeasure(context, value, isValueInDefaultUnit = false) },
+        { _, value, _ -> value.toPrecipitation(precipitationUnit).formatMeasure(context, precipitationUnit) },
         Fill(Color(60, 116, 160).toArgb()),
         /*persistentMapOf(
             50 to Fill(Color(168, 168, 168).toArgb()),
@@ -380,16 +386,21 @@ internal fun PrecipitationChart(
         )*/
         trendHorizontalLines = buildMap {
             put(
-                precipitationUnit.getConvertedUnit(Precipitation.PRECIPITATION_HOURLY_HEAVY),
+                breezyweather.domain.weather.model.Precipitation.PRECIPITATION_HOURLY_HEAVY
+                    .millimeters.toDouble(precipitationUnit),
                 context.getString(R.string.precipitation_intensity_heavy)
             )
-            if (maxY < precipitationUnit.getConvertedUnit(Precipitation.PRECIPITATION_HOURLY_HEAVY.times(2.0))) {
+            if (maxY < breezyweather.domain.weather.model.Precipitation.PRECIPITATION_HOURLY_HEAVY.times(2.0)
+                    .millimeters.toDouble(precipitationUnit)
+            ) {
                 put(
-                    precipitationUnit.getConvertedUnit(Precipitation.PRECIPITATION_HOURLY_MEDIUM),
+                    breezyweather.domain.weather.model.Precipitation.PRECIPITATION_HOURLY_MEDIUM
+                        .millimeters.toDouble(precipitationUnit),
                     context.getString(R.string.precipitation_intensity_medium)
                 )
                 put(
-                    precipitationUnit.getConvertedUnit(Precipitation.PRECIPITATION_HOURLY_LIGHT),
+                    breezyweather.domain.weather.model.Precipitation.PRECIPITATION_HOURLY_LIGHT
+                        .millimeters.toDouble(precipitationUnit),
                     context.getString(R.string.precipitation_intensity_light)
                 )
             }
@@ -403,25 +414,27 @@ internal fun PrecipitationChart(
 
 @Composable
 private fun PrecipitationDetails(
-    daytimePrecipitation: Precipitation?,
-    nighttimePrecipitation: Precipitation?,
+    daytimePrecipitation: breezyweather.domain.weather.model.Precipitation?,
+    nighttimePrecipitation: breezyweather.domain.weather.model.Precipitation?,
 ) {
-    val daytimePrecipitationItems = mutableListOf<Pair<Int, Double?>>()
-    val nighttimePrecipitationItems = mutableListOf<Pair<Int, Double?>>()
+    val daytimePrecipitationItems = mutableListOf<Pair<Int, Precipitation?>>()
+    val nighttimePrecipitationItems = mutableListOf<Pair<Int, Precipitation?>>()
 
-    if ((daytimePrecipitation?.rain ?: 0.0) > 0 || (nighttimePrecipitation?.rain ?: 0.0) > 0) {
+    if ((daytimePrecipitation?.rain?.value ?: 0) > 0 || (nighttimePrecipitation?.rain?.value ?: 0) > 0) {
         daytimePrecipitationItems.add(Pair(R.string.precipitation_rain, daytimePrecipitation?.rain))
         nighttimePrecipitationItems.add(Pair(R.string.precipitation_rain, nighttimePrecipitation?.rain))
     }
-    if ((daytimePrecipitation?.snow ?: 0.0) > 0 || (nighttimePrecipitation?.snow ?: 0.0) > 0) {
+    if ((daytimePrecipitation?.snow?.value ?: 0) > 0 || (nighttimePrecipitation?.snow?.value ?: 0) > 0) {
         daytimePrecipitationItems.add(Pair(R.string.precipitation_snow, daytimePrecipitation?.snow))
         nighttimePrecipitationItems.add(Pair(R.string.precipitation_snow, nighttimePrecipitation?.snow))
     }
-    if ((daytimePrecipitation?.ice ?: 0.0) > 0 || (nighttimePrecipitation?.ice ?: 0.0) > 0) {
+    if ((daytimePrecipitation?.ice?.value ?: 0) > 0 || (nighttimePrecipitation?.ice?.value ?: 0) > 0) {
         daytimePrecipitationItems.add(Pair(R.string.precipitation_ice, daytimePrecipitation?.ice))
         nighttimePrecipitationItems.add(Pair(R.string.precipitation_ice, nighttimePrecipitation?.ice))
     }
-    if ((daytimePrecipitation?.thunderstorm ?: 0.0) > 0 || (nighttimePrecipitation?.thunderstorm ?: 0.0) > 0) {
+    if ((daytimePrecipitation?.thunderstorm?.value ?: 0) > 0 ||
+        (nighttimePrecipitation?.thunderstorm?.value ?: 0) > 0
+    ) {
         daytimePrecipitationItems.add(Pair(R.string.precipitation_thunderstorm, daytimePrecipitation?.thunderstorm))
         nighttimePrecipitationItems.add(Pair(R.string.precipitation_thunderstorm, nighttimePrecipitation?.thunderstorm))
     }
@@ -461,7 +474,7 @@ private fun PrecipitationDetails(
 
 @Composable
 fun DailyPrecipitationDetail(
-    item: Pair<Int, Double?>,
+    item: Pair<Int, Precipitation?>,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -472,7 +485,7 @@ fun DailyPrecipitationDetail(
     }
     DetailsItem(
         headlineText = stringResource(item.first),
-        supportingText = item.second?.let { prec -> unit.formatMeasure(context, prec) }
+        supportingText = item.second?.formatMeasure(context, unit)
             ?: stringResource(R.string.null_data_text),
         modifier = modifier
             .padding(top = dimensionResource(R.dimen.normal_margin))
@@ -481,7 +494,7 @@ fun DailyPrecipitationDetail(
                 item.second?.let { prec ->
                     contentDescription = context.getString(item.first) +
                         context.getString(R.string.colon_separator) +
-                        unit.formatContentDescription(context, prec)
+                        prec.formatMeasure(context, unit, unitWidth = UnitWidth.LONG)
                 }
             }
     )
@@ -705,22 +718,24 @@ private fun PrecipitationDurationSummary(
     nighttimePrecDur: PrecipitationDuration?,
 ) {
     val context = LocalContext.current
-    val daytimePrecDurItems = mutableListOf<Pair<Int, Double?>>()
-    val nighttimePrecDurItems = mutableListOf<Pair<Int, Double?>>()
+    val daytimePrecDurItems = mutableListOf<Pair<Int, Duration?>>()
+    val nighttimePrecDurItems = mutableListOf<Pair<Int, Duration?>>()
 
-    if ((daytimePrecDur?.rain ?: 0.0) > 0 || (nighttimePrecDur?.rain ?: 0.0) > 0) {
+    if ((daytimePrecDur?.rain?.inWholeMinutes ?: 0) > 0 || (nighttimePrecDur?.rain?.inWholeMinutes ?: 0) > 0) {
         daytimePrecDurItems.add(Pair(R.string.precipitation_rain, daytimePrecDur?.rain))
         nighttimePrecDurItems.add(Pair(R.string.precipitation_rain, nighttimePrecDur?.rain))
     }
-    if ((daytimePrecDur?.snow ?: 0.0) > 0 || (nighttimePrecDur?.snow ?: 0.0) > 0) {
+    if ((daytimePrecDur?.snow?.inWholeMinutes ?: 0) > 0 || (nighttimePrecDur?.snow?.inWholeMinutes ?: 0) > 0) {
         daytimePrecDurItems.add(Pair(R.string.precipitation_snow, daytimePrecDur?.snow))
         nighttimePrecDurItems.add(Pair(R.string.precipitation_snow, nighttimePrecDur?.snow))
     }
-    if ((daytimePrecDur?.ice ?: 0.0) > 0 || (nighttimePrecDur?.ice ?: 0.0) > 0) {
+    if ((daytimePrecDur?.ice?.inWholeMinutes ?: 0) > 0 || (nighttimePrecDur?.ice?.inWholeMinutes ?: 0) > 0) {
         daytimePrecDurItems.add(Pair(R.string.precipitation_ice, daytimePrecDur?.ice))
         nighttimePrecDurItems.add(Pair(R.string.precipitation_ice, nighttimePrecDur?.ice))
     }
-    if ((daytimePrecDur?.thunderstorm ?: 0.0) > 0 || (nighttimePrecDur?.thunderstorm ?: 0.0) > 0) {
+    if ((daytimePrecDur?.thunderstorm?.inWholeMinutes ?: 0) > 0 ||
+        (nighttimePrecDur?.thunderstorm?.inWholeMinutes ?: 0) > 0
+    ) {
         daytimePrecDurItems.add(Pair(R.string.precipitation_thunderstorm, daytimePrecDur?.thunderstorm))
         nighttimePrecDurItems.add(Pair(R.string.precipitation_thunderstorm, nighttimePrecDur?.thunderstorm))
     }
@@ -742,7 +757,7 @@ private fun PrecipitationDurationSummary(
                     daytimePrecDur?.total?.let {
                         append(
                             UnitUtils.formatUnitsDifferentFontSize(
-                                formattedMeasure = DurationUnit.HOUR.formatMeasureShort(context, it),
+                                formattedMeasure = it.formatTime(context),
                                 fontSize = MaterialTheme.typography.headlineSmall.fontSize
                             )
                         )
@@ -754,7 +769,11 @@ private fun PrecipitationDurationSummary(
                 modifier = Modifier
                     .clearAndSetSemantics {
                         daytimePrecDur?.total?.let {
-                            contentDescription = DurationUnit.HOUR.formatContentDescription(context, it)
+                            contentDescription = it.formatTime(
+                                context = context,
+                                smallestUnit = DurationUnit.MINUTES,
+                                unitWidth = UnitWidth.LONG
+                            )
                         }
                     }
             )
@@ -774,7 +793,7 @@ private fun PrecipitationDurationSummary(
                     nighttimePrecDur?.total?.let {
                         append(
                             UnitUtils.formatUnitsDifferentFontSize(
-                                formattedMeasure = DurationUnit.HOUR.formatMeasureShort(context, it),
+                                formattedMeasure = it.formatTime(context),
                                 fontSize = MaterialTheme.typography.headlineSmall.fontSize
                             )
                         )
@@ -786,7 +805,11 @@ private fun PrecipitationDurationSummary(
                 modifier = Modifier
                     .clearAndSetSemantics {
                         nighttimePrecDur?.total?.let {
-                            contentDescription = DurationUnit.HOUR.formatContentDescription(context, it)
+                            contentDescription = it.formatTime(
+                                context = context,
+                                smallestUnit = DurationUnit.MINUTES,
+                                unitWidth = UnitWidth.LONG
+                            )
                         }
                     }
             )
@@ -799,14 +822,13 @@ private fun PrecipitationDurationSummary(
 
 @Composable
 fun DailyPrecipitationDurationDetail(
-    item: Pair<Int, Double?>,
+    item: Pair<Int, Duration?>,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val durationUnit = DurationUnit.HOUR
     DetailsItem(
         headlineText = stringResource(item.first),
-        supportingText = item.second?.let { dur -> durationUnit.formatMeasure(context, dur) },
+        supportingText = item.second?.let { dur -> dur.formatTime(context) },
         modifier = modifier
             .padding(top = dimensionResource(R.dimen.normal_margin))
             .semantics(mergeDescendants = true) {}
@@ -814,7 +836,11 @@ fun DailyPrecipitationDurationDetail(
                 item.second?.let { dur ->
                     contentDescription = context.getString(item.first) +
                         context.getString(R.string.colon_separator) +
-                        durationUnit.formatContentDescription(context, dur)
+                        dur.formatTime(
+                            context = context,
+                            smallestUnit = DurationUnit.MINUTES,
+                            unitWidth = UnitWidth.LONG
+                        )
                 }
             }
     )

@@ -58,11 +58,15 @@ import org.breezyweather.sources.brightsky.json.BrightSkyCurrentWeather
 import org.breezyweather.sources.brightsky.json.BrightSkyCurrentWeatherResult
 import org.breezyweather.sources.brightsky.json.BrightSkyWeather
 import org.breezyweather.sources.brightsky.json.BrightSkyWeatherResult
+import org.breezyweather.unit.distance.Distance.Companion.meters
+import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
+import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
 import retrofit2.Retrofit
 import java.util.Calendar
 import java.util.Date
 import javax.inject.Inject
 import javax.inject.Named
+import kotlin.time.Duration.Companion.minutes
 
 class BrightSkyService @Inject constructor(
     @ApplicationContext context: Context,
@@ -211,9 +215,9 @@ class BrightSkyService @Inject constructor(
             ),
             relativeHumidity = result.relativeHumidity?.toDouble(),
             dewPoint = result.dewPoint,
-            pressure = result.pressure,
+            pressure = result.pressure?.hectopascals,
             cloudCover = result.cloudCover,
-            visibility = result.visibility?.toDouble()
+            visibility = result.visibility?.meters
         )
     }
 
@@ -259,7 +263,7 @@ class BrightSkyService @Inject constructor(
                     temperature = result.temperature
                 ),
                 precipitation = Precipitation(
-                    total = result.precipitation
+                    total = result.precipitation?.millimeters
                 ),
                 precipitationProbability = PrecipitationProbability(
                     total = result.precipitationProbability?.toDouble()
@@ -271,10 +275,10 @@ class BrightSkyService @Inject constructor(
                 ),
                 relativeHumidity = result.relativeHumidity?.toDouble(),
                 dewPoint = result.dewPoint,
-                pressure = result.pressure,
+                pressure = result.pressure?.hectopascals,
                 cloudCover = result.cloudCover,
-                visibility = result.visibility?.toDouble(),
-                sunshineDuration = result.sunshine?.div(60)
+                visibility = result.visibility?.toDouble()?.meters,
+                sunshineDuration = result.sunshine?.minutes
             )
         }
     }

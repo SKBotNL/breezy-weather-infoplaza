@@ -90,6 +90,10 @@ import org.breezyweather.sources.openmeteo.json.OpenMeteoWeatherResult
 import org.breezyweather.ui.common.composables.AlertDialogNoPadding
 import org.breezyweather.ui.settings.preference.composables.PreferenceView
 import org.breezyweather.ui.settings.preference.composables.SwitchPreferenceView
+import org.breezyweather.unit.distance.Distance.Companion.meters
+import org.breezyweather.unit.precipitation.Precipitation.Companion.centimeters
+import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
+import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
 import retrofit2.HttpException
 import retrofit2.Retrofit
 import java.text.Collator
@@ -390,9 +394,9 @@ class OpenMeteoService @Inject constructor(
             uV = UV(index = current.uvIndex),
             relativeHumidity = current.relativeHumidity?.toDouble(),
             dewPoint = current.dewPoint,
-            pressure = current.pressureMsl,
+            pressure = current.pressureMsl?.hectopascals,
             cloudCover = current.cloudCover,
-            visibility = current.visibility
+            visibility = current.visibility?.meters
         )
     }
 
@@ -426,7 +430,7 @@ class OpenMeteoService @Inject constructor(
                     )
                 ),
                 uV = UV(index = dailyResult.uvIndexMax?.getOrNull(i)),
-                sunshineDuration = dailyResult.sunshineDuration?.getOrNull(i)?.div(3600),
+                sunshineDuration = dailyResult.sunshineDuration?.getOrNull(i)?.seconds,
                 relativeHumidity = DailyRelativeHumidity(
                     average = dailyResult.relativeHumidityMean?.getOrNull(i)?.toDouble(),
                     max = dailyResult.relativeHumidityMax?.getOrNull(i)?.toDouble(),
@@ -438,9 +442,9 @@ class OpenMeteoService @Inject constructor(
                     min = dailyResult.dewPointMin?.getOrNull(i)
                 ),
                 pressure = DailyPressure(
-                    average = dailyResult.pressureMslMean?.getOrNull(i),
-                    max = dailyResult.pressureMslMax?.getOrNull(i),
-                    min = dailyResult.pressureMslMin?.getOrNull(i)
+                    average = dailyResult.pressureMslMean?.getOrNull(i)?.hectopascals,
+                    max = dailyResult.pressureMslMax?.getOrNull(i)?.hectopascals,
+                    min = dailyResult.pressureMslMin?.getOrNull(i)?.hectopascals
                 ),
                 cloudCover = DailyCloudCover(
                     average = dailyResult.cloudCoverMean?.getOrNull(i),
@@ -448,9 +452,9 @@ class OpenMeteoService @Inject constructor(
                     min = dailyResult.cloudCoverMin?.getOrNull(i)
                 ),
                 visibility = DailyVisibility(
-                    average = dailyResult.visibilityMean?.getOrNull(i),
-                    max = dailyResult.visibilityMax?.getOrNull(i),
-                    min = dailyResult.visibilityMin?.getOrNull(i)
+                    average = dailyResult.visibilityMean?.getOrNull(i)?.meters,
+                    max = dailyResult.visibilityMax?.getOrNull(i)?.meters,
+                    min = dailyResult.visibilityMin?.getOrNull(i)?.meters
                 )
             )
             dailyList.add(daily)
@@ -477,9 +481,9 @@ class OpenMeteoService @Inject constructor(
                         feelsLike = hourlyResult.apparentTemperature?.getOrNull(i)
                     ),
                     precipitation = Precipitation(
-                        total = hourlyResult.precipitation?.getOrNull(i),
-                        rain = hourlyResult.rain?.getOrNull(i) + hourlyResult.showers?.getOrNull(i),
-                        snow = hourlyResult.snowfall?.getOrNull(i)?.times(10) // convert cm -> mm
+                        total = hourlyResult.precipitation?.getOrNull(i)?.millimeters,
+                        rain = (hourlyResult.rain?.getOrNull(i) + hourlyResult.showers?.getOrNull(i))?.millimeters,
+                        snow = hourlyResult.snowfall?.getOrNull(i)?.centimeters
                     ),
                     precipitationProbability = PrecipitationProbability(
                         total = hourlyResult.precipitationProbability?.getOrNull(i)?.toDouble()
@@ -492,9 +496,9 @@ class OpenMeteoService @Inject constructor(
                     uV = UV(index = hourlyResult.uvIndex?.getOrNull(i)),
                     relativeHumidity = hourlyResult.relativeHumidity?.getOrNull(i)?.toDouble(),
                     dewPoint = hourlyResult.dewPoint?.getOrNull(i),
-                    pressure = hourlyResult.pressureMsl?.getOrNull(i),
+                    pressure = hourlyResult.pressureMsl?.getOrNull(i)?.hectopascals,
                     cloudCover = hourlyResult.cloudCover?.getOrNull(i),
-                    visibility = hourlyResult.visibility?.getOrNull(i)?.toDouble()
+                    visibility = hourlyResult.visibility?.getOrNull(i)?.meters
                 )
             )
         }
@@ -562,7 +566,7 @@ class OpenMeteoService @Inject constructor(
                     date = time.seconds.inWholeMilliseconds.toDate(),
                     minuteInterval = 15,
                     // mm/15 min -> mm/h
-                    precipitationIntensity = precipitationMinutely?.getOrNull(i)?.times(4)
+                    precipitationIntensity = precipitationMinutely?.getOrNull(i)?.times(4)?.millimeters
                     /*if (precipitationProbabilityMinutely?.getOrNull(i) != null &&
                         precipitationProbabilityMinutely[i]!! > 30
                     ) {
@@ -816,7 +820,7 @@ class OpenMeteoService @Inject constructor(
                         context.currentLocale
                     ).compare(ws1.model.getName(context), ws2.model.getName(context))
                 }
-                .joinToString(context.getString(R.string.comma_separator)) {
+                .joinToString(context.getString(org.breezyweather.unit.R.string.locale_separator)) {
                     it.model.getName(context)
                 },
             colors = ListItemDefaults.colors(containerColor = AlertDialogDefaults.containerColor)

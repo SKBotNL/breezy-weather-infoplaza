@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ONLY values changed from the original file are included -->
+    <!-- Based on https://www.unicode.org/cldr/charts/47/summary/kab.html -->
+    <!-- If you believe there is an error, please open a discussion -->
+
+    <!-- Pressure units -->
+
+    <!-- Pascal -->
+    <!-- No change -->
+
+    <!-- Hectopascal -->
+    <string name="pressure_hpa_display_name_long">ihiktupaskalen</string>
+    <string name="pressure_hpa_nominative_long">%s n ihiktupaskalen</string>
+
+    <!-- Kilopascal -->
+    <!-- No change -->
+
+    <!-- Millibar -->
+    <!-- No change -->
+
+    <!-- Atmosphere -->
+    <!-- No change -->
+
+    <!-- Millimeter of mercury -->
+    <string name="pressure_mmhg_display_name_short">mm Hg</string>
+    <string name="pressure_mmhg_nominative_short">%s mm Hg</string>
+
+    <!-- Inch of mercury -->
+    <!-- No change -->
+
+    <!-- Duration units -->
+
+    <!-- Hours -->
+    <string name="duration_hr_nominative_short">%s sr</string>
+    <string name="duration_hr_nominative_long">%s n yisragen</string>
+    <string name="duration_hr_per_short">%s/r</string>
+    <string name="duration_hr_per_long">%s i usrag</string>
+
+    <!-- Minutes -->
+    <string name="duration_min_nominative_short">%s tsd</string>
+    <string name="duration_min_nominative_long">%s n tesdatin</string>
+
+    <!-- Seconds -->
+    <string name="duration_sec_nominative_short">%s tsn</string>
+    <string name="duration_sec_nominative_long">%s n tsinin</string>
+    <string name="duration_sec_per_short">%s/n</string>
+    <string name="duration_sec_per_long">%s i tsint</string>
+
+</resources>

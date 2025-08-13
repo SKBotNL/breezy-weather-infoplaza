@@ -16,6 +16,7 @@
 
 package breezyweather.domain.weather.model
 
+import org.breezyweather.unit.precipitation.Precipitation
 import java.io.Serializable
 import java.util.Date
 import kotlin.math.log10
@@ -28,14 +29,18 @@ import kotlin.time.Duration.Companion.minutes
 data class Minutely(
     val date: Date,
     val minuteInterval: Int,
-    val precipitationIntensity: Double? = null,
+    val precipitationIntensity: Precipitation? = null,
 ) : Serializable {
 
     val dbz: Int?
-        get() = precipitationIntensityToDBZ(precipitationIntensity)
+        get() = precipitationIntensityToDBZ(precipitationIntensity?.inMillimeters)
 
     val endingDate: Date
         get() = Date(date.time + minuteInterval.minutes.inWholeMilliseconds)
+
+    fun toValidOrNull(): Minutely? {
+        return if (precipitationIntensity?.toValidHourlyOrNull() != null) this else null
+    }
 
     companion object {
 

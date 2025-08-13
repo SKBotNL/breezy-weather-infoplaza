@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+
+    <!-- Generic translations -->
+    <!-- Based on https://www.unicode.org/cldr/charts/47/summary/root.html -->
+    <!-- If you believe there is an error, please open a discussion -->
+
+    <!-- Value separator -->
+    <string name="locale_separator">,\u0020</string>
+
+    <!-- Length units -->
+
+    <!-- Micrometer -->
+    <string name="length_microm_display_name_short">μm</string>
+    <string name="length_microm_display_name_long">@string/length_microm_display_name_short</string>
+    <string name="length_microm_nominative_short">%s μm</string>
+    <string name="length_microm_nominative_long">@string/length_microm_nominative_short</string>
+
+    <!-- Millimeter -->
+    <string name="length_mm_display_name_short">mm</string>
+    <string name="length_mm_display_name_long">@string/length_mm_display_name_short</string>
+    <string name="length_mm_nominative_short">%s mm</string>
+    <string name="length_mm_nominative_long">@string/length_mm_nominative_short</string>
+
+    <!-- Centimeter -->
+    <string name="length_cm_display_name_short">cm</string>
+    <string name="length_cm_display_name_long">@string/length_cm_display_name_short</string>
+    <string name="length_cm_nominative_short">%s cm</string>
+    <string name="length_cm_nominative_long">@string/length_cm_nominative_short</string>
+
+    <!-- Meter -->
+    <string name="length_m_display_name_short">m</string>
+    <string name="length_m_display_name_long">@string/length_m_display_name_short</string>
+    <string name="length_m_nominative_short">%s m</string>
+    <string name="length_m_nominative_long">@string/length_m_nominative_short</string>
+    <string name="length_m2_per_short">%s/m²</string>
+    <string name="length_m2_per_long">@string/length_m2_per_short</string>
+    <string name="length_m3_per_short">%s/m³</string>
+    <string name="length_m3_per_long">@string/length_m3_per_short</string>
+
+    <!-- Kilometer -->
+    <string name="length_km_display_name_short">km</string>
+    <string name="length_km_display_name_long">@string/length_km_display_name_short</string>
+    <string name="length_km_nominative_short">%s km</string>
+    <string name="length_km_nominative_long">@string/length_km_nominative_short</string>
+
+    <!-- Inch -->
+    <string name="length_in_display_name_short">in</string>
+    <string name="length_in_display_name_long">@string/length_in_display_name_short</string>
+    <string name="length_in_nominative_short">%s in</string>
+    <string name="length_in_nominative_long">@string/length_in_nominative_short</string>
+
+    <!-- Foot -->
+    <string name="length_ft_display_name_short">ft</string>
+    <string name="length_ft_display_name_long">@string/length_ft_display_name_short</string>
+    <string name="length_ft_nominative_short">%s ft</string>
+    <string name="length_ft_nominative_long">@string/length_ft_nominative_short</string>
+
+    <!-- Mile -->
+    <string name="length_mi_display_name_short">mi</string>
+    <string name="length_mi_display_name_long">@string/length_mi_display_name_short</string>
+    <string name="length_mi_nominative_short">%s mi</string>
+    <string name="length_mi_nominative_long">@string/length_mi_nominative_short</string>
+
+    <!-- Nautical mile -->
+    <string name="length_nmi_display_name_short">nmi</string>
+    <string name="length_nmi_display_name_long">@string/length_nmi_display_name_short</string>
+    <string name="length_nmi_nominative_short">%s nmi</string>
+    <string name="length_nmi_nominative_long">@string/length_nmi_nominative_short</string>
+
+    <!-- Volume units -->
+
+    <!-- Liter -->
+    <string name="volume_l_display_name_short">l</string>
+    <string name="volume_l_display_name_long">@string/volume_l_display_name_short</string>
+    <string name="volume_l_nominative_short">%s l</string>
+    <string name="volume_l_nominative_long">@string/volume_l_nominative_short</string>
+
+    <!-- Pressure units -->
+
+    <!-- Pascal -->
+    <string name="pressure_pa_display_name_short">Pa</string>
+    <string name="pressure_pa_display_name_long">@string/pressure_pa_display_name_short</string>
+    <string name="pressure_pa_nominative_short">%s Pa</string>
+    <string name="pressure_pa_nominative_long">@string/pressure_pa_nominative_short</string>
+
+    <!-- Hectopascal -->
+    <string name="pressure_hpa_display_name_short">hPa</string>
+    <string name="pressure_hpa_display_name_long">@string/pressure_hpa_display_name_short</string>
+    <string name="pressure_hpa_nominative_short">%s hPa</string>
+    <string name="pressure_hpa_nominative_long">@string/pressure_hpa_nominative_short</string>
+
+    <!-- Kilopascal -->
+    <string name="pressure_kpa_display_name_short">kPa</string>
+    <string name="pressure_kpa_display_name_long">@string/pressure_kpa_display_name_short</string>
+    <string name="pressure_kpa_nominative_short">%s kPa</string>
+    <string name="pressure_kpa_nominative_long">@string/pressure_kpa_nominative_short</string>
+
+    <!-- Millibar -->
+    <string name="pressure_mbar_display_name_short">mbar</string>
+    <string name="pressure_mbar_display_name_long">@string/pressure_mbar_display_name_short</string>
+    <string name="pressure_mbar_nominative_short">%s mbar</string>
+    <string name="pressure_mbar_nominative_long">@string/pressure_mbar_nominative_short</string>
+
+    <!-- Atmosphere -->
+    <string name="pressure_atm_display_name_short">atm</string>
+    <string name="pressure_atm_display_name_long">@string/pressure_atm_display_name_short</string>
+    <string name="pressure_atm_nominative_short">%s atm</string>
+    <string name="pressure_atm_nominative_long">@string/pressure_atm_nominative_short</string>
+
+    <!-- Millimeter of mercury -->
+    <string name="pressure_mmhg_display_name_short">mmHg</string>
+    <string name="pressure_mmhg_display_name_long">@string/pressure_mmhg_display_name_short</string>
+    <string name="pressure_mmhg_nominative_short">%s mmHg</string>
+    <string name="pressure_mmhg_nominative_long">@string/pressure_mmhg_nominative_short</string>
+
+    <!-- Inch of mercury -->
+    <string name="pressure_inhg_display_name_short">inHg</string>
+    <string name="pressure_inhg_display_name_long">@string/pressure_inhg_display_name_short</string>
+    <string name="pressure_inhg_nominative_short">%s inHg</string>
+    <string name="pressure_inhg_nominative_long">@string/pressure_inhg_nominative_short</string>
+
+    <!-- Duration units TODO: In other languages -->
+
+    <!-- Days / Not used in Breezy Weather, so not translating -->
+    <string name="duration_day_display_name_short" translatable="false">day</string>
+    <string name="duration_day_display_name_long" translatable="false">@string/duration_day_display_name_short</string>
+    <string name="duration_day_nominative_short" translatable="false">%s d</string>
+    <string name="duration_day_nominative_long" translatable="false">@string/duration_day_nominative_short</string>
+    <string name="duration_day_per_short" translatable="false">%s/d</string>
+    <string name="duration_day_per_long" translatable="false">@string/duration_day_per_short</string>
+
+    <!-- Hours / Only partially used in Breezy Weather -->
+    <string name="duration_hr_display_name_short" translatable="false">hr</string>
+    <string name="duration_hr_display_name_long" translatable="false">@string/duration_hr_display_name_short</string>
+    <string name="duration_hr_nominative_short">%s h</string>
+    <string name="duration_hr_nominative_long">@string/duration_hr_nominative_short</string>
+    <string name="duration_hr_per_short">%s/h</string>
+    <string name="duration_hr_per_long">@string/duration_hr_per_short</string>
+
+    <!-- Minutes / Only partially used in Breezy Weather -->
+    <string name="duration_min_display_name_short" translatable="false">min</string>
+    <string name="duration_min_display_name_long" translatable="false">@string/duration_min_display_name_short</string>
+    <string name="duration_min_nominative_short">%s min</string>
+    <string name="duration_min_nominative_long">@string/duration_min_nominative_short</string>
+    <string name="duration_min_per_short" translatable="false">%s/min</string>
+    <string name="duration_min_per_long" translatable="false">@string/duration_min_per_short</string>
+
+    <!-- Seconds / Only partially used in Breezy Weather -->
+    <string name="duration_sec_display_name_short" translatable="false">sec</string>
+    <string name="duration_sec_display_name_long" translatable="false">@string/duration_sec_display_name_short</string>
+    <string name="duration_sec_nominative_short">%s s</string>
+    <string name="duration_sec_nominative_long">@string/duration_sec_nominative_short</string>
+    <string name="duration_sec_per_short">%s/s</string>
+    <string name="duration_sec_per_long">@string/duration_sec_per_short</string>
+
+    <!-- Milliseconds / Not used in Breezy Weather -->
+    <string name="duration_ms_display_name_short" translatable="false">ms</string>
+    <string name="duration_ms_display_name_long" translatable="false">@string/duration_ms_display_name_short</string>
+    <string name="duration_ms_nominative_short" translatable="false">%s ms</string>
+    <string name="duration_ms_nominative_long" translatable="false">@string/duration_ms_nominative_short</string>
+
+    <!-- Microseconds / Not used in Breezy Weather -->
+    <string name="duration_micros_display_name_short" translatable="false">μs</string>
+    <string name="duration_micros_display_name_long" translatable="false">@string/duration_micros_display_name_short</string>
+    <string name="duration_micros_nominative_short" translatable="false">%s μs</string>
+    <string name="duration_micros_nominative_long" translatable="false">@string/duration_micros_nominative_short</string>
+
+    <!-- Nanoseconds / Not used in Breezy Weather -->
+    <string name="duration_ns_display_name_short" translatable="false">ns</string>
+    <string name="duration_ns_display_name_long" translatable="false">@string/duration_ns_display_name_short</string>
+    <string name="duration_ns_nominative_short" translatable="false">%s ns</string>
+    <string name="duration_ns_nominative_long" translatable="false">@string/duration_ns_nominative_short</string>
+
+</resources>

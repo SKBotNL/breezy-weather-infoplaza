@@ -46,7 +46,6 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import org.breezyweather.BreezyWeather
 import org.breezyweather.BuildConfig
-import org.breezyweather.common.basic.models.options.unit.PrecipitationIntensityUnit
 import org.breezyweather.common.exceptions.ApiKeyMissingException
 import org.breezyweather.common.exceptions.LocationException
 import org.breezyweather.common.exceptions.NoNetworkException
@@ -238,7 +237,7 @@ class RefreshHelper @Inject constructor(
                     if (
                         SphericalUtil.computeDistanceBetween(
                             LatLng(it.latitude, it.longitude),
-                            LatLng(location.latitude, location.longitude)
+                            LatLng(locationWithUpdatedCoordinates.latitude, locationWithUpdatedCoordinates.longitude)
                         ) > REVERSE_GEOCODING_DISTANCE_LIMIT
                     ) {
                         LogHelper.log(
@@ -332,7 +331,7 @@ class RefreshHelper @Inject constructor(
         }
 
         // STEP 3 - Add timezone if missing
-        val locationWithTimeZone = if (locationGeocoded.timeZone.id == "GMT") {
+        val locationWithTimeZone = if (locationGeocoded.isTimeZoneInvalid) {
             locationGeocoded.copy(
                 timeZone = getTimeZoneForLocation(context, locationGeocoded)
             )
@@ -862,7 +861,7 @@ class RefreshHelper @Inject constructor(
                 dailyForecast = dailyForecast,
                 hourlyForecast = hourlyForecast,
                 minutelyForecast = weatherWrapperCompleted.minutelyForecast
-                    ?.map { PrecipitationIntensityUnit.validateMinutely(it) }
+                    ?.mapNotNull { it.toValidOrNull() }
                     ?: emptyList(),
                 alertList = weatherWrapperCompleted.alertList ?: emptyList(),
                 normals = weatherWrapperCompleted.normals ?: emptyMap()
@@ -1234,7 +1233,10 @@ class RefreshHelper @Inject constructor(
             SourceFeature.MINUTELY -> {
                 return isUpdateStillValid(
                     location.weather!!.base.minutelyUpdateTime,
-                    if (location.weather!!.minutelyForecast.none { (it.precipitationIntensity ?: 0.0) > 0 }) {
+                    if (location.weather!!.minutelyForecast.none {
+                            (it.precipitationIntensity?.inMicrometers ?: 0.0) > 0
+                        }
+                    ) {
                         if (isRestricted) WAIT_MINUTELY_RESTRICTED else WAIT_MINUTELY
                     } else {
                         if (isRestricted) WAIT_MINUTELY_RESTRICTED_ONGOING else WAIT_MINUTELY_ONGOING

@@ -100,9 +100,9 @@ class GadgetbridgeService @Inject constructor() : BroadcastSource {
             )?.roundToInt(),
 
             dewPoint = current?.dewPoint?.roundCelsiusToKelvin(),
-            pressure = current?.pressure?.toFloat(),
+            pressure = current?.pressure?.inHectopascals?.toFloat(),
             cloudCover = current?.cloudCover,
-            visibility = current?.visibility?.toFloat(),
+            visibility = current?.visibility?.inMeters?.toFloat(),
 
             sunRise = today?.sun?.riseDate?.time?.div(1000)?.toInt(),
             sunSet = today?.sun?.setDate?.time?.div(1000)?.toInt(),

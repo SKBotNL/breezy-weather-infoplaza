@@ -22,8 +22,10 @@ import breezyweather.domain.weather.wrappers.DailyWrapper
 import breezyweather.domain.weather.wrappers.HourlyWrapper
 import breezyweather.domain.weather.wrappers.PollenWrapper
 import breezyweather.domain.weather.wrappers.WeatherWrapper
+import org.breezyweather.unit.precipitation.Precipitation.Companion.micrometers
 import java.io.Serializable
 import java.util.Date
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
@@ -67,11 +69,11 @@ data class Weather(
         emptyList()
     }
 
-    fun isValid(pollingIntervalHours: Double?): Boolean {
+    fun isValid(pollingIntervalHours: Duration?): Boolean {
         val updateTime = base.refreshTime?.time ?: 0
         val currentTime = System.currentTimeMillis()
         return pollingIntervalHours == null ||
-            (currentTime >= updateTime && currentTime - updateTime < pollingIntervalHours * 1.hours.inWholeMilliseconds)
+            (currentTime >= updateTime && currentTime - updateTime < pollingIntervalHours.inWholeMilliseconds)
     }
 
     val currentAlertList: List<Alert> = alertList
@@ -93,12 +95,12 @@ data class Weather(
                         newMinutelyList.add(
                             minutelyForecast[i].copy(
                                 precipitationIntensity = doubleArrayOf(
-                                    minutelyForecast[i].precipitationIntensity ?: 0.0,
-                                    minutelyForecast.getOrNull(i + 1)?.precipitationIntensity ?: 0.0,
-                                    minutelyForecast.getOrNull(i + 2)?.precipitationIntensity ?: 0.0,
-                                    minutelyForecast.getOrNull(i + 3)?.precipitationIntensity ?: 0.0,
-                                    minutelyForecast.getOrNull(i + 4)?.precipitationIntensity ?: 0.0
-                                ).average(),
+                                    minutelyForecast[i].precipitationIntensity?.inMicrometers ?: 0.0,
+                                    minutelyForecast.getOrNull(i + 1)?.precipitationIntensity?.inMicrometers ?: 0.0,
+                                    minutelyForecast.getOrNull(i + 2)?.precipitationIntensity?.inMicrometers ?: 0.0,
+                                    minutelyForecast.getOrNull(i + 3)?.precipitationIntensity?.inMicrometers ?: 0.0,
+                                    minutelyForecast.getOrNull(i + 4)?.precipitationIntensity?.inMicrometers ?: 0.0
+                                ).average().micrometers,
                                 minuteInterval = 5
                             )
                         )

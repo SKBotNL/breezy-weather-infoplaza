@@ -18,6 +18,8 @@ package breezyweather.domain.weather.model
 
 import breezyweather.domain.weather.reference.WeatherCode
 import breezyweather.domain.weather.wrappers.CurrentWrapper
+import org.breezyweather.unit.distance.Distance
+import org.breezyweather.unit.pressure.Pressure
 import java.io.Serializable
 
 /**
@@ -26,8 +28,6 @@ import java.io.Serializable
  * default unit
  * [.relativeHumidity] : [RelativeHumidityUnit.PERCENT]
  * [.dewPoint] : [TemperatureUnit.C]
- * [.visibility] : [DistanceUnit.M]
- * [.ceiling] : [DistanceUnit.M]
  */
 data class Current(
     val weatherText: String? = null,
@@ -40,11 +40,12 @@ data class Current(
     val dewPoint: Double? = null,
     /**
      * Pressure at sea level
+     * Use Kotlin extensions to initialize this value, like 1013.25.hectopascals
      */
-    val pressure: Double? = null,
+    val pressure: Pressure? = null,
     val cloudCover: Int? = null,
-    val visibility: Double? = null,
-    val ceiling: Double? = null,
+    val visibility: Distance? = null,
+    val ceiling: Distance? = null,
     val dailyForecast: String? = null,
     // Is actually a description of the nowcast
     val hourlyForecast: String? = null,

@@ -475,52 +475,6 @@
         <item>ftps</item>
     </string-array>
 
-    <!-- precipitation unit. -->
-    <string-array name="precipitation_units">
-        <item>@string/settings_follow_system</item>
-        <item>@string/unit_mm</item>
-        <item>@string/unit_cm</item>
-        <item>@string/unit_in</item>
-        <item>@string/unit_lpsqm</item>
-    </string-array>
-    <string-array name="precipitation_unit_voices">
-        <item>@string/settings_follow_system</item>
-        <item>@string/unit_mm_voice</item>
-        <item>@string/unit_cm_voice</item>
-        <item>@string/unit_in_voice</item>
-        <item>@string/unit_lpsqm_voice</item>
-    </string-array>
-    <string-array name="precipitation_unit_values">
-        <item>auto</item>
-        <item>mm</item>
-        <item>cm</item>
-        <item>in</item>
-        <item>lpsqm</item>
-    </string-array>
-
-    <!-- precipitation intensity unit. -->
-    <string-array name="precipitation_intensity_units">
-        <item>@string/settings_follow_system</item>
-        <item>@string/unit_mmph</item>
-        <item>@string/unit_cmph</item>
-        <item>@string/unit_inph</item>
-        <item>@string/unit_lpsqmph</item>
-    </string-array>
-    <string-array name="precipitation_intensity_unit_voices">
-        <item>@string/settings_follow_system</item>
-        <item>@string/unit_mmph_voice</item>
-        <item>@string/unit_cmph_voice</item>
-        <item>@string/unit_inph_voice</item>
-        <item>@string/unit_lpsqmph_voice</item>
-    </string-array>
-    <string-array name="precipitation_intensity_unit_values">
-        <item>auto</item>
-        <item>mmph</item>
-        <item>cmph</item>
-        <item>inph</item>
-        <item>lpsqmph</item>
-    </string-array>
-
     <!-- temperature unit. -->
     <string-array name="temperature_units">
         <item>@string/settings_follow_system</item>
@@ -539,64 +493,6 @@
         <item>c</item>
         <item>f</item>
         <item>k</item>
-    </string-array>
-
-    <!-- distance unit. -->
-    <string-array name="distance_units">
-        <item>@string/settings_follow_system</item>
-        <item>@string/unit_km</item>
-        <item>@string/unit_m</item>
-        <item>@string/unit_mi</item>
-        <item>@string/unit_nmi</item>
-        <item>@string/unit_ft</item>
-    </string-array>
-    <string-array name="distance_unit_voices">
-        <item>@string/settings_follow_system</item>
-        <item>@string/unit_km_voice</item>
-        <item>@string/unit_m_voice</item>
-        <item>@string/unit_mi_voice</item>
-        <item>@string/unit_nmi_voice</item>
-        <item>@string/unit_ft_voice</item>
-    </string-array>
-    <string-array name="distance_unit_values">
-        <item>auto</item>
-        <item>km</item>
-        <item>m</item>
-        <item>mi</item>
-        <item>nmi</item>
-        <item>ft</item>
-    </string-array>
-
-    <!-- pressure unit. -->
-    <string-array name="pressure_units">
-        <item>@string/settings_follow_system</item>
-        <item>@string/unit_mb</item>
-        <item>@string/unit_kpa</item>
-        <item>@string/unit_hpa</item>
-        <item>@string/unit_atm</item>
-        <item>@string/unit_mmhg</item>
-        <item>@string/unit_inhg</item>
-        <item>@string/unit_kgfpsqcm</item>
-    </string-array>
-    <string-array name="pressure_unit_voices">
-        <item>@string/settings_follow_system</item>
-        <item>@string/unit_mb_voice</item>
-        <item>@string/unit_kpa_voice</item>
-        <item>@string/unit_hpa_voice</item>
-        <item>@string/unit_atm_voice</item>
-        <item>@string/unit_mmhg_voice</item>
-        <item>@string/unit_inhg_voice</item>
-        <item>@string/unit_kgfpsqcm_voice</item>
-    </string-array>
-    <string-array name="pressure_unit_values">
-        <item>auto</item>
-        <item>mb</item>
-        <item>kpa</item>
-        <item>hpa</item>
-        <item>atm</item>
-        <item>mmhg</item>
-        <item>inhg</item>
-        <item>kgfpsqcm</item>
     </string-array>
 
     <!-- air quality unit. -->
@@ -619,17 +515,6 @@
     </string-array>
     <string-array name="air_quality_co_unit_values">
         <item>mgpcum</item>
-    </string-array>
-
-    <!-- duration unit. -->
-    <string-array name="duration_units">
-        <item>@string/unit_h</item> <!-- hour -->
-    </string-array>
-    <string-array name="duration_unit_voices">
-        <item>@string/unit_h_voice</item>
-    </string-array>
-    <string-array name="duration_unit_values">
-        <item>h</item>
     </string-array>
 
     <!-- pollen unit. -->

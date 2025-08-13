@@ -49,6 +49,8 @@ import org.breezyweather.sources.lhmt.json.LhmtAlertText
 import org.breezyweather.sources.lhmt.json.LhmtAlertsResult
 import org.breezyweather.sources.lhmt.json.LhmtLocationsResult
 import org.breezyweather.sources.lhmt.json.LhmtWeatherResult
+import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
+import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
 import retrofit2.Retrofit
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -206,7 +208,7 @@ class LhmtService @Inject constructor(
                     gusts = it.windGust
                 ),
                 relativeHumidity = it.relativeHumidity,
-                pressure = it.seaLevelPressure,
+                pressure = it.seaLevelPressure?.hectopascals,
                 cloudCover = it.cloudCover?.toInt()
             )
         }
@@ -245,7 +247,7 @@ class LhmtService @Inject constructor(
                             feelsLike = it.feelsLikeTemperature
                         ),
                         precipitation = Precipitation(
-                            total = it.totalPrecipitation
+                            total = it.totalPrecipitation?.millimeters
                         ),
                         wind = Wind(
                             degree = it.windDirection,
@@ -253,7 +255,7 @@ class LhmtService @Inject constructor(
                             gusts = it.windGust
                         ),
                         relativeHumidity = it.relativeHumidity,
-                        pressure = it.seaLevelPressure,
+                        pressure = it.seaLevelPressure?.hectopascals,
                         cloudCover = it.cloudCover?.toInt()
                     )
                 )

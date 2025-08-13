@@ -51,6 +51,9 @@ import org.breezyweather.common.source.WeatherSource
 import org.breezyweather.domain.settings.SourceConfigStore
 import org.breezyweather.sources.here.json.HereGeocodingData
 import org.breezyweather.sources.here.json.HereWeatherData
+import org.breezyweather.unit.distance.Distance.Companion.kilometers
+import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
+import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
 import retrofit2.Retrofit
 import javax.inject.Inject
 import javax.inject.Named
@@ -178,8 +181,8 @@ class HereService @Inject constructor(
             uV = UV(index = result.uvIndex?.toDouble()),
             relativeHumidity = result.humidity?.toDouble(),
             dewPoint = result.dewPoint,
-            pressure = result.barometerPressure,
-            visibility = result.visibility?.times(1000)
+            pressure = result.barometerPressure?.hectopascals,
+            visibility = result.visibility?.kilometers
         )
     }
 
@@ -241,9 +244,9 @@ class HereService @Inject constructor(
                     feelsLike = result.comfort?.toDouble()
                 ),
                 precipitation = Precipitation(
-                    total = result.precipitation1H ?: (result.rainFall + result.snowFall),
-                    rain = result.rainFall,
-                    snow = result.snowFall
+                    total = result.precipitation1H?.millimeters ?: (result.rainFall + result.snowFall)?.millimeters,
+                    rain = result.rainFall?.millimeters,
+                    snow = result.snowFall?.millimeters
                 ),
                 precipitationProbability = PrecipitationProbability(
                     total = result.precipitationProbability?.toDouble()
@@ -255,8 +258,8 @@ class HereService @Inject constructor(
                 uV = UV(index = result.uvIndex?.toDouble()),
                 relativeHumidity = result.humidity?.toDouble(),
                 dewPoint = result.dewPoint,
-                pressure = result.barometerPressure,
-                visibility = result.visibility?.times(1000)
+                pressure = result.barometerPressure?.hectopascals,
+                visibility = result.visibility?.kilometers
             )
         }
     }

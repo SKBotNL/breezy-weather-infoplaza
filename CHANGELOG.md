@@ -7,6 +7,7 @@
 **Removed features**
 - Mean daytime/nighttime temperatures as threshold lines. Use a normals source instead
 - [Met Office UK] Removed address lookup feature
+- Pressure unit - Kilogram force per square centimeter
 
 **Improvements and fixes**
 - Main screen - Allow to move small blocks by drag & drop
@@ -26,6 +27,7 @@
 - Nowcasting chart/Precipitation notification - Fix slightly wrong ending time of precipitation report
 - Settings - Improve the location-based dark mode preference to make it easier to understand
 - Sources - Add a “Recommended” section to the Source selection screen
+- Refresh - Fix a rare crash when Android fails to send us the current location
 - Refresh - Add an error when air quality forecast times don’t match hourly forecast times (observed in India, for example)
 - Refresh - Ensure range of (almost) all values provided by sources, so you no longer have to freak out when seeing -999° with PirateWeather or 1015° with Meteo AM
 - Data sharing - Fix crash when sending too many locations (will now retry with less locations)
@@ -44,8 +46,9 @@
 - [LVGMC] Fix current observations (@chunshek)
 - [NCDR] Added as alert source for Taiwan (@chunshek)
 - [NCEI] Added support for normals (@chunshek)
-- [NWS] Alerts - Updated terminology for Extreme Heat (@chunshek)
+- [Nominatim] Added as another location search
 - [NSLC] Added as address lookup source for Taiwan (@chunshek)
+- [NWS] Alerts - Updated terminology for Extreme Heat (@chunshek)
 - [Open-Meteo] Restrict pollen to Europe as it’s only available there (@chunshek)
 - [Pirate Weather] Add support for daily/hourly summaries
 - [Veðurstofa Íslands] Added as forecast, current, alert and address lookup source for Iceland (@chunshek)
@@ -55,10 +58,16 @@
 **Translations**
 - Initial translation added for Íslenska (@chunshek)
 - Translations updated
+- Alternate calendar: add Hebrew calendar
+- Alternate calendar: add more defaults based on regional preferences
 
 **Technical**
 - Current location process refactoring: coordinates, forced refresh when coordinates changed from more than 5 km
 - Address lookup process refactoring to prepare for future ability to add a location manually by coordinates
+- Pressure unit conversion/formatting refactoring
+
+**Known issues**
+- Visibility: units are no longer be translated on Android < 7
 
 
 # Version 6.0.4-alpha (2025-07-23)

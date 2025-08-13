@@ -1,4 +1,8 @@
 import breezyweather.domain.weather.reference.WeatherCode;
+import kotlin.time.Duration;
+import org.breezyweather.unit.distance.Distance;
+import org.breezyweather.unit.precipitation.Precipitation;
+import org.breezyweather.unit.pressure.Pressure;
 
 CREATE TABLE dailys(
     _id INTEGER NOT NULL PRIMARY KEY,
@@ -17,11 +21,11 @@ CREATE TABLE dailys(
     daytime_wind_chill_temperature REAL,
     daytime_humidex REAL,
 
-    daytime_total_precipitation REAL,
-    daytime_thunderstorm_precipitation REAL,
-    daytime_rain_precipitation REAL,
-    daytime_snow_precipitation REAL,
-    daytime_ice_precipitation REAL,
+    daytime_total_precipitation INTEGER AS Precipitation,
+    daytime_thunderstorm_precipitation INTEGER AS Precipitation,
+    daytime_rain_precipitation INTEGER AS Precipitation,
+    daytime_snow_precipitation INTEGER AS Precipitation,
+    daytime_ice_precipitation INTEGER AS Precipitation,
 
     daytime_total_precipitation_probability REAL,
     daytime_thunderstorm_precipitation_probability REAL,
@@ -29,11 +33,11 @@ CREATE TABLE dailys(
     daytime_snow_precipitation_probability REAL,
     daytime_ice_precipitation_probability REAL,
 
-    daytime_total_precipitation_duration REAL,
-    daytime_thunderstorm_precipitation_duration REAL,
-    daytime_rain_precipitation_duration REAL,
-    daytime_snow_precipitation_duration REAL,
-    daytime_ice_precipitation_duration REAL,
+    daytime_total_precipitation_duration INTEGER AS Duration,
+    daytime_thunderstorm_precipitation_duration INTEGER AS Duration,
+    daytime_rain_precipitation_duration INTEGER AS Duration,
+    daytime_snow_precipitation_duration INTEGER AS Duration,
+    daytime_ice_precipitation_duration INTEGER AS Duration,
 
     daytime_wind_degree REAL,
     daytime_wind_speed REAL,
@@ -50,23 +54,23 @@ CREATE TABLE dailys(
     nighttime_wind_chill_temperature REAL,
     nighttime_humidex REAL,
 
-    nighttime_total_precipitation REAL,
-    nighttime_thunderstorm_precipitation REAL,
-    nighttime_rain_precipitation REAL,
-    nighttime_snow_precipitation REAL,
-    nighttime_ice_precipitation REAL,
+    nighttime_total_precipitation INTEGER AS Precipitation,
+    nighttime_thunderstorm_precipitation INTEGER AS Precipitation,
+    nighttime_rain_precipitation INTEGER AS Precipitation,
+    nighttime_snow_precipitation INTEGER AS Precipitation,
+    nighttime_ice_precipitation INTEGER AS Precipitation,
 
     nighttime_total_precipitation_probability REAL,
     nighttime_thunderstorm_precipitation_probability REAL,
     nighttime_rain_precipitation_probability REAL,
     nighttime_snow_precipitation_probability REAL,
     nighttime_ice_precipitation_probability REAL,
-    nighttime_total_precipitation_duration REAL,
 
-    nighttime_thunderstorm_precipitation_duration REAL,
-    nighttime_rain_precipitation_duration REAL,
-    nighttime_snow_precipitation_duration REAL,
-    nighttime_ice_precipitation_duration REAL,
+    nighttime_total_precipitation_duration INTEGER AS Duration,
+    nighttime_thunderstorm_precipitation_duration INTEGER AS Duration,
+    nighttime_rain_precipitation_duration INTEGER AS Duration,
+    nighttime_snow_precipitation_duration INTEGER AS Duration,
+    nighttime_ice_precipitation_duration INTEGER AS Duration,
 
     nighttime_wind_degree REAL,
     nighttime_wind_speed REAL,
@@ -124,7 +128,7 @@ CREATE TABLE dailys(
     -- uv.
     uv_index REAL,
 
-    sunshine_duration REAL,
+    sunshine_duration INTEGER AS Duration,
 
     -- relative humidity
     relative_humidity_average REAL,
@@ -137,9 +141,9 @@ CREATE TABLE dailys(
     dewpoint_max REAL,
 
     -- pressure
-    pressure_average REAL,
-    pressure_min REAL,
-    pressure_max REAL,
+    pressure_average INTEGER AS Pressure,
+    pressure_min INTEGER AS Pressure,
+    pressure_max INTEGER AS Pressure,
 
     -- cloud cover
     cloud_cover_average INTEGER,
@@ -147,9 +151,9 @@ CREATE TABLE dailys(
     cloud_cover_max INTEGER,
 
     -- visibility
-    visibility_average REAL,
-    visibility_min REAL,
-    visibility_max REAL,
+    visibility_average INTEGER AS Distance,
+    visibility_min INTEGER AS Distance,
+    visibility_max INTEGER AS Distance,
 
     UNIQUE(location_formatted_id, date) ON CONFLICT REPLACE,
     FOREIGN KEY(location_formatted_id) REFERENCES locations (formatted_id)

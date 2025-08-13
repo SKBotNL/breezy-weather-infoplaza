@@ -23,7 +23,10 @@ import breezyweather.domain.weather.model.PrecipitationProbability
 import breezyweather.domain.weather.model.UV
 import breezyweather.domain.weather.model.Wind
 import breezyweather.domain.weather.reference.WeatherCode
+import org.breezyweather.unit.distance.Distance
+import org.breezyweather.unit.pressure.Pressure
 import java.util.Date
+import kotlin.time.Duration
 
 /**
  * Hourly wrapper that allows isDaylight to be null and completed later
@@ -40,13 +43,17 @@ data class HourlyWrapper(
     val uV: UV? = null,
     val relativeHumidity: Double? = null,
     val dewPoint: Double? = null,
-    val pressure: Double? = null,
-    val cloudCover: Int? = null,
-    val visibility: Double? = null,
     /**
-     * Sunshine duration in hours (ex: 0.5 means 30 min)
+     * Pressure at sea level
+     * Use Kotlin extensions to initialize this value, like 1013.25.hectopascals
      */
-    val sunshineDuration: Double? = null,
+    val pressure: Pressure? = null,
+    val cloudCover: Int? = null,
+    val visibility: Distance? = null,
+    /**
+     * Duration of sunshine, NOT duration of daylight
+     */
+    val sunshineDuration: Duration? = null,
 ) {
     fun toHourly(
         airQuality: AirQuality? = null,

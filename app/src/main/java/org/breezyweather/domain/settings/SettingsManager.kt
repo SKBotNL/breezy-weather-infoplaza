@@ -28,13 +28,13 @@ import org.breezyweather.common.basic.models.options.appearance.BackgroundAnimat
 import org.breezyweather.common.basic.models.options.appearance.CardDisplay
 import org.breezyweather.common.basic.models.options.appearance.DailyTrendDisplay
 import org.breezyweather.common.basic.models.options.appearance.HourlyTrendDisplay
-import org.breezyweather.common.basic.models.options.unit.DistanceUnit
-import org.breezyweather.common.basic.models.options.unit.PrecipitationIntensityUnit
-import org.breezyweather.common.basic.models.options.unit.PrecipitationUnit
-import org.breezyweather.common.basic.models.options.unit.PressureUnit
 import org.breezyweather.common.basic.models.options.unit.SpeedUnit
 import org.breezyweather.common.basic.models.options.unit.TemperatureUnit
 import org.breezyweather.common.bus.EventBus
+import org.breezyweather.common.extensions.currentLocale
+import org.breezyweather.unit.distance.DistanceUnit
+import org.breezyweather.unit.precipitation.PrecipitationUnit
+import org.breezyweather.unit.pressure.PressureUnit
 
 class SettingsChangedMessage
 
@@ -226,11 +226,10 @@ class SettingsManager private constructor(
             config.edit().putString("distance_unit", value?.id ?: "auto").apply()
             notifySettingsChanged()
         }
-        get() = DistanceUnit.entries
-            .firstOrNull { it.id == (config.getString("distance_unit", "auto") ?: "auto") }
+        get() = DistanceUnit.getUnit(config.getString("distance_unit", "auto") ?: "auto")
 
     fun getDistanceUnit(context: Context): DistanceUnit {
-        return distanceUnit ?: DistanceUnit.getDefaultUnit(context)
+        return distanceUnit ?: DistanceUnit.getDefaultUnit(context.currentLocale)
     }
 
     var precipitationUnit: PrecipitationUnit?
@@ -238,27 +237,14 @@ class SettingsManager private constructor(
             config.edit().putString("precipitation_unit", value?.id ?: "auto").apply()
             notifySettingsChanged()
         }
-        get() = PrecipitationUnit.entries
-            .firstOrNull { it.id == (config.getString("precipitation_unit", "auto") ?: "auto") }
+        get() = PrecipitationUnit.getUnit(config.getString("precipitation_unit", "auto") ?: "auto")
 
     fun getPrecipitationUnit(context: Context): PrecipitationUnit {
-        return precipitationUnit ?: PrecipitationUnit.getDefaultUnit(context)
+        return precipitationUnit ?: PrecipitationUnit.getDefaultUnit(context.currentLocale)
     }
 
     fun getSnowfallUnit(context: Context): PrecipitationUnit {
-        return precipitationUnit ?: PrecipitationUnit.getDefaultSnowfallUnit(context)
-    }
-
-    fun getPrecipitationIntensityUnit(context: Context): PrecipitationIntensityUnit {
-        return PrecipitationIntensityUnit.entries
-            .firstOrNull { it.id == "${precipitationUnit?.id}ph" }
-            ?: PrecipitationIntensityUnit.getDefaultUnit(context)
-    }
-
-    fun getSnowfallIntensityUnit(context: Context): PrecipitationIntensityUnit {
-        return PrecipitationIntensityUnit.entries
-            .firstOrNull { it.id == "${precipitationUnit?.id}ph" }
-            ?: PrecipitationIntensityUnit.getDefaultSnowfallUnit(context)
+        return precipitationUnit ?: PrecipitationUnit.getDefaultSnowfallUnit(context.currentLocale)
     }
 
     var pressureUnit: PressureUnit?
@@ -266,11 +252,10 @@ class SettingsManager private constructor(
             config.edit().putString("pressure_unit", value?.id ?: "auto").apply()
             notifySettingsChanged()
         }
-        get() = PressureUnit.entries
-            .firstOrNull { it.id == (config.getString("pressure_unit", "auto") ?: "auto") }
+        get() = PressureUnit.getUnit(config.getString("pressure_unit", "auto") ?: "auto")
 
     fun getPressureUnit(context: Context): PressureUnit {
-        return pressureUnit ?: PressureUnit.getDefaultUnit(context)
+        return pressureUnit ?: PressureUnit.getDefaultUnit(context.currentLocale)
     }
 
     var speedUnit: SpeedUnit?

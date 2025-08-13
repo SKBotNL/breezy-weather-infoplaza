@@ -59,6 +59,9 @@ import org.breezyweather.sources.china.json.ChinaForecastHourly
 import org.breezyweather.sources.china.json.ChinaForecastResult
 import org.breezyweather.sources.china.json.ChinaLocationResult
 import org.breezyweather.sources.china.json.ChinaMinutelyResult
+import org.breezyweather.unit.distance.Distance.Companion.kilometers
+import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
+import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
 import retrofit2.Retrofit
 import java.util.Calendar
 import java.util.Date
@@ -279,12 +282,12 @@ class ChinaService @Inject constructor(
                 null
             },
             pressure = if (!current.pressure?.value.isNullOrEmpty()) {
-                current.pressure.value.toDoubleOrNull()
+                current.pressure.value.toDoubleOrNull()?.hectopascals
             } else {
                 null
             },
             visibility = if (!current.visibility?.value.isNullOrEmpty()) {
-                current.visibility.value.toDoubleOrNull()?.times(1000)
+                current.visibility.value.toDoubleOrNull()?.kilometers
             } else {
                 null
             },
@@ -429,6 +432,7 @@ class ChinaService @Inject constructor(
                     date = calendar.time,
                     minuteInterval = 1,
                     precipitationIntensity = precipitation.times(60) // mm/min -> mm/h
+                        .millimeters
                 )
             )
         }
