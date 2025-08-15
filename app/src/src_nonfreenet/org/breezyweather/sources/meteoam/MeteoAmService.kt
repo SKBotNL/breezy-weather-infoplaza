@@ -47,6 +47,7 @@ import org.breezyweather.sources.meteoam.json.MeteoAmObservationResult
 import org.breezyweather.sources.meteoam.json.MeteoAmReverseLocation
 import org.breezyweather.sources.meteoam.json.MeteoAmReverseLocationResult
 import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
+import org.breezyweather.unit.speed.Speed.Companion.kilometersPerHour
 import retrofit2.Retrofit
 import java.util.Date
 import javax.inject.Inject
@@ -180,7 +181,7 @@ class MeteoAmService @Inject constructor(
                     },
                 speed = (
                     currentResult.getOrElse(keys["wkmh"].toString()) { null }?.getOrElse("0") { null } as? Double
-                    )?.div(3.6)
+                    )?.kilometersPerHour
             ),
             relativeHumidity = currentResult.getOrElse(keys["r"].toString()) { null }
                 ?.getOrElse("0") { null } as? Double,
@@ -243,7 +244,7 @@ class MeteoAmService @Inject constructor(
                     },
                     speed = (
                         data.getOrElse(keys["wkmh"].toString()) { null }?.getOrElse(i.toString()) { null } as? Double
-                        )?.div(3.6)
+                        )?.kilometersPerHour
                 ),
                 relativeHumidity = data.getOrElse(keys["r"].toString()) { null }
                     ?.getOrElse(i.toString()) { null } as? Double,
@@ -338,6 +339,9 @@ class MeteoAmService @Inject constructor(
     }
 
     override val testingLocations: List<Location> = emptyList()
+
+    // TODO
+    override val knownAmbiguousCountryCodes: Array<String>? = null
 
     companion object {
         private const val METEOAM_BASE_URL = "https://api.meteoam.it/"

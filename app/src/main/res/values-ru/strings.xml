@@ -216,12 +216,6 @@
     <string name="weather_kind_thunder">Гром</string>
     <string name="weather_kind_thunderstorm">Штормовая гроза</string>
     <string name="weather_kind_wind">Ветер</string>
-    <string name="unit_kph">км/ч</string>
-    <string name="unit_mps">м/с</string>
-    <string name="unit_kn">узлов</string>
-    <string name="unit_mph">миль/ч</string>
-    <string name="unit_ftps">футов/с</string>
-    <string name="unit_mugpcum">мкг/м³</string>
     <string name="unit_ppcm">/м³</string>
     <string name="locations">Местоположения</string>
     <string name="air_quality_level_5">Очень вредно</string>
@@ -329,12 +323,7 @@
     <string name="settings_item_delete">Удалить этот элемент</string>
     <string name="settings_items_drag_to_sort">Нажмите, чтобы перетащить элементы списка для сортировки</string>
     <string name="settings_icon_packs_weather_icon_grey">Серая иконка</string>
-    <string name="unit_kph_voice">Километров в час</string>
-    <string name="unit_mps_voice">Метров в секунду</string>
-    <string name="unit_mph_voice">Миль в час</string>
-    <string name="unit_ftps_voice">Футов в секунду</string>
     <string name="unit_celsius_short">°</string>
-    <string name="unit_mgpcum_voice">Миллиграммы на кубический метр</string>
     <string name="notification_channel_background_services">Фоновые сервисы</string>
     <string name="location_results_by">Результаты местоположения по %s</string>
     <string name="location_swipe_to_delete">Вы можете смахнуть влево, чтобы удалить этот элемент</string>
@@ -347,10 +336,7 @@
     <string name="widget_style_oreo">Oreo</string>
     <string name="widget_clock_font_sans_serif_black">Sans Serif Black</string>
     <string name="widget_clock_font_analog">Analog</string>
-    <string name="unit_kn_voice">Узлы</string>
     <string name="unit_fahrenheit">°F</string>
-    <string name="unit_mugpcum_voice">Микрограммы на кубический метр</string>
-    <string name="unit_mgpcum">мг/м³</string>
     <string name="common_weather_text_overcast">Пасмурно</string>
     <string name="common_weather_text_clear_sky">Ясно</string>
     <string name="alerts_to_follow">Надвигающиеся предупреждения – нажмите здесь для просмотра.</string>
@@ -491,7 +477,6 @@
     <string name="common_weather_text_drizzle_freezing_light">Лёгкая морозящая изморось</string>
     <string name="metno_weather_text_andthunder">%s с грозой</string>
     <string name="common_weather_text_drizzle_freezing">Морозящая изморось</string>
-    <string name="unit_bft_voice">на шкале Бофорта</string>
     <string name="settings_appearance_dark_mode_locations_title">Тёмная тема по местоположению</string>
     <string name="weather_message_unsupported_feature">Источник не поддерживает одну из запрошенных функций</string>
     <string name="about_contribution_designer">Дизайнер логотипа</string>
@@ -739,8 +724,6 @@
     <string name="label_description">Описание</string>
     <string name="label_expanded">Расширенный</string>
     <string name="label_collapsed">Свёрнутый</string>
-    <string name="unit_mum">мкм</string>
-    <string name="unit_mum_voice">Микрометры</string>
     <string name="ephemeris_about_dawn">Рассвет — это когда перед восходом солнца появляется первый видимый свет дня.</string>
     <string name="ephemeris_about_dusk">Сумерки — это самая тёмная стадия между светом и ночью, перед тем как исчезает последний видимый свет.</string>
     <string name="wind_origin">От %s</string>
@@ -749,8 +732,6 @@
     <string name="action_configure_item">Настроить %s</string>
     <string name="settings_appearance_section_regional">Язык и регион</string>
     <string name="settings_appearance_section_theme">Тема</string>
-    <string name="unit_bft_display_name">Бофорт</string>
-    <string name="unit_bft_nominative">%s баллов</string>
     <string name="about_update_check_eol">Эта версия Android больше не поддерживается</string>
     <string name="air_quality_short">Чистота воздуха</string>
     <string name="ephemeris_sun">Солнце</string>

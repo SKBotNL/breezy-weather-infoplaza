@@ -875,34 +875,14 @@
     <string name="settings_color_dark">Dark</string>
     <string name="settings_invalid_syntax">Invalid syntax</string>
     <!-- Units -->
-    <string name="unit_bft_display_name">Beaufort</string>
-    <!-- %s is between 0 and 12 of the scale. Some non-Latin countries prefer to format with a prefix such as "Force 3" -->
-    <string name="unit_bft_nominative">%s Bft</string>
-    <string name="unit_bft_voice">on Beaufort scale</string>
-    <string name="unit_mps">m/s</string>
-    <string name="unit_mps_voice">Meters per second</string>
-    <string name="unit_kph">km/h</string>
-    <string name="unit_kph_voice">Kilometers per hour</string>
-    <string name="unit_kn">kn</string>
-    <string name="unit_kn_voice">Knots</string>
-    <string name="unit_mph">mph</string>
-    <string name="unit_mph_voice">Miles per hour</string>
-    <string name="unit_ftps">ft/s</string>
-    <string name="unit_ftps_voice">Feet per second</string>
     <string name="unit_celsius">°C</string>
     <string name="unit_celsius_short">°</string>
     <string name="unit_fahrenheit">°F</string>
     <string name="unit_fahrenheit_short">°</string>
     <string name="unit_kelvin">K</string>
     <string name="unit_kelvin_short">K</string>
-    <string name="unit_mugpcum">μg/m³</string>
-    <string name="unit_mugpcum_voice">Micrograms per cubic meter</string>
-    <string name="unit_mgpcum">mg/m³</string>
-    <string name="unit_mgpcum_voice">Milligrams per cubic meter</string>
     <string name="unit_ppcm">/m³</string>
     <string name="unit_ppcm_voice">Per cubic meter</string>
-    <string name="unit_mum">µm</string>
-    <string name="unit_mum_voice">Micrometers</string>
     <!-- Notifications -->
     <string name="notification_refreshed_at">Refreshed at</string>
     <string name="notification_channel_alerts">Alerts</string>

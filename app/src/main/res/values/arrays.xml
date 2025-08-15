@@ -363,6 +363,21 @@
     </string-array>
 
     <!-- Beaufort scale levels -->
+    <string-array name="wind_strength_descriptions">
+        <item>@string/wind_strength_0</item>
+        <item>@string/wind_strength_1</item>
+        <item>@string/wind_strength_2</item>
+        <item>@string/wind_strength_3</item>
+        <item>@string/wind_strength_4</item>
+        <item>@string/wind_strength_5</item>
+        <item>@string/wind_strength_6</item>
+        <item>@string/wind_strength_7</item>
+        <item>@string/wind_strength_8</item>
+        <item>@string/wind_strength_9</item>
+        <item>@string/wind_strength_10</item>
+        <item>@string/wind_strength_11</item>
+        <item>@string/wind_strength_12</item>
+    </string-array>
     <integer-array name="wind_strength_colors">
         <item>@color/windStrength_bf0</item>
         <item>@color/windStrength_bf1</item>
@@ -446,35 +461,6 @@
         <item>@color/pollenRecosanteLevel_5</item>
     </integer-array>
 
-    <!-- speed unit. -->
-    <string-array name="speed_units">
-        <item>@string/settings_follow_system</item>
-        <item>@string/unit_bft_display_name</item>
-        <item>@string/unit_mps</item>
-        <item>@string/unit_kph</item>
-        <item>@string/unit_kn</item>
-        <item>@string/unit_mph</item>
-        <item>@string/unit_ftps</item>
-    </string-array>
-    <string-array name="speed_unit_voices">
-        <item>@string/settings_follow_system</item>
-        <item>@string/unit_bft_voice</item>
-        <item>@string/unit_mps_voice</item>
-        <item>@string/unit_kph_voice</item>
-        <item>@string/unit_kn_voice</item>
-        <item>@string/unit_mph_voice</item>
-        <item>@string/unit_ftps_voice</item>
-    </string-array>
-    <string-array name="speed_unit_values">
-        <item>auto</item>
-        <item>bf</item>
-        <item>mps</item>
-        <item>kph</item>
-        <item>kn</item>
-        <item>mph</item>
-        <item>ftps</item>
-    </string-array>
-
     <!-- temperature unit. -->
     <string-array name="temperature_units">
         <item>@string/settings_follow_system</item>
@@ -493,28 +479,6 @@
         <item>c</item>
         <item>f</item>
         <item>k</item>
-    </string-array>
-
-    <!-- air quality unit. -->
-    <string-array name="air_quality_units">
-        <item>@string/unit_mugpcum</item>
-    </string-array>
-    <string-array name="air_quality_unit_voices">
-        <item>@string/unit_mugpcum_voice</item>
-    </string-array>
-    <string-array name="air_quality_unit_values">
-        <item>mugpcum</item>
-    </string-array>
-
-    <!-- air quality co unit. -->
-    <string-array name="air_quality_co_units">
-        <item>@string/unit_mgpcum</item>
-    </string-array>
-    <string-array name="air_quality_co_unit_voices">
-        <item>@string/unit_mgpcum_voice</item>
-    </string-array>
-    <string-array name="air_quality_co_unit_values">
-        <item>mgpcum</item>
     </string-array>
 
     <!-- pollen unit. -->

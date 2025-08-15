@@ -50,6 +50,7 @@ import org.breezyweather.sources.metie.json.MetIeWarning
 import org.breezyweather.sources.metie.json.MetIeWarningResult
 import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
 import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
+import org.breezyweather.unit.speed.Speed.Companion.kilometersPerHour
 import retrofit2.Retrofit
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -206,7 +207,7 @@ class MetIeService @Inject constructor(
                 ),
                 wind = Wind(
                     degree = result.windDirection?.toDoubleOrNull(),
-                    speed = result.windSpeed?.div(3.6)
+                    speed = result.windSpeed?.kilometersPerHour
                 ),
                 relativeHumidity = result.humidity?.toDoubleOrNull(),
                 pressure = result.pressure?.toDoubleOrNull()?.hectopascals
@@ -362,6 +363,9 @@ class MetIeService @Inject constructor(
     }
 
     override val testingLocations: List<Location> = emptyList()
+
+    // Only supports its own country
+    override val knownAmbiguousCountryCodes: Array<String>? = null
 
     companion object {
         private const val MET_IE_BASE_URL = "https://prodapi.metweb.ie/"

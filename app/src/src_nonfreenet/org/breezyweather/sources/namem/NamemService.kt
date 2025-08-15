@@ -58,8 +58,11 @@ import org.breezyweather.sources.namem.json.NamemDailyResult
 import org.breezyweather.sources.namem.json.NamemHourlyResult
 import org.breezyweather.sources.namem.json.NamemNormalsResult
 import org.breezyweather.sources.namem.json.NamemStation
+import org.breezyweather.unit.pollutant.PollutantConcentration.Companion.microgramsPerCubicMeter
+import org.breezyweather.unit.pollutant.PollutantConcentration.Companion.milligramsPerCubicMeter
 import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
 import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
+import org.breezyweather.unit.speed.Speed.Companion.metersPerSecond
 import retrofit2.Retrofit
 import java.util.Date
 import javax.inject.Inject
@@ -247,7 +250,7 @@ class NamemService @Inject constructor(
             ),
             wind = Wind(
                 degree = current?.windDir,
-                speed = current?.windSpeed
+                speed = current?.windSpeed?.metersPerSecond
             ),
             relativeHumidity = current?.ff,
             pressure = current?.pslp?.hectopascals
@@ -285,12 +288,12 @@ class NamemService @Inject constructor(
             }
         }
         return AirQuality(
-            pM25 = pM25,
-            pM10 = pM10,
-            sO2 = sO2,
-            nO2 = nO2,
-            o3 = o3,
-            cO = cO
+            pM25 = pM25?.microgramsPerCubicMeter,
+            pM10 = pM10?.microgramsPerCubicMeter,
+            sO2 = sO2?.microgramsPerCubicMeter,
+            nO2 = nO2?.microgramsPerCubicMeter,
+            o3 = o3?.microgramsPerCubicMeter,
+            cO = cO?.milligramsPerCubicMeter
         )
     }
 
@@ -329,7 +332,7 @@ class NamemService @Inject constructor(
                                 total = forecast.wwNPer
                             ),
                             wind = Wind(
-                                speed = forecast.wndN
+                                speed = forecast.wndN?.metersPerSecond
                             )
                         )
                     )
@@ -349,7 +352,7 @@ class NamemService @Inject constructor(
                             total = forecast.wwDPer
                         ),
                         wind = Wind(
-                            speed = forecast.wndD
+                            speed = forecast.wndD?.metersPerSecond
                         )
                     ),
                     night = dailyResult.fore5Day.getOrNull(i + 1)?.let {
@@ -364,7 +367,7 @@ class NamemService @Inject constructor(
                                 total = it.wwNPer
                             ),
                             wind = Wind(
-                                speed = it.wndN
+                                speed = it.wndN?.metersPerSecond
                             )
                         )
                     }
@@ -393,7 +396,7 @@ class NamemService @Inject constructor(
                             total = it.preProb?.toDoubleOrNull()
                         ),
                         wind = Wind(
-                            speed = it.wnd?.toDoubleOrNull()
+                            speed = it.wnd?.toDoubleOrNull()?.metersPerSecond
                         )
                     )
                 )
@@ -468,10 +471,10 @@ class NamemService @Inject constructor(
     }
 
     // Convert Mongolian AQI to pollutant concentration
-// SO2, NO2, PM10, PM2.5, O3 in µg/m³
-// CO in mg/m³
-//
-// Breakpoint source: http://agaar.mn/article-view/692
+    // SO2, NO2, PM10, PM2.5, O3 in µg/m³
+    // CO in mg/m³
+    //
+    // Breakpoint source: http://agaar.mn/article-view/692
     private fun convertAqi(
         pollutant: PollutantIndex,
         aqi: Double?,
@@ -599,6 +602,9 @@ class NamemService @Inject constructor(
     }
 
     override val testingLocations: List<Location> = emptyList()
+
+    // Only supports its own country
+    override val knownAmbiguousCountryCodes: Array<String>? = null
 
     companion object {
         private const val NAMEM_BASE_URL = "https://weather.gov.mn/"

@@ -53,8 +53,10 @@ import org.breezyweather.sources.metno.json.MetNoAlertResult
 import org.breezyweather.sources.metno.json.MetNoForecastResult
 import org.breezyweather.sources.metno.json.MetNoForecastTimeseries
 import org.breezyweather.sources.metno.json.MetNoNowcastResult
+import org.breezyweather.unit.pollutant.PollutantConcentration.Companion.microgramsPerCubicMeter
 import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
 import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
+import org.breezyweather.unit.speed.Speed.Companion.metersPerSecond
 import retrofit2.Retrofit
 import java.util.Date
 import javax.inject.Inject
@@ -248,11 +250,11 @@ class MetNoService @Inject constructor(
                     val airQualityHourly: MutableMap<Date, AirQuality> = mutableMapOf()
                     airQualityResult.data?.time?.forEach {
                         airQualityHourly[it.from] = AirQuality(
-                            pM25 = it.variables?.pm25Concentration?.value,
-                            pM10 = it.variables?.pm10Concentration?.value,
-                            sO2 = it.variables?.so2Concentration?.value,
-                            nO2 = it.variables?.no2Concentration?.value,
-                            o3 = it.variables?.o3Concentration?.value
+                            pM25 = it.variables?.pm25Concentration?.value?.microgramsPerCubicMeter,
+                            pM10 = it.variables?.pm10Concentration?.value?.microgramsPerCubicMeter,
+                            sO2 = it.variables?.so2Concentration?.value?.microgramsPerCubicMeter,
+                            nO2 = it.variables?.no2Concentration?.value?.microgramsPerCubicMeter,
+                            o3 = it.variables?.o3Concentration?.value?.microgramsPerCubicMeter
                         )
                     }
                     AirQualityWrapper(hourlyForecast = airQualityHourly)
@@ -286,7 +288,7 @@ class MetNoService @Inject constructor(
                 wind = if (currentTimeseries.instant?.details != null) {
                     Wind(
                         degree = currentTimeseries.instant.details.windFromDirection,
-                        speed = currentTimeseries.instant.details.windSpeed
+                        speed = currentTimeseries.instant.details.windSpeed?.metersPerSecond
                     )
                 } else {
                     null
@@ -327,13 +329,11 @@ class MetNoService @Inject constructor(
                         ?: hourlyForecast.data?.next6Hours?.details?.probabilityOfThunder
                         ?: hourlyForecast.data?.next12Hours?.details?.probabilityOfThunder
                 ),
-                wind = if (hourlyForecast.data?.instant?.details != null) {
+                wind = hourlyForecast.data?.instant?.details?.let { details ->
                     Wind(
-                        degree = hourlyForecast.data.instant.details.windFromDirection,
-                        speed = hourlyForecast.data.instant.details.windSpeed
+                        degree = details.windFromDirection,
+                        speed = details.windSpeed?.metersPerSecond
                     )
-                } else {
-                    null
                 },
                 uV = UV(index = hourlyForecast.data?.instant?.details?.ultravioletIndexClearSky),
                 relativeHumidity = hourlyForecast.data?.instant?.details?.relativeHumidity,

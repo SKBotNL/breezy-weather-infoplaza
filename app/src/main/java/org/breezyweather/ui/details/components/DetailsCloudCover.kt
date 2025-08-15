@@ -62,9 +62,9 @@ import kotlinx.collections.immutable.toImmutableMap
 import org.breezyweather.R
 import org.breezyweather.common.basic.models.options.appearance.DetailScreen
 import org.breezyweather.common.basic.models.options.basic.UnitUtils
-import org.breezyweather.common.basic.models.options.unit.cloudCoverScaleThresholds
-import org.breezyweather.common.basic.models.options.unit.getCloudCoverDescription
+import org.breezyweather.common.extensions.cloudCoverScaleThresholds
 import org.breezyweather.common.extensions.formatTime
+import org.breezyweather.common.extensions.getCloudCoverDescription
 import org.breezyweather.common.extensions.getFormattedTime
 import org.breezyweather.common.extensions.is12Hour
 import org.breezyweather.common.extensions.toDate

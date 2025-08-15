@@ -61,6 +61,7 @@ import org.breezyweather.common.extensions.shortcutManager
 import org.breezyweather.common.extensions.sizeInBytes
 import org.breezyweather.common.extensions.toCalendarWithTimeZone
 import org.breezyweather.common.extensions.toDateNoHour
+import org.breezyweather.common.source.AddressSource
 import org.breezyweather.common.source.BroadcastSource
 import org.breezyweather.common.source.ConfigurableSource
 import org.breezyweather.common.source.HttpSource
@@ -178,6 +179,8 @@ class RefreshHelper @Inject constructor(
      * - Apply updated coordinates
      * - Reverse geocoding (if current location)
      * On non-current location, just returns the location
+     *
+     * TODO: Remove redundancy with default reverse geocoding calls
      */
     suspend fun getLocation(
         context: Context,
@@ -188,6 +191,8 @@ class RefreshHelper @Inject constructor(
             // There was already an error earlier in the process, so no errors
             return LocationResult(location, emptyList())
         }
+
+        var needsCountryCodeRefresh = false
 
         val currentErrors = mutableListOf<RefreshError>()
 
@@ -271,7 +276,9 @@ class RefreshHelper @Inject constructor(
                         )
                         location
                     } else {
-                        locationRepository.update(it)
+                        needsCountryCodeRefresh = reverseGeocodingService.knownAmbiguousCountryCodes?.any { cc ->
+                            it.countryCode.equals(cc, ignoreCase = true)
+                        } != false
                         it
                     }
                 }
@@ -302,9 +309,7 @@ class RefreshHelper @Inject constructor(
                         ).copy(
                             // We failed to refresh, so retry reverse geocoding next time
                             needsGeocodeRefresh = true
-                        ).also {
-                            locationRepository.update(it)
-                        }
+                        )
                     } catch (_: Throwable) {
                         /**
                          * Returns the original location
@@ -330,13 +335,25 @@ class RefreshHelper @Inject constructor(
             locationWithUpdatedCoordinates // Same as "location"
         }
 
-        // STEP 3 - Add timezone if missing
+        // STEP 3 - Validate ambiguous ISO 3166 codes
+        val locationInfoFromDefaultSource = if (needsCountryCodeRefresh) {
+            getLocationWithUnambiguousCountryCode(locationGeocoded, context)
+        } else {
+            locationGeocoded
+        }
+
+        // STEP 4 - Add timezone if missing
         val locationWithTimeZone = if (locationGeocoded.isTimeZoneInvalid) {
-            locationGeocoded.copy(
+            locationInfoFromDefaultSource.copy(
                 timeZone = getTimeZoneForLocation(context, locationGeocoded)
             )
         } else {
-            locationGeocoded
+            locationInfoFromDefaultSource
+        }
+
+        // STEP 5 - If there was any change, update in database
+        if (location != locationWithTimeZone) {
+            locationRepository.update(locationWithTimeZone)
         }
 
         return LocationResult(locationWithTimeZone, currentErrors)
@@ -375,6 +392,39 @@ class RefreshHelper @Inject constructor(
             }.awaitFirstOrElse {
                 throw ReverseGeocodingException()
             }
+    }
+
+    suspend fun getLocationWithUnambiguousCountryCode(
+        location: Location,
+        context: Context,
+    ): Location {
+        return if (AddressSource.ambiguousCountryCodes.any { cc ->
+                location.countryCode.equals(cc, ignoreCase = true)
+            }
+        ) {
+            try {
+                // Getting the address for this from the fallback reverse geocoding source
+                requestReverseGeocoding(
+                    sourceManager.getReverseGeocodingSourceOrDefault(BuildConfig.DEFAULT_GEOCODING_SOURCE),
+                    location,
+                    context
+                ).let {
+                    if (!it.countryCode.equals(location.countryCode, ignoreCase = true)) {
+                        location.copy(
+                            // Don't replace country as it doesn’t make sense when it’s a territory
+                            // country = it.country,
+                            countryCode = it.countryCode
+                        )
+                    } else {
+                        location
+                    }
+                }
+            } catch (_: Throwable) {
+                location
+            }
+        } else {
+            location
+        }
     }
 
     suspend fun updateLocation(location: Location, oldFormattedId: String? = null) {

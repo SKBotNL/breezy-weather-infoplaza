@@ -52,6 +52,7 @@ import org.breezyweather.sources.ipma.json.IpmaAlertResult
 import org.breezyweather.sources.ipma.json.IpmaDistrictResult
 import org.breezyweather.sources.ipma.json.IpmaForecastResult
 import org.breezyweather.sources.ipma.json.IpmaLocationResult
+import org.breezyweather.unit.speed.Speed.Companion.kilometersPerHour
 import retrofit2.Retrofit
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -234,7 +235,7 @@ class IpmaService @Inject constructor(
                 ),
                 wind = Wind(
                     degree = getWindDegree(it.ddVento),
-                    speed = it.ffVento?.toDoubleOrNull()?.div(3.6)
+                    speed = it.ffVento?.toDoubleOrNull()?.kilometersPerHour
                 ),
                 relativeHumidity = it.hR?.toDoubleOrNull()
             ).also { hourly ->
@@ -349,8 +350,7 @@ class IpmaService @Inject constructor(
         locations: List<IpmaLocationResult>,
     ): List<LocationAddressInfo> {
         val locationList = mutableListOf<LocationAddressInfo>()
-        val locationMap = mutableMapOf<String, LatLng>()
-        locations.mapIndexed { i, loc ->
+        val locationMap = locations.withIndex().associate { (i, loc) ->
             i.toString() to LatLng(loc.latitude.toDouble(), loc.longitude.toDouble())
         }
         LatLng(latitude, longitude).getNearestLocation(locationMap, 50000.0)?.let {
@@ -427,6 +427,9 @@ class IpmaService @Inject constructor(
     }
 
     override val testingLocations: List<Location> = emptyList()
+
+    // Only supports its own country
+    override val knownAmbiguousCountryCodes: Array<String>? = null
 
     companion object {
         private const val IPMA_BASE_URL = "https://api.ipma.pt/"

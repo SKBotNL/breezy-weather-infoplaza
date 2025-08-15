@@ -77,7 +77,10 @@ import org.breezyweather.sources.nlsc.NlscService.Companion.MATSU_BBOX
 import org.breezyweather.sources.nlsc.NlscService.Companion.PENGHU_BBOX
 import org.breezyweather.sources.nlsc.NlscService.Companion.TAIWAN_BBOX
 import org.breezyweather.sources.nlsc.NlscService.Companion.WUQIU_BBOX
+import org.breezyweather.unit.pollutant.PollutantConcentration.Companion.microgramsPerCubicMeter
 import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
+import org.breezyweather.unit.speed.Speed.Companion.beaufort
+import org.breezyweather.unit.speed.Speed.Companion.metersPerSecond
 import retrofit2.Retrofit
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -395,8 +398,8 @@ class CwaService @Inject constructor(
         val relativeHumidity = getValid(current?.relativeHumidity) as Double?
         val barometricPressure = getValid(current?.airPressure) as Double?
         val windDirection = getValid(current?.windDirection) as Double?
-        val windSpeed = getValid(current?.windSpeed) as Double?
-        val windGusts = getValid(current?.gustInfo?.peakGustSpeed) as Double?
+        val windSpeed = (getValid(current?.windSpeed) as Double?)?.metersPerSecond
+        val windGusts = (getValid(current?.gustInfo?.peakGustSpeed) as Double?)?.metersPerSecond
         val weatherText = getValid(current?.weather) as String?
         var weatherCode: WeatherCode? = null
 
@@ -425,7 +428,9 @@ class CwaService @Inject constructor(
                 // If there is no precipitation, thunder, or fog, we check for strong winds.
                 // CWA's thresholds for "Strong Wind Advisory" are
                 // sustained winds of Bft 6 (10.8m/s), or gusts Bft 8 (17.2m/s).
-                (windSpeed ?: 0.0) >= 10.8 || (windGusts ?: 0.0) >= 17.2 -> WeatherCode.WIND
+                (windSpeed != null && windSpeed >= 6.beaufort) || (windGusts != null && windGusts >= 8.beaufort) -> {
+                    WeatherCode.WIND
+                }
 
                 // If there is no precipitation, thunder, fog, or wind,
                 // we determine the code from cloud cover.
@@ -492,39 +497,39 @@ class CwaService @Inject constructor(
     ): AirQuality? {
         return airQualityResult?.data?.aqi?.getOrNull(0)?.let {
             AirQuality(
-                pM25 = it.pm25?.toDoubleOrNull(),
-                pM10 = it.pm10?.toDoubleOrNull(),
+                pM25 = it.pm25?.toDoubleOrNull()?.microgramsPerCubicMeter,
+                pM10 = it.pm10?.toDoubleOrNull()?.microgramsPerCubicMeter,
                 sO2 = computePollutantInUgm3FromPpb(
                     PollutantIndex.SO2,
                     it.so2?.toDoubleOrNull(),
                     temperature,
                     pressure
-                ),
+                )?.microgramsPerCubicMeter,
                 nO2 = computePollutantInUgm3FromPpb(
                     PollutantIndex.NO2,
                     it.no2?.toDoubleOrNull(),
                     temperature,
                     pressure
-                ),
+                )?.microgramsPerCubicMeter,
                 o3 = computePollutantInUgm3FromPpb(
                     PollutantIndex.O3,
                     it.o3?.toDoubleOrNull(),
                     temperature,
                     pressure
-                ),
+                )?.microgramsPerCubicMeter,
                 cO = computePollutantInUgm3FromPpb(
                     PollutantIndex.CO,
                     it.co?.toDoubleOrNull(),
                     temperature,
                     pressure
-                )
+                )?.microgramsPerCubicMeter
             )
         }
     }
 
     // Forecast data from the main weather API call are unsorted.
-// We need to first store the numbers into maps, then sort the keys,
-// and retrieve the relevant numbers using the sorted keys.
+    // We need to first store the numbers into maps, then sort the keys,
+    // and retrieve the relevant numbers using the sorted keys.
     private fun getDailyForecast(
         dailyResult: CwaForecastResult,
     ): List<DailyWrapper> {
@@ -619,7 +624,7 @@ class CwaService @Inject constructor(
                         ),
                         wind = Wind(
                             degree = wdMap.getOrElse(dayTime) { null },
-                            speed = wsMap.getOrElse(dayTime) { null }
+                            speed = wsMap.getOrElse(dayTime) { null }?.metersPerSecond
                         )
                     ),
                     night = HalfDayWrapper(
@@ -634,7 +639,7 @@ class CwaService @Inject constructor(
                         ),
                         wind = Wind(
                             degree = wdMap.getOrElse(nightTime) { null },
-                            speed = wsMap.getOrElse(nightTime) { null }
+                            speed = wsMap.getOrElse(nightTime) { null }?.metersPerSecond
                         )
                     ),
                     uV = UV(
@@ -647,8 +652,8 @@ class CwaService @Inject constructor(
     }
 
     // Forecast data from the main weather API call are unsorted.
-// We need to first store the numbers into maps, then sort the keys,
-// and retrieve the relevant numbers using the sorted keys.
+    // We need to first store the numbers into maps, then sort the keys,
+    // and retrieve the relevant numbers using the sorted keys.
     private fun getHourlyForecast(
         hourlyResult: CwaForecastResult,
     ): List<HourlyWrapper> {
@@ -756,7 +761,7 @@ class CwaService @Inject constructor(
                     ),
                     wind = Wind(
                         degree = wdMap.getOrElse(key) { null },
-                        speed = wsMap.getOrElse(key) { null }
+                        speed = wsMap.getOrElse(key) { null }?.metersPerSecond
                     ),
                     relativeHumidity = rhMap.getOrElse(key) { null },
                     dewPoint = tdMap.getOrElse(key) { null }
@@ -767,12 +772,12 @@ class CwaService @Inject constructor(
     }
 
     // CWA issues warnings primarily for counties,
-// but also for specific areas in each county:
-//  • 山區 Mountain ("M"): 59 townships
-//  • 基隆北海岸 Keelung North Coast ("K"): 15 townships
-//  • 恆春半島 Hengchun Peninsula ("H"): 6 townships
-//  • 蘭嶼綠島 Lanyu and Ludao ("L"): 2 townships
-// These specifications are stored in CWA_TOWNSHIP_WARNING_AREAS.
+    // but also for specific areas in each county:
+    //  • 山區 Mountain ("M"): 59 townships
+    //  • 基隆北海岸 Keelung North Coast ("K"): 15 townships
+    //  • 恆春半島 Hengchun Peninsula ("H"): 6 townships
+    //  • 蘭嶼綠島 Lanyu and Ludao ("L"): 2 townships
+    // These specifications are stored in CWA_TOWNSHIP_WARNING_AREAS.
     private fun getAlertList(
         alertResult: CwaAlertResult,
         location: Location,
@@ -1081,6 +1086,9 @@ class CwaService @Inject constructor(
             )
         )
     }
+
+    // Only supports its own country
+    override val knownAmbiguousCountryCodes: Array<String>? = null
 
     override val testingLocations: List<Location> = emptyList()
 

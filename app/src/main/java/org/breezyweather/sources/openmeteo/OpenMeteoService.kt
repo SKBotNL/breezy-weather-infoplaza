@@ -91,9 +91,11 @@ import org.breezyweather.ui.common.composables.AlertDialogNoPadding
 import org.breezyweather.ui.settings.preference.composables.PreferenceView
 import org.breezyweather.ui.settings.preference.composables.SwitchPreferenceView
 import org.breezyweather.unit.distance.Distance.Companion.meters
+import org.breezyweather.unit.pollutant.PollutantConcentration.Companion.microgramsPerCubicMeter
 import org.breezyweather.unit.precipitation.Precipitation.Companion.centimeters
 import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
 import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
+import org.breezyweather.unit.speed.Speed.Companion.metersPerSecond
 import retrofit2.HttpException
 import retrofit2.Retrofit
 import java.text.Collator
@@ -388,8 +390,8 @@ class OpenMeteoService @Inject constructor(
             ),
             wind = Wind(
                 degree = current.windDirection,
-                speed = current.windSpeed,
-                gusts = current.windGusts
+                speed = current.windSpeed?.metersPerSecond,
+                gusts = current.windGusts?.metersPerSecond
             ),
             uV = UV(index = current.uvIndex),
             relativeHumidity = current.relativeHumidity?.toDouble(),
@@ -490,8 +492,8 @@ class OpenMeteoService @Inject constructor(
                     ),
                     wind = Wind(
                         degree = hourlyResult.windDirection?.getOrNull(i)?.toDouble(),
-                        speed = hourlyResult.windSpeed?.getOrNull(i),
-                        gusts = hourlyResult.windGusts?.getOrNull(i)
+                        speed = hourlyResult.windSpeed?.getOrNull(i)?.metersPerSecond,
+                        gusts = hourlyResult.windGusts?.getOrNull(i)?.metersPerSecond
                     ),
                     uV = UV(index = hourlyResult.uvIndex?.getOrNull(i)),
                     relativeHumidity = hourlyResult.relativeHumidity?.getOrNull(i)?.toDouble(),
@@ -513,12 +515,12 @@ class OpenMeteoService @Inject constructor(
         val airQualityHourly = mutableMapOf<Date, AirQuality>()
         for (i in hourlyAirQualityResult.time.indices) {
             airQualityHourly[hourlyAirQualityResult.time[i].seconds.inWholeMilliseconds.toDate()] = AirQuality(
-                pM25 = hourlyAirQualityResult.pm25?.getOrNull(i),
-                pM10 = hourlyAirQualityResult.pm10?.getOrNull(i),
-                sO2 = hourlyAirQualityResult.sulphurDioxide?.getOrNull(i),
-                nO2 = hourlyAirQualityResult.nitrogenDioxide?.getOrNull(i),
-                o3 = hourlyAirQualityResult.ozone?.getOrNull(i),
-                cO = hourlyAirQualityResult.carbonMonoxide?.getOrNull(i)?.div(1000.0)
+                pM25 = hourlyAirQualityResult.pm25?.getOrNull(i)?.microgramsPerCubicMeter,
+                pM10 = hourlyAirQualityResult.pm10?.getOrNull(i)?.microgramsPerCubicMeter,
+                sO2 = hourlyAirQualityResult.sulphurDioxide?.getOrNull(i)?.microgramsPerCubicMeter,
+                nO2 = hourlyAirQualityResult.nitrogenDioxide?.getOrNull(i)?.microgramsPerCubicMeter,
+                o3 = hourlyAirQualityResult.ozone?.getOrNull(i)?.microgramsPerCubicMeter,
+                cO = hourlyAirQualityResult.carbonMonoxide?.getOrNull(i)?.microgramsPerCubicMeter
             )
         }
         return AirQualityWrapper(
@@ -944,6 +946,9 @@ class OpenMeteoService @Inject constructor(
     }
 
     override val testingLocations: List<Location> = emptyList()
+
+    // TODO: Same as GeoNames
+    override val knownAmbiguousCountryCodes: Array<String>? = null
 
     companion object {
         private const val OPEN_METEO_AIR_QUALITY_BASE_URL = "https://air-quality-api.open-meteo.com/"

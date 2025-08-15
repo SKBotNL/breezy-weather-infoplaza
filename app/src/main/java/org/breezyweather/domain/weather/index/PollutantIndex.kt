@@ -21,10 +21,11 @@ import android.graphics.Color
 import androidx.annotation.ColorInt
 import androidx.annotation.StringRes
 import org.breezyweather.R
-import org.breezyweather.common.basic.models.options.basic.UnitEnum
-import org.breezyweather.common.basic.models.options.basic.UnitUtils.formatDouble
-import org.breezyweather.common.basic.models.options.unit.AirQualityCOUnit
-import org.breezyweather.common.basic.models.options.unit.AirQualityUnit
+import org.breezyweather.common.extensions.currentLocale
+import org.breezyweather.domain.settings.SettingsManager
+import org.breezyweather.unit.formatting.UnitWidth
+import org.breezyweather.unit.pollutant.PollutantConcentrationUnit
+import org.breezyweather.unit.precipitation.PrecipitationUnit
 import kotlin.math.roundToInt
 
 enum class PollutantIndex(
@@ -178,11 +179,11 @@ enum class PollutantIndex(
             }
         }
 
-        fun getUnit(pollutantIndex: PollutantIndex): UnitEnum<Double> {
+        fun getUnit(pollutantIndex: PollutantIndex): PollutantConcentrationUnit {
             return if (pollutantIndex == CO) {
-                AirQualityCOUnit.MILLIGRAM_PER_CUBIC_METER
+                PollutantConcentrationUnit.MILLIGRAM_PER_CUBIC_METER
             } else {
-                AirQualityUnit.MICROGRAM_PER_CUBIC_METER
+                PollutantConcentrationUnit.MICROGRAM_PER_CUBIC_METER
             }
         }
     }
@@ -213,19 +214,21 @@ enum class PollutantIndex(
     }
 
     fun getFullName(context: Context): String {
-        return if (this == PM10 || this == PM25) {
-            context.getString(
-                fullName,
-                formatDouble(context, if (this == PM10) 10.0 else 2.5, 1) +
-                    "\u202f" +
-                    context.getString(R.string.unit_mum)
-            )
-        } else {
-            context.getString(
-                fullName,
+        return context.getString(
+            fullName,
+            if (this == PM10 || this == PM25) { // Cheating a little by using the precipitation unit
+                PrecipitationUnit.MICROMETER.format(
+                    context = context,
+                    value = if (this == PM10) 10.0 else 2.5,
+                    valueWidth = UnitWidth.LONG,
+                    locale = context.currentLocale,
+                    useNumberFormatter = SettingsManager.getInstance(context).useNumberFormatter,
+                    useMeasureFormat = SettingsManager.getInstance(context).useMeasureFormat
+                )
+            } else {
                 context.getString(shortName)
-            )
-        }
+            }
+        )
     }
 
     fun getIndex(cp: Double?): Int? {

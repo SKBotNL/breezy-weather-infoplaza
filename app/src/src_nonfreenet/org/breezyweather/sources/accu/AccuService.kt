@@ -90,11 +90,16 @@ import org.breezyweather.unit.distance.Distance.Companion.feet
 import org.breezyweather.unit.distance.Distance.Companion.kilometers
 import org.breezyweather.unit.distance.Distance.Companion.meters
 import org.breezyweather.unit.distance.Distance.Companion.miles
+import org.breezyweather.unit.pollutant.PollutantConcentration
+import org.breezyweather.unit.pollutant.PollutantConcentration.Companion.microgramsPerCubicMeter
 import org.breezyweather.unit.precipitation.Precipitation.Companion.centimeters
 import org.breezyweather.unit.precipitation.Precipitation.Companion.inches
 import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
 import org.breezyweather.unit.precipitation.PrecipitationUnit
 import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
+import org.breezyweather.unit.speed.Speed
+import org.breezyweather.unit.speed.Speed.Companion.kilometersPerHour
+import org.breezyweather.unit.speed.Speed.Companion.milesPerHour
 import retrofit2.Retrofit
 import java.util.Calendar
 import java.util.Date
@@ -419,8 +424,8 @@ class AccuService @Inject constructor(
             ),
             wind = Wind(
                 degree = currentResult.Wind?.Direction?.Degrees?.toDouble(),
-                speed = currentResult.Wind?.Speed?.Metric?.Value?.div(3.6),
-                gusts = currentResult.WindGust?.Speed?.Metric?.Value?.div(3.6)
+                speed = currentResult.Wind?.Speed?.Metric?.Value?.kilometersPerHour,
+                gusts = currentResult.WindGust?.Speed?.Metric?.Value?.kilometersPerHour
             ),
             uV = UV(index = currentResult.UVIndex?.toDouble()),
             relativeHumidity = currentResult.RelativeHumidity?.toDouble(),
@@ -605,20 +610,20 @@ class AccuService @Inject constructor(
         val airQualityHourly = mutableMapOf<Date, AirQuality>()
         airQualityHourlyResult
             .forEach {
-                var pm25: Double? = null
-                var pm10: Double? = null
-                var so2: Double? = null
-                var no2: Double? = null
-                var o3: Double? = null
-                var co: Double? = null
+                var pm25: PollutantConcentration? = null
+                var pm10: PollutantConcentration? = null
+                var so2: PollutantConcentration? = null
+                var no2: PollutantConcentration? = null
+                var o3: PollutantConcentration? = null
+                var co: PollutantConcentration? = null
                 it.pollutants?.forEach { p ->
                     when (p.type) {
-                        "O3" -> o3 = p.concentration.value
-                        "NO2" -> no2 = p.concentration.value
-                        "PM2_5" -> pm25 = p.concentration.value
-                        "PM10" -> pm10 = p.concentration.value
-                        "SO2" -> so2 = p.concentration.value
-                        "CO" -> co = p.concentration.value?.div(1000.0)
+                        "O3" -> o3 = p.concentration.value?.microgramsPerCubicMeter
+                        "NO2" -> no2 = p.concentration.value?.microgramsPerCubicMeter
+                        "PM2_5" -> pm25 = p.concentration.value?.microgramsPerCubicMeter
+                        "PM10" -> pm10 = p.concentration.value?.microgramsPerCubicMeter
+                        "SO2" -> so2 = p.concentration.value?.microgramsPerCubicMeter
+                        "CO" -> co = p.concentration.value?.microgramsPerCubicMeter
                     }
                 }
                 val airQuality = if (pm25 != null ||
@@ -764,11 +769,11 @@ class AccuService @Inject constructor(
         }
     }
 
-    private fun getSpeedInMetersPerSecond(value: AccuValue?): Double? {
+    private fun getSpeedInMetersPerSecond(value: AccuValue?): Speed? {
         return if (value?.UnitType == 9) { // mi/h
-            value.Value?.div(2.23694)
+            value.Value?.milesPerHour
         } else {
-            value?.Value?.div(3.6)
+            value?.Value?.kilometersPerHour
         }
     }
 
@@ -1026,6 +1031,9 @@ class AccuService @Inject constructor(
             normalsSource = id
         )
     )
+
+    // TODO
+    override val knownAmbiguousCountryCodes: Array<String>? = null
 
     companion object {
         private const val ACCU_DEVELOPER_BASE_URL = "https://dataservice.accuweather.com/"

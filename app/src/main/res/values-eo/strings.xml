@@ -386,28 +386,12 @@
     <string name="settings_color_dark">Malhela</string>
     <string name="settings_invalid_syntax">Nevalida sintakso</string>
     <!-- Units -->
-    <string name="unit_bft_nominative">%s Bft</string>
-    <string name="unit_bft_voice">sur la boforta skalo</string>
-    <string name="unit_mps">m/s</string>
-    <string name="unit_mps_voice">Metroj por sekundo</string>
-    <string name="unit_kph">km/h</string>
-    <string name="unit_kph_voice">Kilometroj por horo</string>
-    <string name="unit_kn">kn</string>
-    <string name="unit_kn_voice">Nodoj</string>
-    <string name="unit_mph">mph</string>
-    <string name="unit_mph_voice">Mejloj en horo</string>
-    <string name="unit_ftps">ft/s</string>
-    <string name="unit_ftps_voice">Futoj en sekundo</string>
     <string name="unit_celsius">°C</string>
     <string name="unit_celsius_short">°</string>
     <string name="unit_fahrenheit">°F</string>
     <string name="unit_fahrenheit_short">°</string>
     <string name="unit_kelvin">K</string>
     <string name="unit_kelvin_short">K</string>
-    <string name="unit_mugpcum">μg/m³</string>
-    <string name="unit_mugpcum_voice">Mikrogramoj por kuba metro</string>
-    <string name="unit_mgpcum">mg/m³</string>
-    <string name="unit_mgpcum_voice">Miligramoj por kuba metro</string>
     <string name="unit_ppcm">/m³</string>
     <string name="unit_ppcm_voice">Por kuba metro</string>
     <!-- Notifications -->
@@ -777,8 +761,6 @@
     <string name="settings_modules_live_wallpaper_error">Ne povis lanĉi tapeton elektilo. Vi povas ankoraŭ ebligi %s tapeton elektante “Live Wallpaper” en via hejma ekrana tapetelekto.</string>
     <string name="settings_modules_notification_permission_summary">Devata montri la sciigan fenestraĵo. %s</string>
     <string name="settings_debug_notification_permission">Bezonata por sciigi pri kraŝaj protokoloj kaj nesukcesaj veteraj ĝisdatigoj. %s</string>
-    <string name="unit_mum">μm</string>
-    <string name="unit_mum_voice">Mikrometroj</string>
     <string name="common_weather_text_tornado">Tornado</string>
     <string name="common_weather_text_blowing_snow">Blovanta neĝo</string>
     <string name="common_weather_text_drifting_snow">Drivanta neĝo</string>

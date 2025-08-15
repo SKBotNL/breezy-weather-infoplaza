@@ -41,18 +41,15 @@ import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.em
-import org.breezyweather.R
-import org.breezyweather.common.basic.models.options.unit.SpeedUnit
 import org.breezyweather.common.basic.models.options.unit.UnitWidth
 import org.breezyweather.common.extensions.code
 import org.breezyweather.common.extensions.currentLocale
 import org.breezyweather.common.extensions.isRtl
 import org.breezyweather.common.extensions.isTraditionalChinese
 import org.breezyweather.domain.settings.SettingsManager
+import org.breezyweather.unit.formatting.format
 import java.text.FieldPosition
 import java.util.Locale
-import kotlin.math.pow
-import kotlin.math.roundToInt
 
 object UnitUtils {
 
@@ -93,6 +90,7 @@ object UnitUtils {
         values: Array<String>,
     ) = values.zip(names).firstOrNull { it.first == value }?.second
 
+    @Deprecated("Use Number.format() extension")
     fun formatValue(
         context: Context,
         enum: UnitEnum<Double>,
@@ -100,78 +98,62 @@ object UnitUtils {
         precision: Int,
         isValueInDefaultUnit: Boolean = true,
         showSign: Boolean = false,
-    ) = if (precision == 0) {
-        formatInt(context, (if (isValueInDefaultUnit) enum.getConvertedUnit(value) else value).roundToInt(), showSign)
-    } else {
-        formatDouble(context, if (isValueInDefaultUnit) enum.getConvertedUnit(value) else value, precision, showSign)
+    ): String {
+        return (if (isValueInDefaultUnit) enum.getConvertedUnit(value) else value)
+            .format(
+                decimals = precision,
+                locale = context.currentLocale,
+                showSign = showSign,
+                useNumberFormatter = SettingsManager.getInstance(context).useNumberFormatter,
+                useMeasureFormat = SettingsManager.getInstance(context).useMeasureFormat
+            )
     }
 
+    @Deprecated("Use Number.format() extension")
     fun formatDouble(
         context: Context,
         value: Double,
         precision: Int = 2,
         showSign: Boolean = false,
     ): String {
-        val factor = 10.0.pow(precision)
-        return if (
-            value.roundToInt() * factor == (value * factor).roundToInt().toDouble()
-        ) {
-            formatNumber(context, value.roundToInt(), precision = 0, showSign)
-        } else {
-            formatNumber(context, value, precision, showSign)
-        }
+        return value.format(
+            decimals = precision,
+            locale = context.currentLocale,
+            showSign = showSign,
+            useNumberFormatter = SettingsManager.getInstance(context).useNumberFormatter,
+            useMeasureFormat = SettingsManager.getInstance(context).useMeasureFormat
+        )
     }
 
+    @Deprecated("Use Number.format() extension")
     fun formatInt(
         context: Context,
         value: Int,
         showSign: Boolean = false,
     ): String {
-        return formatNumber(context, value, precision = 0, showSign)
+        return value.format(
+            decimals = 0,
+            locale = context.currentLocale,
+            showSign = showSign,
+            useNumberFormatter = SettingsManager.getInstance(context).useNumberFormatter,
+            useMeasureFormat = SettingsManager.getInstance(context).useMeasureFormat
+        )
     }
 
-    /**
-     * Uses LocalizedNumberFormatter on Android SDK >= 30 (which is the recommended way)
-     * Uses NumberFormat on Android SDK >= 24
-     * Uses String.format() on Android SDK < 24
-     */
+    @Deprecated("Use Number.format() extension")
     fun formatNumber(
         context: Context,
         valueWithoutUnit: Number,
         precision: Int,
         showSign: Boolean = false,
     ): String {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
-            SettingsManager.getInstance(context).useNumberFormatter
-        ) {
-            (NumberFormatter.withLocale(context.currentLocale) as LocalizedNumberFormatter)
-                .precision(Precision.fixedFraction(precision))
-                .sign(if (showSign) NumberFormatter.SignDisplay.ALWAYS else NumberFormatter.SignDisplay.AUTO)
-                .format(valueWithoutUnit)
-                .toString()
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
-            SettingsManager.getInstance(context).useMeasureFormat &&
-            !showSign // showSign not supported by NumberFormat, skip
-        ) {
-            NumberFormat.getNumberInstance(context.currentLocale)
-                .apply { maximumFractionDigits = precision }
-                .format(valueWithoutUnit)
-                .toString()
-        } else {
-            if (precision == 0) {
-                String.format(
-                    context.currentLocale,
-                    if (showSign) "%+d" else "%d",
-                    valueWithoutUnit
-                )
-            } else {
-                String.format(
-                    context.currentLocale,
-                    if (showSign) "%+." + precision + "f" else "%." + precision + "f",
-                    valueWithoutUnit
-                )
-            }
-        }
+        return valueWithoutUnit.format(
+            decimals = precision,
+            locale = context.currentLocale,
+            showSign = showSign,
+            useNumberFormatter = SettingsManager.getInstance(context).useNumberFormatter,
+            useMeasureFormat = SettingsManager.getInstance(context).useMeasureFormat
+        )
     }
 
     fun formatMeasure(
@@ -354,15 +336,9 @@ object UnitUtils {
         enum: UnitEnum<Double>,
         formattedValue: String,
         unitWidth: UnitWidth = UnitWidth.SHORT,
-    ) = if (enum == SpeedUnit.BEAUFORT) {
-        // Dirty hack for special case
-        // TODO: Add this kind of formatting for all units
-        context.getString(R.string.unit_bft_nominative, formattedValue)
-    } else {
-        (if (context.isRtl) BidiFormatter.getInstance().unicodeWrap(formattedValue) else formattedValue) +
-            (if (unitWidth != UnitWidth.NARROW) "\u202f" else "") +
-            (if (unitWidth != UnitWidth.FULL) getName(context, enum) else getMeasureContentDescription(context, enum))
-    }
+    ) = (if (context.isRtl) BidiFormatter.getInstance().unicodeWrap(formattedValue) else formattedValue) +
+        (if (unitWidth != UnitWidth.NARROW) "\u202f" else "") +
+        (if (unitWidth != UnitWidth.FULL) getName(context, enum) else getMeasureContentDescription(context, enum))
 
     /**
      * Uses LocalizedNumberFormatter on Android SDK >= 30 (which is the recommended way)

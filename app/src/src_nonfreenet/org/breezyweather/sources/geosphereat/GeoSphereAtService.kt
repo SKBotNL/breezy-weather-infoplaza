@@ -51,8 +51,10 @@ import org.breezyweather.common.source.WeatherSource.Companion.PRIORITY_HIGHEST
 import org.breezyweather.common.source.WeatherSource.Companion.PRIORITY_NONE
 import org.breezyweather.sources.geosphereat.json.GeoSphereAtTimeseriesResult
 import org.breezyweather.sources.geosphereat.json.GeoSphereAtWarningsResult
+import org.breezyweather.unit.pollutant.PollutantConcentration.Companion.microgramsPerCubicMeter
 import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
 import org.breezyweather.unit.pressure.Pressure.Companion.pascals
+import org.breezyweather.unit.speed.Speed.Companion.metersPerSecond
 import retrofit2.Retrofit
 import java.util.Date
 import javax.inject.Inject
@@ -239,10 +241,10 @@ class GeoSphereAtService @Inject constructor(
                         airQualityResult.timestamps.forEachIndexed { i, date ->
                             airQualityHourly[date] = airQualityResult.features[0].properties!!.parameters!!.let {
                                 AirQuality(
-                                    pM25 = it.pm25surf?.data?.getOrNull(i),
-                                    pM10 = it.pm10surf?.data?.getOrNull(i),
-                                    nO2 = it.no2surf?.data?.getOrNull(i),
-                                    o3 = it.o3surf?.data?.getOrNull(i)
+                                    pM25 = it.pm25surf?.data?.getOrNull(i)?.microgramsPerCubicMeter,
+                                    pM10 = it.pm10surf?.data?.getOrNull(i)?.microgramsPerCubicMeter,
+                                    nO2 = it.no2surf?.data?.getOrNull(i)?.microgramsPerCubicMeter,
+                                    o3 = it.o3surf?.data?.getOrNull(i)?.microgramsPerCubicMeter
                                 )
                             }
                         }
@@ -351,9 +353,9 @@ class GeoSphereAtService @Inject constructor(
                 ),
                 wind = if (windSpeed != null) {
                     Wind(
-                        speed = windSpeed,
                         degree = windDegree,
-                        gusts = windGustSpeed
+                        speed = windSpeed.metersPerSecond,
+                        gusts = windGustSpeed?.metersPerSecond
                     )
                 } else {
                     null

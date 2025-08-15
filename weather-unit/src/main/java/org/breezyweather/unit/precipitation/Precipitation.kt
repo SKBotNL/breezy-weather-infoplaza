@@ -315,6 +315,7 @@ value class Precipitation internal constructor(
         useNumberFormatter: Boolean = true,
         useMeasureFormat: Boolean = true,
     ): String {
+        val convertedValue = toDouble(unit)
         return context.getString(
             when (unitWidth) {
                 UnitWidth.SHORT -> R.string.duration_hr_per_short
@@ -324,6 +325,7 @@ value class Precipitation internal constructor(
             formatWithAndroidTranslations(
                 context = context,
                 unit = unit,
+                value = convertedValue,
                 valueWidth = valueWidth,
                 unitWidth = unitWidth,
                 locale = locale,
@@ -355,9 +357,9 @@ fun Long.toPrecipitation(unit: PrecipitationUnit): Precipitation {
  * @throws IllegalArgumentException if this `Double` value is `NaN`.
  */
 fun Double.toPrecipitation(unit: PrecipitationUnit): Precipitation {
-    val valueInPa = convertPrecipitationUnit(this, unit, PrecipitationUnit.MICROMETER)
-    require(!valueInPa.isNaN()) { "Precipitation value cannot be NaN." }
-    return precipitationOf(valueInPa.roundToLong())
+    val valueInMicrom = convertPrecipitationUnit(this, unit, PrecipitationUnit.MICROMETER)
+    require(!valueInMicrom.isNaN()) { "Precipitation value cannot be NaN." }
+    return precipitationOf(valueInMicrom.roundToLong())
 }
 
 private fun parsePrecipitation(value: String): Precipitation {

@@ -173,7 +173,6 @@
     <string name="widget_label_text_size">Tekststørrelse</string>
     <string name="settings_debug_summary">Nedbrudslogge</string>
     <string name="common_weather_text_snow">Nogen sne</string>
-    <string name="unit_mgpcum">mg/m³</string>
     <string name="dialog_time_picker_select_time">Vælg tidspunkt</string>
     <string name="dialog_time_picker_toggle_text_input_voice">Skift til tekstindtastning</string>
     <string name="dialog_time_picker_toggle_touch_input_voice">Skift til berøringsindtastning</string>
@@ -240,7 +239,6 @@
     <string name="common_weather_text_rain_snow_mixed_showers_heavy">Kraftig byge med slud</string>
     <string name="common_weather_text_drizzle">Støvregn</string>
     <string name="common_weather_text_drizzle_freezing_light">Let isglat</string>
-    <string name="unit_mugpcum">μg/m³</string>
     <string name="common_weather_text_drizzle_freezing_heavy">Kraftigt isglat</string>
     <string name="settings_background_updates_refresh_skip_when_battery_low">Ignorér når batteriet er lavt</string>
     <string name="settings_background_updates_section_troubleshoot">Fejlfinding</string>
@@ -314,7 +312,6 @@
     <string name="settings_location_access_permission_already_granted">Tilladelse allerede tildelt</string>
     <string name="settings_location_service">Placeringstjeneste</string>
     <string name="settings_item_delete">Slet dette element</string>
-    <string name="unit_mps">m/s</string>
     <string name="unit_ppcm_voice">Per kubikmeter</string>
     <string name="about_app">Om app</string>
     <string name="notification_style_native">Indbygget</string>
@@ -329,11 +326,8 @@
     <string name="common_weather_text_rain_showers_light">Let byge</string>
     <string name="common_weather_text_rain_freezing_light">Let isslag</string>
     <string name="settings_appearance_calendar_title">Alternativ kalender</string>
-    <string name="unit_mps_voice">Meter i sekundet</string>
-    <string name="unit_bft_voice">på Beaufortskalaen</string>
     <string name="notification_channel_background_services">Baggrundstjenester</string>
     <string name="notification_precipitation_starting_desc">Forventes at begynde kl. %s</string>
-    <string name="unit_mgpcum_voice">Milligram per kubikmeter</string>
     <string name="precipitation_intensity_medium">Middel</string>
     <string name="pollen_populus">Poppel</string>
     <string name="pollen_rumex">Syre</string>
@@ -352,7 +346,6 @@
     <string name="widget_label_subtitle_data">Undertiteldata</string>
     <string name="settings_weather_source_open_meteo_weather_models_best_match_description">Kombinerer de bedste vejrmodeller til denne placering</string>
     <string name="settings_enabled">Aktiveret</string>
-    <string name="unit_mugpcum_voice">Mikrogram per kubikmeter</string>
     <string name="notification_update_error">%d opdatering(er) fejlede</string>
     <string name="about_translators">Oversættere</string>
     <string name="common_weather_text_rain_snow_mixed_light">Let slud</string>
@@ -423,8 +416,6 @@
     <string name="settings_main_background_animation_disabled">Deaktiveret</string>
     <string name="settings_notifications">Notifikationer</string>
     <string name="settings_notifications_summary">Notifikationer for vejrvarsler, nedbør, eller vejrudsigt for den første placering</string>
-    <string name="unit_kph">km/t</string>
-    <string name="unit_kph_voice">Kilometer i timen</string>
     <string name="notification_running_in_background">Kører i baggrunden, for at fortsætte opdateringer</string>
     <string name="notification_updating_weather_data">Opdaterer vejrdata (%1$d/%2$d)</string>
     <string name="widget_label_view_style">Visningsstil</string>
@@ -550,12 +541,6 @@
     <string name="settings_weather_source_open_meteo_weather_models">Vejrmodeller</string>
     <string name="settings_units">Enheder</string>
     <string name="settings_color_night_always">Altid nat</string>
-    <string name="unit_kn">kn</string>
-    <string name="unit_kn_voice">Knob</string>
-    <string name="unit_mph">mph</string>
-    <string name="unit_mph_voice">Engelske mil i timen</string>
-    <string name="unit_ftps">ft/s</string>
-    <string name="unit_ftps_voice">Fod i sekundet</string>
     <string name="common_weather_text_drizzle_light">Let støvregn</string>
     <string name="openmeteo_weather_text_depositing_rime_fog">Aflejrende rimtåge</string>
     <string name="openmeteo_weather_text_thunderstorm_slight_or_moderate">Let tordenvejr</string>

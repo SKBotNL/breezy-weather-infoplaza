@@ -42,6 +42,7 @@ import org.breezyweather.sources.veduris.json.VedurIsStationForecast
 import org.breezyweather.sources.veduris.json.VedurIsStationResult
 import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
 import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
+import org.breezyweather.unit.speed.Speed.Companion.metersPerSecond
 import org.json.JSONObject
 import retrofit2.Retrofit
 import java.text.SimpleDateFormat
@@ -198,7 +199,7 @@ class VedurIsService @Inject constructor(
                     precipitationProbability = null,
                     wind = Wind(
                         degree = it.windDirection,
-                        speed = it.windSpeed
+                        speed = it.windSpeed?.metersPerSecond
                     ),
                     relativeHumidity = if (it.humidity != 0.0) it.humidity else null
                 )
@@ -222,7 +223,7 @@ class VedurIsService @Inject constructor(
                         precipitationProbability = null,
                         wind = Wind(
                             degree = it.windDirection,
-                            speed = it.windSpeed
+                            speed = it.windSpeed?.metersPerSecond
                         ),
                         relativeHumidity = if (it.humidity != 0.0) it.humidity else null
                     )
@@ -272,8 +273,8 @@ class VedurIsService @Inject constructor(
                 ),
                 wind = Wind(
                     degree = it.windDirection,
-                    speed = it.windSpeed,
-                    gusts = it.maxWindGust
+                    speed = it.windSpeed?.metersPerSecond,
+                    gusts = it.maxWindGust?.metersPerSecond
                 ),
                 relativeHumidity = if (it.humidity != 0.0) it.humidity else null,
                 dewPoint = it.dewPoint,
@@ -535,6 +536,9 @@ class VedurIsService @Inject constructor(
     }
 
     override val testingLocations: List<Location> = emptyList()
+
+    // Only supports its own country
+    override val knownAmbiguousCountryCodes: Array<String>? = null
 
     companion object {
         private const val VEDUR_IS_BASE_URL = "https://gottvedur.is/"

@@ -60,8 +60,11 @@ import org.breezyweather.sources.china.json.ChinaForecastResult
 import org.breezyweather.sources.china.json.ChinaLocationResult
 import org.breezyweather.sources.china.json.ChinaMinutelyResult
 import org.breezyweather.unit.distance.Distance.Companion.kilometers
+import org.breezyweather.unit.pollutant.PollutantConcentration.Companion.microgramsPerCubicMeter
+import org.breezyweather.unit.pollutant.PollutantConcentration.Companion.milligramsPerCubicMeter
 import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
 import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
+import org.breezyweather.unit.speed.Speed.Companion.kilometersPerHour
 import retrofit2.Retrofit
 import java.util.Calendar
 import java.util.Date
@@ -220,12 +223,12 @@ class ChinaService @Inject constructor(
                     mainResult.aqi?.let {
                         AirQualityWrapper(
                             current = AirQuality(
-                                pM25 = it.pm25?.toDoubleOrNull(),
-                                pM10 = it.pm10?.toDoubleOrNull(),
-                                sO2 = it.so2?.toDoubleOrNull(),
-                                nO2 = it.no2?.toDoubleOrNull(),
-                                o3 = it.o3?.toDoubleOrNull(),
-                                cO = it.co?.toDoubleOrNull()
+                                pM25 = it.pm25?.toDoubleOrNull()?.microgramsPerCubicMeter,
+                                pM10 = it.pm10?.toDoubleOrNull()?.microgramsPerCubicMeter,
+                                sO2 = it.so2?.toDoubleOrNull()?.microgramsPerCubicMeter,
+                                nO2 = it.no2?.toDoubleOrNull()?.microgramsPerCubicMeter,
+                                o3 = it.o3?.toDoubleOrNull()?.microgramsPerCubicMeter,
+                                cO = it.co?.toDoubleOrNull()?.milligramsPerCubicMeter
                             )
                         )
                     }
@@ -266,7 +269,7 @@ class ChinaService @Inject constructor(
             wind = if (current.wind != null) {
                 Wind(
                     degree = current.wind.direction?.value?.toDoubleOrNull(),
-                    speed = current.wind.speed?.value?.toDoubleOrNull()?.div(3.6)
+                    speed = current.wind.speed?.value?.toDoubleOrNull()?.kilometersPerHour
                 )
             } else {
                 null
@@ -331,7 +334,7 @@ class ChinaService @Inject constructor(
                             Wind(
                                 degree = dailyForecast.wind.direction?.value?.getOrNull(index)?.from?.toDoubleOrNull(),
                                 speed = dailyForecast.wind.speed?.value?.getOrNull(index)?.from?.toDoubleOrNull()
-                                    ?.div(3.6)
+                                    ?.kilometersPerHour
                             )
                         } else {
                             null
@@ -350,7 +353,7 @@ class ChinaService @Inject constructor(
                             Wind(
                                 degree = dailyForecast.wind.direction?.value?.getOrNull(index)?.to?.toDoubleOrNull(),
                                 speed = dailyForecast.wind.speed?.value?.getOrNull(index)?.to?.toDoubleOrNull()
-                                    ?.div(3.6)
+                                    ?.kilometersPerHour
                             )
                         } else {
                             null
@@ -399,7 +402,8 @@ class ChinaService @Inject constructor(
                     wind = if (hourlyForecast.wind != null) {
                         Wind(
                             degree = hourlyForecast.wind.value?.getOrNull(index)?.direction?.toDoubleOrNull(),
-                            speed = hourlyForecast.wind.value?.getOrNull(index)?.speed?.toDoubleOrNull()?.div(3.6)
+                            speed = hourlyForecast.wind.value?.getOrNull(index)?.speed?.toDoubleOrNull()
+                                ?.kilometersPerHour
                         )
                     } else {
                         null
@@ -619,6 +623,9 @@ class ChinaService @Inject constructor(
     }
 
     override val testingLocations: List<Location> = emptyList()
+
+    // Only supports its own country
+    override val knownAmbiguousCountryCodes: Array<String>? = null
 
     companion object {
         private const val CHINA_WEATHER_BASE_URL = "https://weatherapi.market.xiaomi.com/wtr-v3/"

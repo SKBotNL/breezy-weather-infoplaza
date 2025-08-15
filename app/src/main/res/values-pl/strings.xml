@@ -241,7 +241,6 @@
     <string name="unit_fahrenheit_short">°</string>
     <string name="unit_kelvin_short">K</string>
     <string name="common_weather_text_overcast">Zachmurzenie całkowite</string>
-    <string name="unit_ftps">ft/s</string>
     <string name="unit_kelvin">K</string>
     <string name="wind_direction_variable">Zmienny</string>
     <string name="wind_direction_NW_short">NW</string>
@@ -259,7 +258,6 @@
     <string name="widget_custom_subtitle_keyword_al_description">Alerty</string>
     <string name="widget_custom_subtitle_keyword_als_description">Alerty (krótkie)</string>
     <string name="widget_clock_font_analog">Analogowy</string>
-    <string name="unit_kn">kn</string>
     <string name="unit_ppcm">/m³</string>
     <string name="common_weather_text_clear_sky">Bezchmurnie</string>
     <string name="about_contributors">Współtwórcy</string>
@@ -286,8 +284,6 @@
     <string name="widget_label_align_end">Wyrównaj do prawej</string>
     <string name="widget_week_style_5_days">5 dni</string>
     <string name="settings_icon_packs_check_details">Sprawdź szczegóły</string>
-    <string name="unit_kph">km/h</string>
-    <string name="unit_mps">m/s</string>
     <string name="about_matrix">Pokój Matrix</string>
     <string name="settings_background_updates_refresh_never">Nigdy</string>
     <string name="settings_background_updates_refresh_title">Częstotliwość odświeżania</string>
@@ -313,9 +309,6 @@
     <string name="wind_direction_W_short">W</string>
     <string name="uv_index_11">Ekstremalnie wysoki</string>
     <string name="air_quality_level_4">Szkodliwe</string>
-    <string name="unit_mph">mph</string>
-    <string name="unit_mugpcum">μg/m³</string>
-    <string name="unit_mgpcum">mg/m³</string>
     <string name="settings_main_section_options">Opcje</string>
     <string name="air_quality_pm10">PM10</string>
     <string name="action_location_list">Lista lokalizacji</string>
@@ -412,7 +405,6 @@
     <string name="settings_main_background_animation_title">Animacja tła</string>
     <string name="common_weather_text_snow_grains">Śnieg ziarnisty</string>
     <string name="openmeteo_weather_text_depositing_rime_fog">Mgła osadzająca szadź</string>
-    <string name="unit_mgpcum_voice">Miligramów na metr sześcienny</string>
     <string name="settings_location_access_precise_summaryOn">Włączone. Używana jest przede wszystkim sieć komórkowa, ale GPS również może być użyty jako rezerwowe źródło lokalizacji.</string>
     <string name="settings_weather_sources_summary">Domyślne źródło danych pogodowych dla nowych lokalizacji, osobiste klucze API i inne ustawienia źródeł danych</string>
     <string name="settings_main_summary">Kolejność bloków, wyświetlane elementy, animacje</string>
@@ -424,7 +416,6 @@
     <string name="settings_modules_section_notification_widget">Widżet w powiadomieniu</string>
     <string name="settings_modules_notification_widget_title">Widżet w powiadomieniu</string>
     <string name="settings_debug_dump_crash_logs_summary">Zapisuje dzienniki błędów do pliku w celu udostępnienia ich programistom</string>
-    <string name="unit_mugpcum_voice">Mikrogramów na metr sześcienny</string>
     <string name="settings_modules_notification_feels_like_switch">Użyj temperatury odczuwalnej</string>
     <string name="settings_location_access_background_summaryOff">Włącz opcję „Zawsze zezwalaj”, aby odświeżać bieżącą lokalizację w tle.</string>
     <string name="settings_units_summary">Temperatura, opady, odległość, prędkość, ciśnienie</string>
@@ -436,10 +427,6 @@
     <string name="settings_debug_dump_crash_logs_title">Udostępnij dzienniki awarii</string>
     <string name="notification_update_error">Aktualizacja %d nie powiodła się</string>
     <string name="settings_notifications_forecast_time_tomorrow_title">Czas powiadomienia o prognozie na następny dzień</string>
-    <string name="unit_mps_voice">Metrów na sekundę</string>
-    <string name="unit_kn_voice">Węzłów</string>
-    <string name="unit_mph_voice">Mil na godzinę</string>
-    <string name="unit_ftps_voice">Stóp na sekundę</string>
     <string name="common_weather_text_mostly_clear">Przeważnie bezchmurnie</string>
     <string name="openmeteo_weather_text_thunderstorm_slight_or_moderate">Lekka lub umiarkowana burza z piorunami</string>
     <string name="openmeteo_weather_text_thunderstorm_with_heavy_hail">Silna burza z gradem</string>
@@ -450,7 +437,6 @@
     <string name="settings_icon_packs_weather_icon_light">Jasna ikona</string>
     <string name="settings_items_drag_to_sort">Dotknij i przeciągnij, aby posortować elementy listy</string>
     <string name="settings_debug">Debugowanie</string>
-    <string name="unit_kph_voice">Kilometrów na godzinę</string>
     <string name="openmeteo_weather_text_thunderstorm_with_slight_hail">Lekka lub umiarkowana burza z gradem</string>
     <string name="about_dependencies">Zależności</string>
     <string name="settings_modules">Widżety i animowana tapeta</string>
@@ -464,7 +450,6 @@
     <string name="message_parsing_error_content">Upewnij się, że zaktualizowałeś do najnowszej wersji aplikacji. Serwer może być tymczasowo nie dostępny, w tym przypadku spróbuj ponownie później. Jeśli problem się utrwala, proszę o wygenerowanie dziennika crasha z ustawień debugowania i zgłoszenie problemu na GitHubie.</string>
     <string name="about_privacy_policy">Polityka prywatności</string>
     <string name="about_contact">Kontakt</string>
-    <string name="unit_bft_voice">w skali Beauforta</string>
     <string name="common_weather_text_rain_showers_light">Lekkie przelotne opady deszczu</string>
     <string name="common_weather_text_rain_showers_moderate">Umiarkowane przelotne opady deszczu</string>
     <string name="common_weather_text_rain_showers_heavy">Silne przelotne opady deszczu</string>
@@ -743,8 +728,6 @@
     <string name="label_description">Opis</string>
     <string name="label_expanded">Rozszerzony</string>
     <string name="label_collapsed">Zwinięty</string>
-    <string name="unit_mum">µm</string>
-    <string name="unit_mum_voice">Mikrometry</string>
     <string name="air_quality_short">Jakość powietrza</string>
     <string name="ephemeris_sun">Słońce</string>
     <string name="ephemeris_moon">Księżyc</string>
@@ -767,8 +750,6 @@
     <string name="action_configure_item">Konfiguruj %s</string>
     <string name="settings_appearance_section_regional">Język i region</string>
     <string name="settings_appearance_section_theme">Motyw</string>
-    <string name="unit_bft_display_name">Beaufort</string>
-    <string name="unit_bft_nominative">%s Bft</string>
     <string name="about_update_check_eol">Ta wersja Androida nie jest już wspierana</string>
     <string name="temperature_normals_deviation">odchylenie</string>
     <string name="temperature_normals_deviation_explanation_maximum">Odchylenie od średniej maksymalnej temperatury %s dla tej lokalizacji</string>
@@ -808,4 +789,5 @@
     <string name="content_provider_permission_description">pobierz informacje pogodowe z Breezy Weather, w tym współrzędne Twoich lokalizacji – na przykład bieżącej, jeśli została dodana</string>
     <string name="action_add_as_location">Dodaj jako lokalizację</string>
     <string name="settings_regional_preference">Ustawienia regionalne</string>
+    <string name="broadcast_source_breezy_weather_update_notifier">Powiadomienie o aktualizacji lokalizacji z %s</string>
 </resources>

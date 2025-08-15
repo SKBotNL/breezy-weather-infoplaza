@@ -51,6 +51,7 @@ import org.breezyweather.sources.lhmt.json.LhmtLocationsResult
 import org.breezyweather.sources.lhmt.json.LhmtWeatherResult
 import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
 import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
+import org.breezyweather.unit.speed.Speed.Companion.metersPerSecond
 import retrofit2.Retrofit
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -204,8 +205,8 @@ class LhmtService @Inject constructor(
                 ),
                 wind = Wind(
                     degree = it.windDirection,
-                    speed = it.windSpeed,
-                    gusts = it.windGust
+                    speed = it.windSpeed?.metersPerSecond,
+                    gusts = it.windGust?.metersPerSecond
                 ),
                 relativeHumidity = it.relativeHumidity,
                 pressure = it.seaLevelPressure?.hectopascals,
@@ -251,8 +252,8 @@ class LhmtService @Inject constructor(
                         ),
                         wind = Wind(
                             degree = it.windDirection,
-                            speed = it.windSpeed,
-                            gusts = it.windGust
+                            speed = it.windSpeed?.metersPerSecond,
+                            gusts = it.windGust?.metersPerSecond
                         ),
                         relativeHumidity = it.relativeHumidity,
                         pressure = it.seaLevelPressure?.hectopascals,
@@ -531,6 +532,9 @@ class LhmtService @Inject constructor(
     }
 
     override val testingLocations: List<Location> = emptyList()
+
+    // Only supports its own country
+    override val knownAmbiguousCountryCodes: Array<String>? = null
 
     companion object {
         private const val LHMT_BASE_URL = "https://api.meteo.lt/"

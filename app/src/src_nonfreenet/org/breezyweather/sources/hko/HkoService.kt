@@ -63,6 +63,7 @@ import org.breezyweather.sources.hko.json.HkoNormalsResult
 import org.breezyweather.sources.hko.json.HkoOneJsonResult
 import org.breezyweather.sources.hko.json.HkoWarningResult
 import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
+import org.breezyweather.unit.speed.Speed.Companion.kilometersPerHour
 import org.json.JSONObject
 import retrofit2.Retrofit
 import java.text.SimpleDateFormat
@@ -329,8 +330,8 @@ class HkoService @Inject constructor(
             ),
             wind = Wind(
                 degree = getWindDegree(regionalWeather?.Wind?.WindDirectionCode),
-                speed = regionalWeather?.Wind?.WindSpeed?.toDoubleOrNull()?.div(3.6), // convert km/h to m/s
-                gusts = regionalWeather?.Wind?.Gust?.toDoubleOrNull()?.div(3.6) // convert km/h to m/s
+                speed = regionalWeather?.Wind?.WindSpeed?.toDoubleOrNull()?.kilometersPerHour,
+                gusts = regionalWeather?.Wind?.Gust?.toDoubleOrNull()?.kilometersPerHour
             ),
             uV = UV(
                 index = oneJson.RHRREAD?.UVIndex?.toDoubleOrNull()
@@ -492,7 +493,7 @@ class HkoService @Inject constructor(
                             ),
                             wind = Wind(
                                 degree = value.ForecastWindDirection,
-                                speed = value.ForecastWindSpeed?.div(3.6) // convert km/h to m/s
+                                speed = value.ForecastWindSpeed?.kilometersPerHour
                             ),
                             relativeHumidity = value.ForecastRelativeHumidity
                         )
@@ -1113,6 +1114,9 @@ class HkoService @Inject constructor(
     }
 
     override val testingLocations: List<Location> = emptyList()
+
+    // Only supports its own country
+    override val knownAmbiguousCountryCodes: Array<String>? = null
 
     companion object {
         private const val HKO_BASE_URL = "https://www.hko.gov.hk/"

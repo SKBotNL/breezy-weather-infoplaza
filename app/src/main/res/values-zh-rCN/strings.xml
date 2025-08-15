@@ -291,20 +291,6 @@
     <string name="air_quality_level_6">危险</string>
     <string name="air_quality_level_6_description">在空气中的任何暴露，哪怕只是几分钟，都会对每个人的健康造成严重影响。避免户外活动。</string>
     <!-- Units -->
-    <string name="unit_kph">千米/时</string>
-    <string name="unit_kph_voice">千米每小时</string>
-    <string name="unit_mps">米/秒</string>
-    <string name="unit_mps_voice">米每秒</string>
-    <string name="unit_kn">节</string>
-    <string name="unit_kn_voice">节</string>
-    <string name="unit_mph">英里/时</string>
-    <string name="unit_mph_voice">英里每小时</string>
-    <string name="unit_ftps">英尺/秒</string>
-    <string name="unit_ftps_voice">英尺每秒</string>
-    <string name="unit_mugpcum">微克/米³</string>
-    <string name="unit_mugpcum_voice">微克每立方米</string>
-    <string name="unit_mgpcum">毫克/米³</string>
-    <string name="unit_mgpcum_voice">毫克每立方米</string>
     <string name="unit_ppcm">/米³</string>
     <string name="unit_ppcm_voice">每立方米</string>
     <string name="uv_alert_level">预警水平</string>
@@ -494,8 +480,6 @@
     <string name="common_weather_text_drizzle">毛毛雨</string>
     <string name="common_weather_text_drizzle_light">小毛毛雨</string>
     <string name="metno_weather_text_andthunder">%s 并伴有雷电</string>
-    <string name="unit_bft_nominative">%s级</string>
-    <string name="unit_bft_voice">蒲福风级</string>
     <string name="settings_appearance_dark_mode_locations_title">基于位置的深色模式</string>
     <string name="weather_message_unsupported_feature">数据源不支持所请求功能中的一个</string>
     <string name="about_contribution_designer">Logo 设计者</string>
@@ -802,8 +786,6 @@
     <string name="visibility_perfectly_clear">非常清楚</string>
     <string name="cloud_cover_about">关于云量</string>
     <string name="label_description">描述</string>
-    <string name="unit_mum">微米</string>
-    <string name="unit_mum_voice">微米</string>
     <string name="air_quality_co_sources">通常源自碳基燃料的不完全燃烧，比如发生在汽车引擎和电厂中的那些。</string>
     <string name="air_quality_pm_sources">主要来源是燃烧过程（电厂、室内加热、汽车排放、野火）、机械过程（施工、矿灰、农业）和生物微粒（花粉、模具、细菌、病毒）。</string>
     <string name="air_quality_o3_sources">臭氧是在大气中的氧气、氮氧化物、一氧化碳和有机化合物间的化学反应中创造的，存在于日光中。</string>
@@ -829,7 +811,6 @@
     <string name="settings_appearance_section_regional">语言和区域</string>
     <string name="settings_appearance_section_theme">主题</string>
     <string name="action_configure_item">配置 %s</string>
-    <string name="unit_bft_display_name">蒲福风级</string>
     <string name="about_update_check_eol">这个 Android 版本不再受支持</string>
     <string name="air_quality_short">空气质量</string>
     <string name="ephemeris_sun">太阳</string>
