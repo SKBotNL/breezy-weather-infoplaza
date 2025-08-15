@@ -17,7 +17,6 @@
 package org.breezyweather.sources.infoplaza
 
 import android.content.Context
-import android.util.Log
 import breezyweather.domain.location.model.Location
 import breezyweather.domain.source.SourceContinent
 import breezyweather.domain.source.SourceFeature
@@ -45,7 +44,6 @@ class InfoplazaService @Inject constructor(
     }
 
     override fun requestLocationParameters(context: Context, location: Location): Observable<Map<String, String>> {
-        Log.d("Debug", location.city + " " + location.country)
         return mSearchApi.search(location.city + " " + location.country).map { list ->
             mapOf(
                 "geoAreaId" to list.firstOrNull { it.locationId != null }?.locationId.toString()
