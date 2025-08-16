@@ -64,6 +64,9 @@ data class InfoplazaForecastDaily(
                 @Serializable
                 data class Grasses(
                     val grasses: Int?,
+                    val mugwort: Int?,
+                    val plantain: Int?,
+                    val sorrel: Int?,
                 )
 
                 @Serializable

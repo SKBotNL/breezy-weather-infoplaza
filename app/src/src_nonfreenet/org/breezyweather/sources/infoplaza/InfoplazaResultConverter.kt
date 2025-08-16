@@ -17,15 +17,14 @@
 package org.breezyweather.sources.infoplaza
 
 import breezyweather.domain.weather.model.Alert
-import breezyweather.domain.weather.model.AlertSeverity
 import breezyweather.domain.weather.model.Minutely
 import breezyweather.domain.weather.model.Pollen
 import breezyweather.domain.weather.model.Precipitation
 import breezyweather.domain.weather.model.PrecipitationProbability
 import breezyweather.domain.weather.model.UV
-import breezyweather.domain.weather.model.WeatherCode
 import breezyweather.domain.weather.model.Wind
 import breezyweather.domain.weather.reference.AlertSeverity
+import breezyweather.domain.weather.reference.WeatherCode
 import breezyweather.domain.weather.wrappers.DailyWrapper
 import breezyweather.domain.weather.wrappers.HalfDayWrapper
 import breezyweather.domain.weather.wrappers.HourlyWrapper
@@ -37,7 +36,13 @@ import org.breezyweather.sources.infoplaza.json.InfoplazaForecastDaily
 import org.breezyweather.sources.infoplaza.json.InfoplazaForecastHourly
 import org.breezyweather.sources.infoplaza.json.InfoplazaForecastWeatherSymbol
 import org.breezyweather.sources.infoplaza.json.InfoplazaNowcastTimeseries
+import org.breezyweather.unit.pollen.PollenConcentration
+import org.breezyweather.unit.pollen.PollenConcentration.Companion.pollenIndex
+import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
+import org.breezyweather.unit.speed.Speed.Companion.metersPerSecond
+import org.breezyweather.unit.temperature.Temperature.Companion.celsius
 import java.util.Objects
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 private val iconSignificance = listOf(
@@ -66,18 +71,14 @@ internal fun getDailyForecast(
                 ).minByOrNull { iconSignificance.indexOf(it) },
                 temperature = TemperatureWrapper(
                     temperature = listOfNotNull(
-                        current.dayPart?.afternoon?.temperature?.air,
-                        current.dayPart?.evening?.temperature?.air
+                        current.dayPart?.afternoon?.temperature?.air?.celsius,
+                        current.dayPart?.evening?.temperature?.air?.celsius
                     ).maxOrNull(),
                     feelsLike = listOfNotNull(
-                        current.dayPart?.afternoon?.temperature?.feelsLike,
-                        current.dayPart?.evening?.temperature?.feelsLike
+                        current.dayPart?.afternoon?.temperature?.feelsLike?.celsius,
+                        current.dayPart?.evening?.temperature?.feelsLike?.celsius
                     ).maxOrNull()
-                ),
-                cloudCover = listOfNotNull(
-                    getCloudCover(current.dayPart?.afternoon?.weatherSymbol),
-                    getCloudCover(next.dayPart?.evening?.weatherSymbol)
-                ).maxOrNull()
+                )
             ),
             night = HalfDayWrapper(
                 weatherCode = listOfNotNull(
@@ -86,21 +87,17 @@ internal fun getDailyForecast(
                 ).minByOrNull { iconSignificance.indexOf(it) },
                 temperature = TemperatureWrapper(
                     temperature = listOfNotNull(
-                        current.dayPart?.night?.temperature?.air,
-                        next.dayPart?.morning?.temperature?.air
+                        current.dayPart?.night?.temperature?.air?.celsius,
+                        next.dayPart?.morning?.temperature?.air?.celsius
                     ).maxOrNull(),
                     feelsLike = listOfNotNull(
-                        current.dayPart?.night?.temperature?.feelsLike,
-                        next.dayPart?.morning?.temperature?.feelsLike
+                        current.dayPart?.night?.temperature?.feelsLike?.celsius,
+                        next.dayPart?.morning?.temperature?.feelsLike?.celsius
                     ).maxOrNull()
-                ),
-                cloudCover = listOfNotNull(
-                    getCloudCover(current.dayPart?.night?.weatherSymbol),
-                    getCloudCover(next.dayPart?.morning?.weatherSymbol)
-                ).maxOrNull()
+                )
             ),
             uV = UV(index = current.digits?.health?.maxUvIndex),
-            sunshineDuration = current.sunshine?.minutes?.div(60)
+            sunshineDuration = current.sunshine?.minutes?.minutes
         )
     }
 }
@@ -113,18 +110,18 @@ internal fun getHourlyForecast(
             date = result.intervalStart.millis.toDate(),
             weatherCode = getWeatherCode(result.weatherSymbol),
             temperature = TemperatureWrapper(
-                temperature = result.temperature?.air,
-                feelsLike = result.temperature?.feelsLike
+                temperature = result.temperature?.air?.celsius,
+                feelsLike = result.temperature?.feelsLike?.celsius
             ),
             precipitation = Precipitation(
-                total = result.precipitation?.amount,
+                total = result.precipitation?.amount?.millimeters,
             ),
             precipitationProbability = PrecipitationProbability(
                 total = result.precipitation?.probability
             ),
             wind = Wind(
                 degree = directionToBearing(result.wind?.direction),
-                speed = result.wind?.speed?.ms,
+                speed = result.wind?.speed?.ms?.metersPerSecond,
             ),
             cloudCover = getCloudCover(result.weatherSymbol)
         )
@@ -158,9 +155,18 @@ internal fun getMinutelyForecast(minutelyResult: List<InfoplazaNowcastTimeseries
         Minutely(
             date = result.timestamp.seconds.inWholeMilliseconds.toDate(),
             minuteInterval = 5,
-            precipitationIntensity = result.precipitationRate
+            precipitationIntensity = result.precipitationRate?.millimeters
         )
     }
+}
+
+fun Int?.toPollenIndex(): PollenConcentration? = when (this) {
+    0 -> 0.pollenIndex
+    1 -> 25.pollenIndex
+    2 -> 50.pollenIndex
+    3 -> 75.pollenIndex
+    4 -> 100.pollenIndex
+    else -> null
 }
 
 internal fun getPollen(dailyResult: List<InfoplazaForecastDaily>?): PollenWrapper? {
@@ -168,15 +174,18 @@ internal fun getPollen(dailyResult: List<InfoplazaForecastDaily>?): PollenWrappe
     return PollenWrapper(
         dailyForecast = dailyResult.associate { result ->
             result.intervalStart.millis.toDate() to Pollen(
-                alder = result.digits?.health?.hayFever?.trees?.alder,
-                ash = result.digits?.health?.hayFever?.trees?.ash,
-                birch = result.digits?.health?.hayFever?.trees?.birch,
-                cypress = result.digits?.health?.hayFever?.trees?.cypress,
-                grass = result.digits?.health?.hayFever?.grasses?.grasses,
-                hazel = result.digits?.health?.hayFever?.trees?.hazel,
-                oak = result.digits?.health?.hayFever?.trees?.oak,
-                poplar = result.digits?.health?.hayFever?.trees?.poplar,
-                willow = result.digits?.health?.hayFever?.trees?.willow
+                alder = result.digits?.health?.hayFever?.trees?.alder.toPollenIndex(),
+                ash = result.digits?.health?.hayFever?.trees?.ash?.toPollenIndex(),
+                birch = result.digits?.health?.hayFever?.trees?.birch?.toPollenIndex(),
+                cypress = result.digits?.health?.hayFever?.trees?.cypress?.toPollenIndex(),
+                grass = result.digits?.health?.hayFever?.grasses?.grasses?.toPollenIndex(),
+                hazel = result.digits?.health?.hayFever?.trees?.hazel?.toPollenIndex(),
+                oak = result.digits?.health?.hayFever?.trees?.oak?.toPollenIndex(),
+                poplar = result.digits?.health?.hayFever?.trees?.poplar?.toPollenIndex(),
+                willow = result.digits?.health?.hayFever?.trees?.willow?.toPollenIndex(),
+                mugwort = result.digits?.health?.hayFever?.grasses?.mugwort?.toPollenIndex(),
+                plantain = result.digits?.health?.hayFever?.grasses?.plantain?.toPollenIndex(),
+                sorrel = result.digits?.health?.hayFever?.grasses?.sorrel?.toPollenIndex(),
             )
         }
     )
