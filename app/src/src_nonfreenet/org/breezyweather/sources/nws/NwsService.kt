@@ -51,7 +51,6 @@ import org.breezyweather.common.source.WeatherSource
 import org.breezyweather.common.source.WeatherSource.Companion.PRIORITY_HIGHEST
 import org.breezyweather.common.source.WeatherSource.Companion.PRIORITY_NONE
 import org.breezyweather.common.utils.ISO8601Utils
-import org.breezyweather.sources.computeMeanSeaLevelPressure
 import org.breezyweather.sources.getWindDegree
 import org.breezyweather.sources.nws.json.NwsAlert
 import org.breezyweather.sources.nws.json.NwsAlertsResult
@@ -64,11 +63,13 @@ import org.breezyweather.sources.nws.json.NwsValueDoubleContainer
 import org.breezyweather.sources.nws.json.NwsValueIntContainer
 import org.breezyweather.sources.nws.json.NwsValueWeatherContainer
 import org.breezyweather.sources.nws.json.NwsValueWeatherValue
+import org.breezyweather.unit.computing.computeMeanSeaLevelPressure
 import org.breezyweather.unit.distance.Distance.Companion.meters
 import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
 import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
 import org.breezyweather.unit.pressure.Pressure.Companion.inchesOfMercury
 import org.breezyweather.unit.pressure.Pressure.Companion.pascals
+import org.breezyweather.unit.ratio.Ratio.Companion.percent
 import org.breezyweather.unit.speed.Speed
 import org.breezyweather.unit.speed.Speed.Companion.kilometersPerHour
 import org.breezyweather.unit.speed.Speed.Companion.milesPerHour
@@ -282,7 +283,7 @@ class NwsService @Inject constructor(
                 } else {
                     null
                 },
-                relativeHumidity = it.relativeHumidity?.value,
+                relativeHumidity = it.relativeHumidity?.value?.percent,
                 dewPoint = it.dewpoint?.value?.celsius,
                 pressure = if (it.seaLevelPressure != null) {
                     it.seaLevelPressure.value?.pascals
@@ -320,7 +321,7 @@ class NwsService @Inject constructor(
                         temperature = it.temperature?.value?.celsius
                     ),
                     precipitationProbability = PrecipitationProbability(
-                        total = it.probabilityOfPrecipitation?.value
+                        total = it.probabilityOfPrecipitation?.value?.percent
                     ),
                     wind = Wind(
                         degree = getWindDegree(it.windDirection),
@@ -336,7 +337,7 @@ class NwsService @Inject constructor(
                         temperature = it.temperature?.value?.celsius
                     ),
                     precipitationProbability = PrecipitationProbability(
-                        total = it.probabilityOfPrecipitation?.value
+                        total = it.probabilityOfPrecipitation?.value?.percent
                     ),
                     wind = Wind(
                         degree = getWindDegree(it.windDirection),
@@ -450,18 +451,18 @@ class NwsService @Inject constructor(
                     ice = iceAccumulationForecastList.getOrElse(it) { null }?.millimeters
                 ),
                 precipitationProbability = PrecipitationProbability(
-                    total = probabilityOfPrecipitationForecastList.getOrElse(it) { null }?.toDouble(),
-                    thunderstorm = probabilityOfThunderForecastList.getOrElse(it) { null }?.toDouble()
+                    total = probabilityOfPrecipitationForecastList.getOrElse(it) { null }?.percent,
+                    thunderstorm = probabilityOfThunderForecastList.getOrElse(it) { null }?.percent
                 ),
                 wind = Wind(
                     degree = windDirectionForecastList.getOrElse(it) { null }?.toDouble(),
                     speed = windSpeedForecastList.getOrElse(it) { null }?.kilometersPerHour,
                     gusts = windGustForecastList.getOrElse(it) { null }?.kilometersPerHour
                 ),
-                relativeHumidity = relativeHumidityList.getOrElse(it) { null }?.toDouble(),
+                relativeHumidity = relativeHumidityList.getOrElse(it) { null }?.percent,
                 dewPoint = dewpointForecastList.getOrElse(it) { null }?.celsius,
                 pressure = pressureForecastList.getOrElse(it) { null }?.inchesOfMercury,
-                cloudCover = skyCoverForecastList.getOrElse(it) { null },
+                cloudCover = skyCoverForecastList.getOrElse(it) { null }?.percent,
                 visibility = visibilityForecastList.getOrElse(it) { null }?.meters
             )
         }

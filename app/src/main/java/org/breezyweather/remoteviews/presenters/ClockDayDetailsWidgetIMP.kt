@@ -29,6 +29,7 @@ import breezyweather.domain.weather.model.Weather
 import org.breezyweather.R
 import org.breezyweather.background.receiver.widget.WidgetClockDayDetailsProvider
 import org.breezyweather.common.extensions.formatMeasure
+import org.breezyweather.common.extensions.formatPercent
 import org.breezyweather.common.extensions.getFormattedMediumDayAndMonthInAdditionalCalendar
 import org.breezyweather.common.extensions.getShortWeekdayDayMonth
 import org.breezyweather.common.options.appearance.CalendarHelper
@@ -89,6 +90,7 @@ object ClockDayDetailsWidgetIMP : AbstractRemoteViewsPresenter() {
         val provider = ResourcesProviderFactory.newInstance
         val dayTime = location.isDaylight
         val settings = SettingsManager.getInstance(context)
+        val temperatureUnit = settings.getTemperatureUnit(context)
         val minimalIcon = settings.isWidgetUsingMonochromeIcons
 
         // Clock
@@ -160,11 +162,11 @@ object ClockDayDetailsWidgetIMP : AbstractRemoteViewsPresenter() {
         builder.append(location.getPlace(context))
         weather.current?.temperature?.temperature?.let {
             builder.append(" ").append(
-                it.formatMeasure(context, unitWidth = UnitWidth.NARROW)
+                it.formatMeasure(context, temperatureUnit, unitWidth = UnitWidth.NARROW)
             )
         }
         views.setTextViewText(R.id.widget_clock_day_subtitle, builder.toString())
-        weather.today?.getTrendTemperature(context)?.let {
+        weather.today?.getTrendTemperature(context, temperatureUnit)?.let {
             views.setTextViewText(
                 R.id.widget_clock_day_todayTemp,
                 context.getString(R.string.daily_today_short) + " " + it
@@ -177,7 +179,7 @@ object ClockDayDetailsWidgetIMP : AbstractRemoteViewsPresenter() {
                 R.id.widget_clock_day_feelsLikeTemp,
                 context.getString(
                     R.string.temperature_feels_like_with_unit,
-                    it.formatMeasure(context, unitWidth = UnitWidth.NARROW)
+                    it.formatMeasure(context, temperatureUnit, unitWidth = UnitWidth.NARROW)
                 )
             )
         } ?: run {
@@ -288,7 +290,7 @@ object ClockDayDetailsWidgetIMP : AbstractRemoteViewsPresenter() {
             weather.current?.relativeHumidity?.let {
                 context.getString(R.string.humidity) +
                     context.getString(R.string.colon_separator) +
-                    UnitUtils.formatPercent(context, it)
+                    it.formatPercent(context, UnitWidth.NARROW)
             }
         }
     }

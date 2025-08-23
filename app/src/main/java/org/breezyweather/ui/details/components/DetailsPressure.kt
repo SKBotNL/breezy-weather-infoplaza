@@ -16,8 +16,12 @@
 
 package org.breezyweather.ui.details.components
 
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
+import android.text.Spannable
 import android.text.SpannableString
-import android.text.style.RelativeSizeSpan
+import android.text.style.ImageSpan
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -34,15 +38,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.unit.dp
 import breezyweather.domain.location.model.Location
 import breezyweather.domain.weather.model.Daily
 import breezyweather.domain.weather.model.Hourly
+import com.patrykandpatrick.vico.compose.cartesian.axis.fixed
+import com.patrykandpatrick.vico.core.cartesian.axis.BaseAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
@@ -52,8 +60,10 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
 import org.breezyweather.R
+import org.breezyweather.common.extensions.dpToPx
 import org.breezyweather.common.extensions.formatMeasure
 import org.breezyweather.common.extensions.getFormattedTime
 import org.breezyweather.common.extensions.is12Hour
@@ -64,7 +74,7 @@ import org.breezyweather.common.options.appearance.DetailScreen
 import org.breezyweather.common.utils.UnitUtils
 import org.breezyweather.domain.settings.SettingsManager
 import org.breezyweather.ui.common.charts.BreezyLineChart
-import org.breezyweather.ui.settings.preference.bottomInsetItem
+import org.breezyweather.ui.common.charts.TimeTopAxisItemPlacer
 import org.breezyweather.unit.formatting.UnitWidth
 import org.breezyweather.unit.pressure.Pressure
 import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
@@ -74,6 +84,7 @@ import org.breezyweather.unit.pressure.toPressure
 import java.util.Date
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 @Composable
 fun DetailsPressure(
@@ -145,7 +156,7 @@ fun DetailsPressure(
                 stringResource(R.string.pressure_about_description2)
             )
         }
-        bottomInsetItem()
+        bottomDetailsInset()
     }
 }
 
@@ -232,6 +243,7 @@ private fun PressureChart(
             mappedValues.values.minOf { it.toDouble(pressureUnit) }
         ).roundDownToNearestMultiplier(chartStep)
     }
+    val iconColor = MaterialTheme.colorScheme.onSurface
 
     val modelProducer = remember { CartesianChartModelProducer() }
 
@@ -247,60 +259,80 @@ private fun PressureChart(
     }
 
     BreezyLineChart(
-        location,
-        modelProducer,
-        daily.date,
-        maxY,
-        { _, value, _ -> value.toPressure(pressureUnit).formatMeasure(context) },
-        persistentListOf(
-            persistentMapOf(
-                1080.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(48, 8, 24),
-                1046.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(111, 24, 64),
-                1038.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(142, 47, 57),
-                1030.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(159, 81, 44),
-                1024.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(163, 116, 67),
-                1019.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(167, 147, 107),
-                1015.25.hectopascals.toDouble(pressureUnit).toFloat() to Color(176, 174, 152),
-                1013.25.hectopascals.toDouble(pressureUnit).toFloat() to Color(182, 182, 182),
-                1011.25.hectopascals.toDouble(pressureUnit).toFloat() to Color(155, 183, 172),
-                1007.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(103, 162, 155),
-                1002.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(26, 140, 147),
-                995.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(0, 117, 146),
-                986.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(0, 90, 148),
-                976.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(0, 52, 146),
-                950.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(0, 32, 96),
-                900.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(8, 16, 48)
+        location = location,
+        modelProducer = modelProducer,
+        theDay = daily.date,
+        maxY = maxY,
+        topAxisItemPlacer = remember(mappedValues) {
+            TimeTopAxisItemPlacer(mappedValues.keys.toImmutableList())
+        },
+        topAxisSize = BaseAxis.Size.fixed(23.dp),
+        endAxisValueFormatter = { _, value, _ -> value.toPressure(pressureUnit).formatMeasure(context) },
+        colors = remember {
+            persistentListOf(
+                persistentMapOf(
+                    1080.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(48, 8, 24),
+                    1046.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(111, 24, 64),
+                    1038.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(142, 47, 57),
+                    1030.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(159, 81, 44),
+                    1024.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(163, 116, 67),
+                    1019.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(167, 147, 107),
+                    1015.25.hectopascals.toDouble(pressureUnit).toFloat() to Color(176, 174, 152),
+                    1013.25.hectopascals.toDouble(pressureUnit).toFloat() to Color(182, 182, 182),
+                    1011.25.hectopascals.toDouble(pressureUnit).toFloat() to Color(155, 183, 172),
+                    1007.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(103, 162, 155),
+                    1002.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(26, 140, 147),
+                    995.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(0, 117, 146),
+                    986.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(0, 90, 148),
+                    976.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(0, 52, 146),
+                    950.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(0, 32, 96),
+                    900.0.hectopascals.toDouble(pressureUnit).toFloat() to Color(8, 16, 48)
+                )
             )
-        ),
+        },
         trendHorizontalLines = persistentMapOf(
-            PressureUnit.NORMAL.pascals.toDouble(pressureUnit) to stringResource(R.string.temperature_normal_short)
+            PressureUnit.NORMAL.pascals.toDouble(pressureUnit) to
+                context.getString(R.string.temperature_normal_short)
         ),
         minY = minY,
         topAxisValueFormatter = { _, value, _ ->
             val currentIndex = mappedValues.keys.indexOfFirst { it == value.toLong() }.let {
                 if (it == 0) 1 else it
             }
-            val previousValue = if (currentIndex > 0) {
-                mappedValues.values.elementAt(currentIndex - 1)
-            } else {
-                return@BreezyLineChart "-"
-            }
-            val currentValue = mappedValues.values.elementAt(currentIndex)
-            val trend = with(currentValue.value - previousValue.value) {
-                when {
-                    // Take into account the trend if the difference is of at least 0.5
-                    this >= 0.5 -> "↑"
-                    this <= -0.5 -> "↓"
-                    else -> "="
+            if (currentIndex > 0) {
+                val previousValue = mappedValues.values.elementAt(currentIndex - 1)
+                val currentValue = mappedValues.values.elementAt(currentIndex)
+                val trendIcon = with(currentValue.value - previousValue.value) {
+                    when {
+                        // Take into account the trend if the difference is of at least 0.5
+                        this >= 0.5 -> R.drawable.ic_arrow_upward_alt
+                        this <= -0.5 -> R.drawable.ic_arrow_downward_alt
+                        else -> R.drawable.ic_equal
+                    }
                 }
-            }
-            SpannableString(trend).apply {
-                setSpan(RelativeSizeSpan(2f), 0, trend.length, 0)
+                val d = AppCompatResources.getDrawable(context, trendIcon)
+                if (d != null) {
+                    val ss = SpannableString("abc")
+                    d.setBounds(0, 0, context.dpToPx(18f).roundToInt(), context.dpToPx(18f).roundToInt())
+                    d.colorFilter = PorterDuffColorFilter(
+                        iconColor.toArgb(),
+                        PorterDuff.Mode.SRC_ATOP
+                    )
+                    val span = ImageSpan(d, ImageSpan.ALIGN_BASELINE)
+                    ss.setSpan(span, 0, 3, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
+                    ss
+                } else {
+                    when (trendIcon) {
+                        R.drawable.ic_arrow_upward_alt -> "↑"
+                        R.drawable.ic_arrow_downward_alt -> "↓"
+                        else -> "="
+                    }
+                }
+            } else {
+                "-"
             }
         },
-        endAxisItemPlacer = remember {
-            VerticalAxis.ItemPlacer.step({ chartStep })
-        },
+        endAxisItemPlacer = remember { VerticalAxis.ItemPlacer.step({ chartStep }) },
         markerVisibilityListener = markerVisibilityListener
     )
 }

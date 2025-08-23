@@ -19,7 +19,6 @@ package org.breezyweather.unit
 import android.content.Context
 import android.icu.text.MeasureFormat
 import android.icu.util.MeasureUnit
-import android.os.Build
 import org.breezyweather.unit.formatting.UnitDecimals
 import org.breezyweather.unit.formatting.UnitTranslation
 import org.breezyweather.unit.formatting.UnitWidth
@@ -71,14 +70,26 @@ interface WeatherUnit {
         width: UnitWidth = UnitWidth.SHORT,
         useMeasureFormat: Boolean = true,
     ): String {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
+        if (supportsUnitDisplayName() &&
             useMeasureFormat &&
-            measureUnit != null &&
-            perMeasureUnit == null
+            measureUnit != null
         ) {
-            return MeasureFormat
-                .getInstance(locale, width.measureFormatWidth)
-                .getUnitDisplayName(measureUnit)
+            if (perMeasureUnit == null) {
+                return MeasureFormat
+                    .getInstance(locale, width.measureFormatWidth)
+                    .getUnitDisplayName(measureUnit)
+            } else if (perMeasureUnit != null && per != null) {
+                return context.getString(
+                    when (width) {
+                        UnitWidth.SHORT -> per!!.short
+                        UnitWidth.LONG -> per!!.long
+                        UnitWidth.NARROW -> per!!.narrow
+                    },
+                    MeasureFormat
+                        .getInstance(locale, width.measureFormatWidth)
+                        .getUnitDisplayName(measureUnit)
+                )
+            }
         }
 
         val formattingWithoutPer = context.getString(
@@ -140,12 +151,12 @@ interface WeatherUnit {
         useMeasureFormat: Boolean = true,
     ): String {
         if (measureUnit != null &&
-            (perMeasureUnit == null || Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) &&
+            (perMeasureUnit == null || supportsMeasureFormat()) &&
             (useNumberFormatter || useMeasureFormat)
         ) {
             // LogHelper.log(msg = "Formatting with ICU ${enum.id}: ${enum.measureUnit} per ${enum.perMeasureUnit}")
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && useNumberFormatter) {
+            if (supportsNumberFormatter() && useNumberFormatter) {
                 return measureUnit!!.formatWithNumberFormatter(
                     locale = locale,
                     value = value,
@@ -156,7 +167,7 @@ interface WeatherUnit {
                 )
             }
 
-            if (!showSign) {
+            if (!showSign && (perMeasureUnit == null || supportsMeasureFormatPerUnit())) {
                 return measureUnit!!.formatWithMeasureFormat(
                     locale = locale,
                     value = value,
@@ -201,7 +212,7 @@ interface WeatherUnit {
                 locale = locale,
                 showSign = showSign,
                 useNumberFormatter = useNumberFormatter,
-                useMeasureFormat = useMeasureFormat
+                useNumberFormat = useMeasureFormat
             )
         )
 

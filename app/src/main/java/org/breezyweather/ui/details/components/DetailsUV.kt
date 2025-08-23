@@ -40,7 +40,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -62,8 +61,10 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
 import org.breezyweather.R
+import org.breezyweather.common.extensions.getColorResource
 import org.breezyweather.common.extensions.getFormattedTime
 import org.breezyweather.common.extensions.is12Hour
 import org.breezyweather.common.extensions.toDate
@@ -72,8 +73,8 @@ import org.breezyweather.common.utils.UnitUtils
 import org.breezyweather.domain.weather.model.getLevel
 import org.breezyweather.domain.weather.model.getUVColor
 import org.breezyweather.ui.common.charts.BreezyLineChart
+import org.breezyweather.ui.common.charts.TimeTopAxisItemPlacer
 import org.breezyweather.ui.common.widgets.Material3ExpressiveCardListItem
-import org.breezyweather.ui.settings.preference.bottomInsetItem
 import java.util.Date
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -157,7 +158,7 @@ fun DetailsUV(
         item {
             UVScale()
         }
-        bottomInsetItem()
+        bottomDetailsInset()
     }
 }
 
@@ -267,22 +268,27 @@ private fun UVChart(
     }
 
     BreezyLineChart(
-        location,
-        modelProducer,
-        daily.date,
-        maxY,
-        { _, value, _ -> UnitUtils.formatInt(context, value.roundToInt()) },
-        persistentListOf(
-            persistentMapOf(
-                19f to Color(255, 255, 255),
-                11f to colorResource(R.color.colorLevel_5),
-                10f to colorResource(R.color.colorLevel_4),
-                7f to colorResource(R.color.colorLevel_3),
-                5f to colorResource(R.color.colorLevel_2),
-                2f to colorResource(R.color.colorLevel_1),
-                0f to Color(110, 110, 110)
+        location = location,
+        modelProducer = modelProducer,
+        theDay = daily.date,
+        maxY = maxY,
+        topAxisItemPlacer = remember(mappedValues) {
+            TimeTopAxisItemPlacer(mappedValues.keys.toImmutableList())
+        },
+        endAxisValueFormatter = { _, value, _ -> UnitUtils.formatInt(context, value.roundToInt()) },
+        colors = remember {
+            persistentListOf(
+                persistentMapOf(
+                    19f to Color(255, 255, 255),
+                    11f to context.getColorResource(R.color.colorLevel_5),
+                    10f to context.getColorResource(R.color.colorLevel_4),
+                    7f to context.getColorResource(R.color.colorLevel_3),
+                    5f to context.getColorResource(R.color.colorLevel_2),
+                    2f to context.getColorResource(R.color.colorLevel_1),
+                    0f to Color(110, 110, 110)
+                )
             )
-        ),
+        },
         topAxisValueFormatter = { _, value, _ ->
             mappedValues.getOrElse(value.toLong()) { null }?.index?.roundToInt()
                 ?.let { UnitUtils.formatInt(context, it) }
@@ -291,9 +297,7 @@ private fun UVChart(
         trendHorizontalLines = persistentMapOf(
             UV.UV_INDEX_MIDDLE to context.getString(R.string.uv_alert_level)
         ),
-        endAxisItemPlacer = remember {
-            VerticalAxis.ItemPlacer.step({ 1.0 }) // Every rounded UVI
-        },
+        endAxisItemPlacer = remember { VerticalAxis.ItemPlacer.step({ 1.0 }) }, // Every rounded UVI
         markerVisibilityListener = markerVisibilityListener
     )
 }

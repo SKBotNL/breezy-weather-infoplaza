@@ -57,6 +57,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
 import org.breezyweather.R
 import org.breezyweather.common.extensions.currentLocale
@@ -76,8 +77,8 @@ import org.breezyweather.domain.weather.model.getRangeContentDescriptionSummary
 import org.breezyweather.domain.weather.model.getRangeDescriptionSummary
 import org.breezyweather.domain.weather.model.getRangeSummary
 import org.breezyweather.ui.common.charts.BreezyLineChart
+import org.breezyweather.ui.common.charts.TimeTopAxisItemPlacer
 import org.breezyweather.ui.common.widgets.Material3ExpressiveCardListItem
-import org.breezyweather.ui.settings.preference.bottomInsetItem
 import org.breezyweather.unit.distance.Distance
 import org.breezyweather.unit.distance.Distance.Companion.meters
 import org.breezyweather.unit.distance.toDistance
@@ -161,7 +162,7 @@ fun DetailsVisibility(
         item {
             VisibilityScale()
         }
-        bottomInsetItem()
+        bottomDetailsInset()
     }
 }
 
@@ -312,30 +313,33 @@ private fun VisibilityChart(
     }
 
     BreezyLineChart(
-        location,
-        modelProducer,
-        daily.date,
-        maxYRounded,
-        { _, value, _ -> value.toDistance(distanceUnit).formatMeasure(context) },
-        persistentListOf(
-            persistentMapOf(
-                20000.meters.toDouble(distanceUnit).toFloat() to Color(119, 141, 120),
-                15000.meters.toDouble(distanceUnit).toFloat() to Color(91, 167, 99),
-                9000.meters.toDouble(distanceUnit).toFloat() to Color(90, 169, 90),
-                8000.meters.toDouble(distanceUnit).toFloat() to Color(98, 122, 160),
-                6000.meters.toDouble(distanceUnit).toFloat() to Color(98, 122, 160),
-                5000.meters.toDouble(distanceUnit).toFloat() to Color(167, 91, 91),
-                2200.meters.toDouble(distanceUnit).toFloat() to Color(167, 91, 91),
-                1600.meters.toDouble(distanceUnit).toFloat() to Color(162, 97, 160),
-                0.meters.toDouble(distanceUnit).toFloat() to Color(166, 93, 165)
+        location = location,
+        modelProducer = modelProducer,
+        theDay = daily.date,
+        maxY = maxYRounded,
+        topAxisItemPlacer = remember(mappedValues) {
+            TimeTopAxisItemPlacer(mappedValues.keys.toImmutableList())
+        },
+        endAxisValueFormatter = { _, value, _ -> value.toDistance(distanceUnit).formatMeasure(context) },
+        colors = remember {
+            persistentListOf(
+                persistentMapOf(
+                    20000.meters.toDouble(distanceUnit).toFloat() to Color(119, 141, 120),
+                    15000.meters.toDouble(distanceUnit).toFloat() to Color(91, 167, 99),
+                    9000.meters.toDouble(distanceUnit).toFloat() to Color(90, 169, 90),
+                    8000.meters.toDouble(distanceUnit).toFloat() to Color(98, 122, 160),
+                    6000.meters.toDouble(distanceUnit).toFloat() to Color(98, 122, 160),
+                    5000.meters.toDouble(distanceUnit).toFloat() to Color(167, 91, 91),
+                    2200.meters.toDouble(distanceUnit).toFloat() to Color(167, 91, 91),
+                    1600.meters.toDouble(distanceUnit).toFloat() to Color(162, 97, 160),
+                    0.meters.toDouble(distanceUnit).toFloat() to Color(166, 93, 165)
+                )
             )
-        ),
+        },
         topAxisValueFormatter = { _, value, _ ->
             mappedValues.getOrElse(value.toLong()) { null }?.formatValue(context) ?: "-"
         },
-        endAxisItemPlacer = remember {
-            VerticalAxis.ItemPlacer.step({ step })
-        },
+        endAxisItemPlacer = remember { VerticalAxis.ItemPlacer.step({ step }) },
         markerVisibilityListener = markerVisibilityListener
     )
 }

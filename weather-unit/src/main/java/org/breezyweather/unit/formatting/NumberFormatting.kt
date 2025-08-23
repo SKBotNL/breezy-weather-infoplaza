@@ -20,7 +20,8 @@ import android.icu.number.LocalizedNumberFormatter
 import android.icu.number.NumberFormatter
 import android.icu.number.Precision
 import android.icu.text.NumberFormat
-import android.os.Build
+import org.breezyweather.unit.supportsNumberFormat
+import org.breezyweather.unit.supportsNumberFormatter
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.Locale
@@ -35,22 +36,22 @@ fun Number.format(
     locale: Locale = Locale.getDefault(),
     showSign: Boolean = false,
     useNumberFormatter: Boolean = true,
-    useMeasureFormat: Boolean = true,
+    useNumberFormat: Boolean = true,
 ): String {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && useNumberFormatter) {
+    return if (supportsNumberFormatter() && useNumberFormatter) {
         (NumberFormatter.withLocale(locale) as LocalizedNumberFormatter)
             .precision(Precision.fixedFraction(decimals))
             .sign(if (showSign) NumberFormatter.SignDisplay.ALWAYS else NumberFormatter.SignDisplay.AUTO)
             .format(this)
             .toString()
-    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && useMeasureFormat && !showSign) {
+    } else if (supportsNumberFormat() && useNumberFormat && !showSign) {
         // showSign not supported by NumberFormat, skip
         NumberFormat.getNumberInstance(locale)
             .apply { maximumFractionDigits = decimals }
             .format(this)
             .toString()
     } else {
-        return DecimalFormat(if (showSign) "+0" else "0", DecimalFormatSymbols.getInstance(locale))
+        return DecimalFormat(if (showSign && toDouble() > 0) "+0" else "0", DecimalFormatSymbols.getInstance(locale))
             .apply { setMaximumFractionDigits(decimals) }
             .format(this)
     }

@@ -8,6 +8,52 @@
     <!-- Value separator -->
     <string name="locale_separator">、</string>
 
+    <!-- Temperature units -->
+
+    <!-- Degree Celsius -->
+    <string name="temperature_c_display_name_long">摂氏</string>
+    <string name="temperature_c_nominative_long">摂氏 %s 度</string>
+
+    <!-- Degree Fahrenheit -->
+    <string name="temperature_f_display_name_long">華氏</string>
+    <string name="temperature_f_nominative_long">華氏 %s 度</string>
+
+    <!-- Kelvin -->
+    <string name="temperature_k_display_name_long">ケルビン</string>
+    <string name="temperature_k_nominative_long">%s ケルビン</string>
+
+    <!-- Area units -->
+
+    <!-- Square meter -->
+    <string name="area_m2_per_long">%s/平方メートル</string>
+
+    <!-- Speed units -->
+
+    <!-- Beaufort scale -->
+    <string name="speed_bf_display_name_short">風力階級</string>
+    <string name="speed_bf_display_name_long">ビューフォート風力階級</string>
+    <string name="speed_bf_nominative_short">風力%s</string>
+    <string name="speed_bf_nominative_long">ビューフォート風力階級 %s</string>
+
+    <!-- Volume units -->
+
+    <!-- Cubic meter -->
+    <string name="volume_m3_per_long">%s/立方メートル</string>
+
+    <!-- Liter -->
+    <string name="volume_l_display_name_long">リットル</string>
+    <string name="volume_l_nominative_long">%s リットル</string>
+
+    <!-- Weight units -->
+
+    <!-- Microgram -->
+    <string name="weight_microg_display_name_long">マイクログラム</string>
+    <string name="weight_microg_nominative_long">%s マイクログラム</string>
+
+    <!-- Milligram -->
+    <string name="weight_mg_display_name_long">ミリグラム</string>
+    <string name="weight_mg_nominative_long">%s ミリグラム</string>
+
     <!-- Pressure units -->
 
     <!-- Pascal -->

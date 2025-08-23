@@ -5,6 +5,50 @@
     <!-- Based on https://www.unicode.org/cldr/charts/47/summary/fi.html -->
     <!-- If you believe there is an error, please open a discussion -->
 
+    <!-- Temperature units -->
+
+    <!-- Degree Celsius -->
+    <string name="temperature_c_display_name_long">celsiusasteet</string>
+    <string name="temperature_c_nominative_long">%s celsiusastetta</string>
+
+    <!-- Degree Fahrenheit -->
+    <string name="temperature_f_display_name_long">fahrenheitasteet</string>
+    <string name="temperature_f_nominative_long">%s fahrenheitastetta</string>
+
+    <!-- Kelvin -->
+    <string name="temperature_k_display_name_long">kelvinit</string>
+    <string name="temperature_k_nominative_long">%s kelviniä</string>
+
+    <!-- Area units -->
+
+    <!-- Square meter -->
+    <string name="area_m2_per_long">%s / neliömetri</string>
+
+    <!-- Speed units -->
+
+    <!-- Beaufort scale -->
+    <string name="speed_bf_display_name_long">bofori</string>
+    <string name="speed_bf_nominative_long">%s boforia</string>
+
+    <!-- Volume units -->
+
+    <!-- Cubic meter -->
+    <string name="volume_m3_per_long">%s / kuutiometri</string>
+
+    <!-- Liter -->
+    <string name="volume_l_display_name_long">litrat</string>
+    <string name="volume_l_nominative_long">%s litraa</string>
+
+    <!-- Weight units -->
+
+    <!-- Microgram -->
+    <string name="weight_microg_display_name_long">mikrogrammat</string>
+    <string name="weight_microg_nominative_long">%s mikrogrammaa</string>
+
+    <!-- Milligram -->
+    <string name="weight_mg_display_name_long">milligrammat</string>
+    <string name="weight_mg_nominative_long">%s milligrammaa</string>
+
     <!-- Pressure units -->
 
     <!-- Pascal -->

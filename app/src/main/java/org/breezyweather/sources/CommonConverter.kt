@@ -45,10 +45,13 @@ import org.breezyweather.common.extensions.CLOUD_COVER_FEW
 import org.breezyweather.common.extensions.ensurePositive
 import org.breezyweather.common.extensions.getIsoFormattedDate
 import org.breezyweather.common.extensions.toCalendarWithTimeZone
-import org.breezyweather.common.utils.UnitUtils
-import org.breezyweather.domain.weather.index.PollutantIndex
 import org.breezyweather.domain.weather.model.validate
 import org.breezyweather.ui.theme.weatherView.WeatherViewController
+import org.breezyweather.unit.computing.computeApparentTemperature
+import org.breezyweather.unit.computing.computeDewPoint
+import org.breezyweather.unit.computing.computeHumidex
+import org.breezyweather.unit.computing.computeRelativeHumidity
+import org.breezyweather.unit.computing.computeWindChillTemperature
 import org.breezyweather.unit.distance.Distance
 import org.breezyweather.unit.distance.Distance.Companion.meters
 import org.breezyweather.unit.duration.toValidDailyOrNull
@@ -58,11 +61,12 @@ import org.breezyweather.unit.precipitation.Precipitation.Companion.micrometers
 import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
 import org.breezyweather.unit.pressure.Pressure
 import org.breezyweather.unit.pressure.Pressure.Companion.pascals
+import org.breezyweather.unit.ratio.Ratio
+import org.breezyweather.unit.ratio.Ratio.Companion.percent
+import org.breezyweather.unit.ratio.Ratio.Companion.permille
 import org.breezyweather.unit.speed.Speed
-import org.breezyweather.unit.speed.Speed.Companion.kilometersPerHour
 import org.breezyweather.unit.speed.Speed.Companion.metersPerSecond
 import org.breezyweather.unit.temperature.Temperature
-import org.breezyweather.unit.temperature.Temperature.Companion.celsius
 import org.breezyweather.unit.temperature.Temperature.Companion.deciCelsius
 import org.shredzone.commons.suncalc.MoonIllumination
 import org.shredzone.commons.suncalc.MoonTimes
@@ -71,10 +75,6 @@ import java.util.Calendar
 import java.util.Date
 import java.util.TimeZone
 import kotlin.math.cos
-import kotlin.math.exp
-import kotlin.math.ln
-import kotlin.math.log10
-import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
@@ -224,13 +224,13 @@ internal fun computeMissingHourlyData(
             ice = hourly.precipitation!!.ice?.toValidHourlyOrNull()
         )
         val precipitationProbability = hourly.precipitationProbability?.copy(
-            total = UnitUtils.validatePercent(hourly.precipitationProbability!!.total),
-            thunderstorm = UnitUtils.validatePercent(hourly.precipitationProbability!!.thunderstorm),
-            rain = UnitUtils.validatePercent(hourly.precipitationProbability!!.rain),
-            snow = UnitUtils.validatePercent(hourly.precipitationProbability!!.snow),
-            ice = UnitUtils.validatePercent(hourly.precipitationProbability!!.ice)
+            total = hourly.precipitationProbability!!.total?.toValidRangeOrNull(),
+            thunderstorm = hourly.precipitationProbability!!.thunderstorm?.toValidRangeOrNull(),
+            rain = hourly.precipitationProbability!!.rain?.toValidRangeOrNull(),
+            snow = hourly.precipitationProbability!!.snow?.toValidRangeOrNull(),
+            ice = hourly.precipitationProbability!!.ice?.toValidRangeOrNull()
         )
-        val cloudCover = UnitUtils.validatePercent(hourly.cloudCover)
+        val cloudCover = hourly.cloudCover?.toValidRangeOrNull()
         val visibility = hourly.visibility?.toValidOrNull()
         val weatherCode = hourly.weatherCode ?: getHalfDayWeatherCodeFromHourlyList(
             listOf(hourly.toHourly()),
@@ -240,7 +240,7 @@ internal fun computeMissingHourlyData(
             cloudCover,
             visibility
         )
-        val relativeHumidity = UnitUtils.validatePercent(hourly.relativeHumidity)
+        val relativeHumidity = hourly.relativeHumidity?.toValidRangeOrNull()
             ?: computeRelativeHumidity(temp, hourly.dewPoint?.toValidOrNull())
         val dewPoint = hourly.dewPoint?.toValidOrNull()
             ?: computeDewPoint(temp, relativeHumidity)
@@ -269,120 +269,6 @@ internal fun computeMissingHourlyData(
             visibility = visibility
         )
     }
-}
-
-/**
- * Compute relative humidity from temperature and dew point
- * Uses Magnus approximation with Arden Buck best variable set
- * TODO: Unit test
- */
-private fun computeRelativeHumidity(
-    temperature: Temperature?,
-    dewPoint: Temperature?,
-): Double? {
-    if (temperature == null || dewPoint == null) return null
-
-    val b = if (temperature < 0.celsius) 17.966 else 17.368
-    val c = if (temperature < 0.celsius) 227.15 else 238.88 // °C
-
-    return 100 * (
-        exp((b * dewPoint.inCelsius).div(c + dewPoint.inCelsius)) /
-            exp((b * temperature.inCelsius).div(c + temperature.inCelsius))
-        )
-}
-
-/**
- * Compute dew point from temperature and relative humidity
- * Uses Magnus approximation with Arden Buck best variable set
- * TODO: Unit test
- *
- * @param temperature
- * @param relativeHumidity in %
- */
-private fun computeDewPoint(
-    temperature: Temperature?,
-    relativeHumidity: Double?,
-): Temperature? {
-    if (temperature == null || relativeHumidity == null) return null
-
-    val b = if (temperature < 0.celsius) 17.966 else 17.368
-    val c = if (temperature < 0.celsius) 227.15 else 238.88 // °C
-
-    val magnus = ln(relativeHumidity / 100) + (b * temperature.inCelsius) / (c + temperature.inCelsius)
-    return ((c * magnus) / (b - magnus)).celsius
-}
-
-/**
- * Compute apparent temperature from temperature, relative humidity, and wind speed
- * Uses Bureau of Meteorology Australia methodology
- * Source: http://www.bom.gov.au/info/thermal_stress/#atapproximation
- * TODO: Unit test
- *
- * @param temperature
- * @param relativeHumidity in %
- */
-internal fun computeApparentTemperature(
-    temperature: Temperature?,
-    relativeHumidity: Double?,
-    windSpeed: Speed?,
-): Temperature? {
-    if (temperature == null || relativeHumidity == null || windSpeed == null) return null
-
-    val e = relativeHumidity.div(100) * 6.105 * exp(17.27 * temperature.inCelsius / (237.7 + temperature.inCelsius))
-    return (temperature.inCelsius + 0.33 * e - 0.7 * windSpeed.inMetersPerSecond - 4.0).celsius
-}
-
-/**
- * Compute wind chill from temperature and wind speed
- * Uses Environment Canada methodology
- * Source: https://climate.weather.gc.ca/glossary_e.html#w
- * Only valid for (T ≤ 0 °C) or (T ≤ 10°C and WS ≥ 5 km/h)
- * TODO: Unit test
- *
- * @param temperature
- * @param windSpeed
- */
-internal fun computeWindChillTemperature(
-    temperature: Temperature?,
-    windSpeed: Speed?,
-): Temperature? {
-    if (temperature == null || windSpeed == null || temperature > 10.celsius) return null
-    return if (windSpeed >= 5.kilometersPerHour) {
-        (
-            13.12 +
-                (0.6215 * temperature.inCelsius) -
-                (11.37 * windSpeed.inKilometersPerHour.pow(0.16)) +
-                (0.3965 * temperature.inCelsius * windSpeed.inKilometersPerHour.pow(0.16))
-            ).celsius
-    } else if (temperature <= 0.celsius) {
-        (temperature.inCelsius + ((-1.59 + 0.1345 * temperature.inCelsius) / 5.0) * windSpeed.inKilometersPerHour)
-            .celsius
-    } else {
-        null
-    }
-}
-
-/**
- * Compute humidex from temperature and humidity
- * Based on formula from ECCC
- *
- * @param temperature
- * @param dewPoint
- */
-internal fun computeHumidex(
-    temperature: Temperature?,
-    dewPoint: Temperature?,
-): Temperature? {
-    if (temperature == null || dewPoint == null || temperature < 15.celsius) return null
-
-    return (
-        temperature.inCelsius +
-            0.5555.times(
-                6.11.times(
-                    exp(5417.7530.times(1.div(273.15) - 1.div(273.15 + dewPoint.inCelsius)))
-                ).minus(10)
-            )
-        ).celsius
 }
 
 /**
@@ -415,108 +301,6 @@ internal fun getWindDegree(
     "NNW", "NNO" -> 337.5
     "VR", "VAR" -> -1.0
     else -> null
-}
-
-/**
- * Compute mean sea level pressure (MSLP) from barometric pressure and altitude.
- * Optional elements can be provided for minor adjustments.
- * Source: https://integritext.net/DrKFS/correctiontosealevel.htm
- *
- * To compute barometric pressure from MSLP,
- * simply enter negative altitude.
- *
- * @param barometricPressure in hPa
- * @param altitude in meters
- * @param temperature in °C (optional)
- * @param humidity in % (optional)
- * @param latitude in ° (optional)
- */
-internal fun computeMeanSeaLevelPressure(
-    barometricPressure: Double?,
-    altitude: Double?,
-    temperature: Double? = null,
-    humidity: Double? = null,
-    latitude: Double? = null,
-): Double? {
-    // There is nothing to calculate if barometric pressure or altitude is null.
-    if (barometricPressure == null || altitude == null) {
-        return null
-    }
-
-    // Source: http://www.bom.gov.au/info/thermal_stress/#atapproximation
-    val waterVaporPressure = if (humidity != null && temperature != null) {
-        humidity / 100 * 6.105 * exp(17.27 * temperature / (237.7 + temperature))
-    } else {
-        0.0
-    }
-
-    // adjustment for temperature
-    val term1 = 1.0 + 0.0037 * (temperature ?: 0.0)
-
-    // adjustment for humidity
-    val term2 = 1.0 / (1.0 - 0.378 * waterVaporPressure / barometricPressure)
-
-    // adjustment for asphericity of the Earth
-    val term3 = 1.0 / (1.0 - 0.0026 * cos(2 * (latitude ?: 45.0) * Math.PI / 180))
-
-    // adjustment for variation of gravitational acceleration with height
-    val term4 = 1.0 + (altitude / 6367324)
-
-    return (10.0).pow(log10(barometricPressure) + altitude / (18400.0 * term1 * term2 * term3 * term4))
-}
-
-/**
- * Compute pollutant concentration in µg/m³ when given in ppb.
- * Can also be used for converting to mg/m³ from ppm.
- * Source: https://en.wikipedia.org/wiki/Useful_conversions_and_formulas_for_air_dispersion_modeling
- *
- * Basis for temperature and pressure assumptions:
- * https://www.ecfr.gov/current/title-40/chapter-I/subchapter-C/part-50/section-50.3
- *
- * @param pollutant one of NO2, O3, SO2 or CO
- * @param concentrationInPpb in ppb
- * @param temperature assumed 25 °C if omitted
- * @param barometricPressure assumed 1 atm = 1013.25 hPa if omitted
- */
-internal fun computePollutantInUgm3FromPpb(
-    pollutant: PollutantIndex,
-    concentrationInPpb: Double?,
-    temperature: Temperature? = null,
-    barometricPressure: Pressure? = null,
-): Double? {
-    if (concentrationInPpb == null) return null
-    if (pollutant.molecularMass == null) return null
-    return concentrationInPpb *
-        pollutant.molecularMass /
-        (8.31446261815324 / (barometricPressure?.inHectopascals ?: 1013.25) * 10) /
-        (273.15 + (temperature?.inCelsius ?: 25.0))
-}
-
-/**
- * Compute pollutant concentration in ppb from µg/m³
- * Can also be used for converting to ppm from mg/m³
- * Source: https://en.wikipedia.org/wiki/Useful_conversions_and_formulas_for_air_dispersion_modeling
- *
- * Basis for temperature and pressure assumptions:
- * https://www.ecfr.gov/current/title-40/chapter-I/subchapter-C/part-50/section-50.3
- *
- * @param pollutant one of NO2, O3, SO2 or CO
- * @param concentrationInUgm3 in µg/m³
- * @param temperature assumed 25 °C if omitted
- * @param barometricPressure assumed 1 atm = 1013.25 hPa if omitted
- */
-internal fun computePollutantInPpbFromUgm3(
-    pollutant: PollutantIndex,
-    concentrationInUgm3: Double?,
-    temperature: Temperature? = null,
-    barometricPressure: Pressure? = null,
-): Double? {
-    if (concentrationInUgm3 == null) return null
-    if (pollutant.molecularMass == null) return null
-    return concentrationInUgm3 /
-        pollutant.molecularMass *
-        (8.31446261815324 / (barometricPressure?.inHectopascals ?: 1013.25) * 10) *
-        (273.15 + (temperature?.inCelsius ?: 25.0))
 }
 
 /**
@@ -878,11 +662,11 @@ private fun completeHalfDayFromHourlyList(
     }
 
     val initialPrecipitationProbability = newHalfDay.precipitationProbability?.copy(
-        total = UnitUtils.validatePercent(newHalfDay.precipitationProbability!!.total),
-        thunderstorm = UnitUtils.validatePercent(newHalfDay.precipitationProbability!!.thunderstorm),
-        rain = UnitUtils.validatePercent(newHalfDay.precipitationProbability!!.rain),
-        snow = UnitUtils.validatePercent(newHalfDay.precipitationProbability!!.snow),
-        ice = UnitUtils.validatePercent(newHalfDay.precipitationProbability!!.ice)
+        total = newHalfDay.precipitationProbability!!.total?.toValidRangeOrNull(),
+        thunderstorm = newHalfDay.precipitationProbability!!.thunderstorm?.toValidRangeOrNull(),
+        rain = newHalfDay.precipitationProbability!!.rain?.toValidRangeOrNull(),
+        snow = newHalfDay.precipitationProbability!!.snow?.toValidRangeOrNull(),
+        ice = newHalfDay.precipitationProbability!!.ice?.toValidRangeOrNull()
     )
     val maxPrecipitationProbability = if (initialPrecipitationProbability?.total == null) {
         getHalfDayPrecipitationProbabilityFromHourlyList(halfDayHourlyList)
@@ -963,11 +747,11 @@ private fun getHalfDayWeatherCodeFromHourlyList(
     totPrecipitation: Precipitation?,
     maxPrecipitationProbability: PrecipitationProbability?,
     maxWind: Wind?,
-    avgCloudCover: Int?,
+    avgCloudCover: Ratio?,
     avgVisibility: Distance?,
 ): WeatherCode? {
-    val minPrecipIntensity = 1.0.millimeters // in mm
-    val minPrecipProbability = 30.0 // in %
+    val minPrecipIntensity = 1.0.millimeters
+    val minPrecipProbability = 30.percent
     val maxVisibilityHaze = 5000.meters
     val maxVisibilityFog = 1000.meters
     val maxWindSpeedWindy = 10.metersPerSecond
@@ -975,7 +759,7 @@ private fun getHalfDayWeatherCodeFromHourlyList(
     // If total precipitation is greater than 1 mm
     // and max probability is greater than 30 % (assume 100 % if not reported)
     if ((totPrecipitation?.total ?: 0.0.millimeters) > minPrecipIntensity &&
-        (maxPrecipitationProbability?.total ?: 100.0) > minPrecipProbability
+        (maxPrecipitationProbability?.total ?: 100.percent) > minPrecipProbability
     ) {
         val isRain = maxPrecipitationProbability?.rain?.let { it > minPrecipProbability }
             ?: totPrecipitation!!.rain?.let { it.value > 0 }
@@ -1047,8 +831,8 @@ private fun getHalfDayWeatherCodeFromHourlyList(
 
     // It’s not raining, it’s not windy, and it’s not mysterious. Just cloudy
     if (avgCloudCover != null) {
-        if (avgCloudCover > CLOUD_COVER_BKN) return WeatherCode.CLOUDY
-        if (avgCloudCover > CLOUD_COVER_FEW) return WeatherCode.PARTLY_CLOUDY
+        if (avgCloudCover > CLOUD_COVER_BKN.percent) return WeatherCode.CLOUDY
+        if (avgCloudCover > CLOUD_COVER_FEW.percent) return WeatherCode.PARTLY_CLOUDY
         return WeatherCode.CLEAR
     }
 
@@ -1230,10 +1014,9 @@ private fun getHalfDayWindFromHourlyList(
 
 private fun getHalfDayCloudCoverFromHourlyList(
     halfDayHourlyList: List<Hourly>,
-): Int? {
+): Ratio? {
     // average() would return NaN when called for an empty list
-    return halfDayHourlyList.mapNotNull { it.cloudCover }
-        .takeIf { it.isNotEmpty() }?.average()?.roundToInt()
+    return halfDayHourlyList.mapNotNull { it.cloudCover?.value }.takeIf { it.isNotEmpty() }?.average()?.permille
 }
 
 private fun getHalfDayAvgVisibilityFromHourlyList(
@@ -1340,16 +1123,16 @@ private fun getSunshineDuration(
 
 fun getDailyRelativeHumidity(
     initialDailyRelativeHumidity: DailyRelativeHumidity?,
-    values: List<Double>?,
+    values: List<Ratio>?,
 ): DailyRelativeHumidity? {
     if (values.isNullOrEmpty()) return initialDailyRelativeHumidity
 
     return DailyRelativeHumidity(
-        average = UnitUtils.validatePercent(initialDailyRelativeHumidity?.average)
-            ?: values.average(),
-        min = UnitUtils.validatePercent(initialDailyRelativeHumidity?.min)
+        average = initialDailyRelativeHumidity?.average?.toValidRangeOrNull()
+            ?: values.map { it.value }.average().permille,
+        min = initialDailyRelativeHumidity?.min?.toValidRangeOrNull()
             ?: values.min(),
-        max = UnitUtils.validatePercent(initialDailyRelativeHumidity?.max)
+        max = initialDailyRelativeHumidity?.max?.toValidRangeOrNull()
             ?: values.max()
     )
 }
@@ -1388,16 +1171,16 @@ fun getDailyPressure(
 
 fun getDailyCloudCover(
     initialDailyCloudCover: DailyCloudCover?,
-    values: List<Int>?,
+    values: List<Ratio>?,
 ): DailyCloudCover? {
     if (values.isNullOrEmpty()) return initialDailyCloudCover
 
     return DailyCloudCover(
-        average = UnitUtils.validatePercent(initialDailyCloudCover?.average)
-            ?: values.average().roundToInt(),
-        min = UnitUtils.validatePercent(initialDailyCloudCover?.min)
+        average = initialDailyCloudCover?.average?.toValidRangeOrNull()
+            ?: values.map { it.value }.average().permille,
+        min = initialDailyCloudCover?.min?.toValidRangeOrNull()
             ?: values.min(),
-        max = UnitUtils.validatePercent(initialDailyCloudCover?.max)
+        max = initialDailyCloudCover?.max?.toValidRangeOrNull()
             ?: values.max()
     )
 }
@@ -1576,7 +1359,7 @@ internal fun completeCurrentFromHourlyData(
     val initialFeelsLike = newCurrent.temperature?.feelsLike?.toValidOrNull()
     val initialWind = newCurrent.wind?.validate()
     val newWind = if (initialWind?.speed != null || hourly.wind?.speed == null) initialWind else hourly.wind
-    val newRelativeHumidity = UnitUtils.validatePercent(newCurrent.relativeHumidity)
+    val newRelativeHumidity = newCurrent.relativeHumidity?.toValidRangeOrNull()
         ?: hourly.relativeHumidity
     val newDewPoint = newCurrent.dewPoint?.toValidOrNull()
         ?: if (newRelativeHumidity != null || initialTemp != null) {
@@ -1623,7 +1406,7 @@ internal fun completeCurrentFromHourlyData(
         relativeHumidity = newRelativeHumidity,
         dewPoint = newDewPoint,
         pressure = newCurrent.pressure?.toValidOrNull() ?: hourly.pressure,
-        cloudCover = UnitUtils.validatePercent(newCurrent.cloudCover) ?: hourly.cloudCover,
+        cloudCover = newCurrent.cloudCover?.toValidRangeOrNull() ?: hourly.cloudCover,
         visibility = newCurrent.visibility?.toValidOrNull() ?: hourly.visibility,
         ceiling = newCurrent.ceiling?.toValidOrNull()
     )
@@ -1634,7 +1417,7 @@ private fun completeCurrentTemperatureFromHourly(
     initialFeelsLike: Temperature?,
     hourlyTemperature: breezyweather.domain.weather.model.Temperature?,
     windSpeed: Speed?,
-    relativeHumidity: Double?,
+    relativeHumidity: Ratio?,
     dewPoint: Temperature?,
 ): breezyweather.domain.weather.model.Temperature? {
     if (initialTemp == null) return hourlyTemperature

@@ -35,6 +35,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.unit.dp
 import breezyweather.domain.location.model.Location
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.axis.auto
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisGuidelineComponent
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisLabelComponent
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisLineComponent
@@ -55,6 +56,7 @@ import com.patrykandpatrick.vico.compose.common.fill
 import com.patrykandpatrick.vico.compose.common.insets
 import com.patrykandpatrick.vico.core.cartesian.CartesianDrawingContext
 import com.patrykandpatrick.vico.core.cartesian.axis.Axis
+import com.patrykandpatrick.vico.core.cartesian.axis.BaseAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
@@ -106,6 +108,13 @@ fun BreezyLineChart(
     colors: ImmutableList<ImmutableMap<Float, Color>>,
     modifier: Modifier = Modifier,
     topAxisValueFormatter: CartesianValueFormatter? = null,
+    topAxisItemPlacer: HorizontalAxis.ItemPlacer = remember {
+        HorizontalAxis.ItemPlacer.aligned(
+            shiftExtremeLines = false,
+            addExtremeLabelPadding = false
+        )
+    },
+    topAxisSize: BaseAxis.Size = BaseAxis.Size.auto(),
     endAxisItemPlacer: VerticalAxis.ItemPlacer = remember {
         VerticalAxis.ItemPlacer.step()
     },
@@ -145,7 +154,7 @@ fun BreezyLineChart(
                 color = Color(context.getThemeColor(com.google.android.material.R.attr.colorOnPrimary)),
                 background = rememberShapeComponent(
                     fill = Fill(context.getThemeColor(androidx.appcompat.R.attr.colorPrimary)),
-                    CorneredShape.Pill,
+                    shape = CorneredShape.Pill,
                     shadow = Shadow(
                         radiusDp = LABEL_BACKGROUND_SHADOW_RADIUS_DP,
                         yDp = LABEL_BACKGROUND_SHADOW_DY_DP
@@ -198,7 +207,7 @@ fun BreezyLineChart(
                 tick = rememberAxisTickComponent(fill = fill(lineColor)),
                 guideline = rememberAxisGuidelineComponent(fill = fill(lineColor)),
                 itemPlacer = remember {
-                    TimeHorizontalAxisItemPlacer(location, startingDate)
+                    TimeHorizontalAxisItemPlacer(startingDate, location.timeZone)
                 }
             ),
             topAxis = topAxisValueFormatter?.let {
@@ -208,8 +217,8 @@ fun BreezyLineChart(
                     valueFormatter = it,
                     tick = null,
                     guideline = null,
-                    // TODO: Don't add ticks at places where there is no data
-                    itemPlacer = HorizontalAxis.ItemPlacer.aligned()
+                    itemPlacer = topAxisItemPlacer,
+                    size = topAxisSize
                 )
             },
             decorations = if (isTrendHorizontalLinesEnabled) {

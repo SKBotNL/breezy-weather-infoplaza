@@ -1,8 +1,24 @@
-# Version 6.0.5-alpha (not yet released)
+# Version 6.1.x (not yet released)
+
+The following features are already available in the current branch, but will be removed before each v6.0.x release and restored after, during the testing phase.
 
 **New features**
-- Content provider: allows (with your permission) other apps to query your weather data. Currently not available in release builds during the testing phase. [Read the announcement](https://github.com/breezy-weather/breezy-weather/discussions/2089)
+- Content provider: allows (with your permission) other apps to query your weather data. [Read the announcement](https://github.com/breezy-weather/breezy-weather/discussions/2089)
 - New broadcast: you can use `org.breezyweather.ACTION_UPDATE_NOTIFIER` (or `org.breezyweather.debug.ACTION_UPDATE_NOTIFIER` with the debug build) to be notified of updated locations (most common use case is coupled with the content provider)
+
+
+# Version 6.0.6-alpha (not yet released)
+
+**Improvements and fixes**
+- Fix crash on Android 7.0/7.1 when formatting some units
+
+**Weather sources**
+- [HERE] Removed following recent restrictions on free API
+
+
+# Version 6.0.5-alpha (2025-08-23)
+
+This version is still an experimental one, with a significant rewrite of the refresh process core, especially on current locations. Weather data for all locations will be reset due to a major technical change in the database. A simple refresh will bring it back.
 
 **Removed features**
 - Mean daytime/nighttime temperatures as threshold lines. Use a normals source instead
@@ -17,12 +33,15 @@
 - Main screen - Move refresh time out of app bar when scrolling
 - Main screen - Fix settings not applying immediately
 - Main screen - Fix shooting stars getting stuck in the corner in landscape
+- Details - Add a bottom margin at the end of each page, so that it doesn’t overlap with the floating button
 - Details - Don’t animate charts when “Other element animations” is disabled
 - Details - Air quality - Add individual charts for each pollutant
 - Details - Humidity/Dewpoint/Cloud cover - Show min/max of the day
 - Details - Pressure/Visibility - Fix sometimes wrong daily value
 - Details - Fallback to current value on Today screen when daily value is missing
 - Details - Add visibility and cloud cover scales
+- Details - Fix top X-axis sometimes showing “-” for some sources
+- Details - Charts are now slightly wider following the removal of start and end paddings by removing midnight labels
 - Alerts - Add “Translate” and “Share” to text select actions
 - Nowcasting chart/Precipitation notification - Fix slightly wrong ending time of precipitation report
 - Settings - Improve the location-based dark mode preference to make it easier to understand
@@ -35,6 +54,7 @@
 - Widgets - Improve line height on many widgets
 - Widgets - Weekly - Spread day/night temperatures on 2 lines if necessary
 - Widgets - Minor fixes
+- Wallpaper - Due to some people running outdated versions of Breezy Weather just to see some gimmicks on their wallpaper, we bring back wallpaper animations behind a dangerous disabled-by-default option. We STRONGLY advise against enabling them.
 
 **Weather sources**
 - [AccuWeather] Restrict pollen to USA, Canada and Europe as it’s only available there (@chunshek)
@@ -65,10 +85,8 @@
 **Technical**
 - Current location process refactoring: coordinates, forced refresh when coordinates changed from more than 5 km
 - Address lookup process refactoring to prepare for future ability to add a location manually by coordinates
-- Pressure unit conversion/formatting refactoring
-
-**Known issues**
-- Visibility: units are no longer be translated on Android < 7
+- Experimental offline timezone deduction for address lookup sources missing the info or for Nominatim search service (@chunshek)
+- Unit conversion/formatting refactoring. **Known temporary issue:** Some distance, speed and precipitation units are no longer translated on Android < 7
 
 
 # Version 6.0.4-alpha (2025-07-23)

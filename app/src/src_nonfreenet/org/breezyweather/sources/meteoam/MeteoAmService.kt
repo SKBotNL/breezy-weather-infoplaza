@@ -47,6 +47,7 @@ import org.breezyweather.sources.meteoam.json.MeteoAmObservationResult
 import org.breezyweather.sources.meteoam.json.MeteoAmReverseLocation
 import org.breezyweather.sources.meteoam.json.MeteoAmReverseLocationResult
 import org.breezyweather.unit.pressure.Pressure.Companion.hectopascals
+import org.breezyweather.unit.ratio.Ratio.Companion.percent
 import org.breezyweather.unit.speed.Speed.Companion.kilometersPerHour
 import org.breezyweather.unit.temperature.Temperature.Companion.celsius
 import retrofit2.Retrofit
@@ -185,8 +186,9 @@ class MeteoAmService @Inject constructor(
                     currentResult.getOrElse(keys["wkmh"].toString()) { null }?.getOrElse("0") { null } as? Double
                     )?.kilometersPerHour
             ),
-            relativeHumidity = currentResult.getOrElse(keys["r"].toString()) { null }
-                ?.getOrElse("0") { null } as? Double,
+            relativeHumidity = (
+                currentResult.getOrElse(keys["r"].toString()) { null }?.getOrElse("0") { null } as? Double
+                )?.percent,
             pressure = (currentResult.getOrElse(keys["pmsl"].toString()) { null }?.getOrElse("0") { null } as? Double)
                 ?.hectopascals
         )
@@ -239,7 +241,9 @@ class MeteoAmService @Inject constructor(
                         )?.celsius
                 ),
                 precipitationProbability = PrecipitationProbability(
-                    total = data.getOrElse(keys["tpp"].toString()) { null }?.getOrElse(i.toString()) { null } as? Double
+                    total = (
+                        data.getOrElse(keys["tpp"].toString()) { null }?.getOrElse(i.toString()) { null } as? Double
+                        )?.percent
                 ),
                 wind = Wind(
                     degree = data.getOrElse(keys["wdir"].toString()) { null }?.getOrElse(i.toString()) { null }?.let {
@@ -249,8 +253,9 @@ class MeteoAmService @Inject constructor(
                         data.getOrElse(keys["wkmh"].toString()) { null }?.getOrElse(i.toString()) { null } as? Double
                         )?.kilometersPerHour
                 ),
-                relativeHumidity = data.getOrElse(keys["r"].toString()) { null }
-                    ?.getOrElse(i.toString()) { null } as? Double,
+                relativeHumidity = (
+                    data.getOrElse(keys["r"].toString()) { null }?.getOrElse(i.toString()) { null } as? Double
+                    )?.percent,
                 pressure = (
                     data.getOrElse(keys["pmsl"].toString()) { null }?.getOrElse(i.toString()) { null } as? Double
                     )?.hectopascals
@@ -343,8 +348,19 @@ class MeteoAmService @Inject constructor(
 
     override val testingLocations: List<Location> = emptyList()
 
-    // TODO
-    override val knownAmbiguousCountryCodes: Array<String>? = null
+    // This source is really inconsistent. Many missing, half correct, half “incorrect”
+    override val knownAmbiguousCountryCodes: Array<String> = arrayOf(
+        "AU", // Territories: NF
+        "CN", // Territories: HK, MO
+        "ES", // Nearest location for GI
+        "FI", // Territories: AX
+        "FR", // Territories: GF, PF, TF (uninhabited), GP, MQ, YT, NC, RE, BL, MF, PM, WF, CP. Claims: AQ
+        "IL", // Claims: PS
+        "MA", // Claims: EH
+        "NL", // Territories: AW, BQ, CW, SX
+        "NO", // Territories: SJ
+        "US" // Territories: MP, VI
+    )
 
     companion object {
         private const val METEOAM_BASE_URL = "https://api.meteoam.it/"

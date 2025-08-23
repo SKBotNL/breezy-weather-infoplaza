@@ -68,12 +68,15 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import breezyweather.domain.location.model.Location
 import breezyweather.domain.weather.model.Daily
 import breezyweather.domain.weather.model.Hourly
 import breezyweather.domain.weather.model.Normals
 import breezyweather.domain.weather.reference.WeatherCode
+import com.patrykandpatrick.vico.compose.cartesian.axis.fixed
+import com.patrykandpatrick.vico.core.cartesian.axis.BaseAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
@@ -83,10 +86,12 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.launch
 import org.breezyweather.R
 import org.breezyweather.common.extensions.currentLocale
+import org.breezyweather.common.extensions.dpToPx
 import org.breezyweather.common.extensions.formatMeasure
 import org.breezyweather.common.extensions.getCalendarMonth
 import org.breezyweather.common.extensions.getFormattedTime
@@ -99,18 +104,21 @@ import org.breezyweather.common.extensions.toDate
 import org.breezyweather.common.options.appearance.DetailScreen
 import org.breezyweather.domain.settings.SettingsManager
 import org.breezyweather.ui.common.charts.BreezyLineChart
+import org.breezyweather.ui.common.charts.TimeTopAxisItemPlacer
 import org.breezyweather.ui.common.widgets.AnimatableIconView
-import org.breezyweather.ui.settings.preference.bottomInsetItem
 import org.breezyweather.ui.theme.resource.ResourceHelper
 import org.breezyweather.ui.theme.resource.ResourcesProviderFactory
 import org.breezyweather.unit.formatting.UnitWidth
+import org.breezyweather.unit.ratio.Ratio
 import org.breezyweather.unit.temperature.Temperature
 import org.breezyweather.unit.temperature.Temperature.Companion.celsius
 import org.breezyweather.unit.temperature.Temperature.Companion.deciCelsius
+import org.breezyweather.unit.temperature.TemperatureUnit
 import org.breezyweather.unit.temperature.toTemperature
 import java.util.Date
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 @Composable
 fun DetailsConditions(
@@ -123,6 +131,9 @@ fun DetailsConditions(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val temperatureUnit = remember {
+        SettingsManager.getInstance(context).getTemperatureUnit(context)
+    }
     val mappedValues = remember(hourlyList, selectedChart) {
         hourlyList
             .filter {
@@ -163,7 +174,7 @@ fun DetailsConditions(
             .associate { it.date.time to it.precipitationProbability!!.total!! }
             .toImmutableMap()
     }
-    var activeProbabilityItem: Pair<Date, Double>? by remember { mutableStateOf(null) }
+    var activeProbabilityItem: Pair<Date, Ratio>? by remember { mutableStateOf(null) }
     val probabilityMarkerVisibilityListener = remember {
         object : CartesianMarkerVisibilityListener {
             override fun onShown(marker: CartesianMarker, targets: List<CartesianMarker.Target>) {
@@ -195,7 +206,14 @@ fun DetailsConditions(
         )
     ) {
         item {
-            TemperatureHeader(location, daily, activeItem, selectedChart != DetailScreen.TAG_FEELS_LIKE, normals)
+            TemperatureHeader(
+                location,
+                daily,
+                activeItem,
+                selectedChart != DetailScreen.TAG_FEELS_LIKE,
+                normals,
+                temperatureUnit
+            )
         }
         item {
             Spacer(modifier = Modifier.height(dimensionResource(R.dimen.normal_margin)))
@@ -208,6 +226,7 @@ fun DetailsConditions(
                     selectedChart != DetailScreen.TAG_FEELS_LIKE,
                     normals,
                     daily,
+                    temperatureUnit,
                     markerVisibilityListener
                 )
             }
@@ -265,7 +284,6 @@ fun DetailsConditions(
         }
         // TODO: Make a better design for degree day
         if (daily.degreeDay?.isValid == true) {
-            val temperatureUnit = SettingsManager.getInstance(context).getTemperatureUnit(context)
             item {
                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_margin)))
             }
@@ -284,7 +302,7 @@ fun DetailsConditions(
                             headlineText = stringResource(R.string.temperature_degree_day_heating),
                             supportingText = daily.degreeDay!!.heating!!.toDoubleDeviation(temperatureUnit)
                                 .toTemperature(temperatureUnit)
-                                .formatMeasure(context),
+                                .formatMeasure(context, temperatureUnit),
                             icon = R.drawable.ic_mode_heat,
                             modifier = Modifier
                                 .semantics(mergeDescendants = true) {}
@@ -293,7 +311,7 @@ fun DetailsConditions(
                                         context.getString(R.string.colon_separator) +
                                         daily.degreeDay!!.heating!!.toDoubleDeviation(temperatureUnit)
                                             .toTemperature(temperatureUnit)
-                                            .formatMeasure(context, unitWidth = UnitWidth.LONG)
+                                            .formatMeasure(context, temperatureUnit, unitWidth = UnitWidth.LONG)
                                 }
                                 .clickable {
                                     coroutineScope.launch {
@@ -319,7 +337,7 @@ fun DetailsConditions(
                             headlineText = stringResource(R.string.temperature_degree_day_cooling),
                             supportingText = daily.degreeDay!!.cooling!!.toDoubleDeviation(temperatureUnit)
                                 .toTemperature(temperatureUnit)
-                                .formatMeasure(context),
+                                .formatMeasure(context, temperatureUnit),
                             icon = R.drawable.ic_mode_cool,
                             modifier = Modifier
                                 .semantics(mergeDescendants = true) {}
@@ -328,7 +346,7 @@ fun DetailsConditions(
                                         context.getString(R.string.colon_separator) +
                                         daily.degreeDay!!.heating!!.toDoubleDeviation(temperatureUnit)
                                             .toTemperature(temperatureUnit)
-                                            .formatMeasure(context, unitWidth = UnitWidth.LONG)
+                                            .formatMeasure(context, temperatureUnit, unitWidth = UnitWidth.LONG)
                                 }
                                 .clickable {
                                     coroutineScope.launch {
@@ -388,7 +406,7 @@ fun DetailsConditions(
                 )
             }
         }
-        bottomInsetItem()
+        bottomDetailsInset()
     }
 }
 
@@ -399,6 +417,7 @@ fun TemperatureHeader(
     activeItem: Pair<Date, Hourly>?,
     showRealTemp: Boolean,
     normals: Normals?,
+    temperatureUnit: TemperatureUnit,
 ) {
     val context = LocalContext.current
 
@@ -418,13 +437,15 @@ fun TemperatureHeader(
             animated = false, // Doesn't redraw otherwise
             normals = null,
             monthFormatted = "",
-            keepSpaceForSubtext = normals?.daytimeTemperature != null || normals?.nighttimeTemperature != null
+            keepSpaceForSubtext = normals?.daytimeTemperature != null || normals?.nighttimeTemperature != null,
+            temperatureUnit = temperatureUnit
         )
     } ?: WeatherConditionSummary(
         daily,
         showRealTemp,
         normals,
-        daily.date.getCalendarMonth(location).getDisplayName(context.currentLocale)
+        daily.date.getCalendarMonth(location).getDisplayName(context.currentLocale),
+        temperatureUnit
     )
 }
 
@@ -475,6 +496,7 @@ private fun WeatherConditionSummary(
     showRealTemp: Boolean,
     normals: Normals?,
     monthFormatted: String,
+    temperatureUnit: TemperatureUnit,
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.normal_margin)),
@@ -498,7 +520,8 @@ private fun WeatherConditionSummary(
                     animated = true,
                     normals = normals,
                     monthFormatted = monthFormatted,
-                    keepSpaceForSubtext = normals?.daytimeTemperature != null || normals?.nighttimeTemperature != null
+                    keepSpaceForSubtext = normals?.daytimeTemperature != null || normals?.nighttimeTemperature != null,
+                    temperatureUnit = temperatureUnit
                 )
             }
         }
@@ -519,7 +542,8 @@ private fun WeatherConditionSummary(
                     animated = true,
                     normals = normals,
                     monthFormatted = monthFormatted,
-                    keepSpaceForSubtext = normals?.daytimeTemperature != null || normals?.nighttimeTemperature != null
+                    keepSpaceForSubtext = normals?.daytimeTemperature != null || normals?.nighttimeTemperature != null,
+                    temperatureUnit = temperatureUnit
                 )
             }
         }
@@ -538,6 +562,7 @@ private fun WeatherConditionItem(
     normals: Normals?,
     monthFormatted: String,
     keepSpaceForSubtext: Boolean,
+    temperatureUnit: TemperatureUnit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -550,12 +575,16 @@ private fun WeatherConditionItem(
             Column {
                 (if (showRealTemp) temperature?.temperature else temperature?.feelsLikeTemperature).let { temp ->
                     TextFixedHeight(
-                        text = temp?.formatMeasure(context, unitWidth = UnitWidth.NARROW) ?: "",
+                        text = temp?.formatMeasure(context, temperatureUnit, unitWidth = UnitWidth.NARROW) ?: "",
                         style = MaterialTheme.typography.displaySmall,
                         modifier = Modifier
                             .clearAndSetSemantics {
                                 temp?.let {
-                                    contentDescription = it.formatMeasure(context, unitWidth = UnitWidth.LONG)
+                                    contentDescription = it.formatMeasure(
+                                        context,
+                                        temperatureUnit,
+                                        unitWidth = UnitWidth.LONG
+                                    )
                                 }
                             }
                     )
@@ -565,7 +594,7 @@ private fun WeatherConditionItem(
                         text = temperature?.temperature?.let {
                             stringResource(R.string.temperature_real) +
                                 stringResource(R.string.colon_separator) +
-                                it.formatMeasure(context)
+                                it.formatMeasure(context, temperatureUnit)
                         } ?: "",
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -574,7 +603,11 @@ private fun WeatherConditionItem(
                                 if (temperature?.temperature != null) {
                                     contentDescription = context.getString(R.string.temperature_real) +
                                         context.getString(R.string.colon_separator) +
-                                        temperature.temperature!!.formatMeasure(context, unitWidth = UnitWidth.LONG)
+                                        temperature.temperature!!.formatMeasure(
+                                            context,
+                                            temperatureUnit,
+                                            unitWidth = UnitWidth.LONG
+                                        )
                                 }
                             }
                     )
@@ -584,7 +617,8 @@ private fun WeatherConditionItem(
                         normals,
                         monthFormatted,
                         isDaytime,
-                        keepSpaceForSubtext
+                        keepSpaceForSubtext,
+                        temperatureUnit
                     )
                 }
             }
@@ -607,6 +641,7 @@ fun NormalsDepartureLabel(
     monthFormatted: String,
     isDaytime: Boolean,
     keepSpaceForSubtext: Boolean,
+    temperatureUnit: TemperatureUnit,
     modifier: Modifier = Modifier,
 ) {
     val normal = if (isDaytime) normals?.daytimeTemperature else normals?.nighttimeTemperature
@@ -615,7 +650,6 @@ fun NormalsDepartureLabel(
         val context = LocalContext.current
         val tooltipState = rememberTooltipState(isPersistent = true)
         val coroutineScope = rememberCoroutineScope()
-        val temperatureUnit = SettingsManager.getInstance(context).getTemperatureUnit(context)
         val departure = remember(halfDayTemperature, normal) {
             halfDayTemperature.toDouble(temperatureUnit) - normal.toDouble(temperatureUnit)
         }
@@ -659,6 +693,7 @@ fun NormalsDepartureLabel(
                         "" +
                         departure.toTemperature(temperatureUnit).formatMeasure(
                             context,
+                            temperatureUnit,
                             unitWidth = UnitWidth.NARROW,
                             showSign = true
                         ),
@@ -737,12 +772,12 @@ private fun TemperatureChart(
     showRealTemp: Boolean,
     normals: Normals?,
     daily: Daily,
+    temperatureUnit: TemperatureUnit,
     markerVisibilityListener: CartesianMarkerVisibilityListener,
 ) {
     val context = LocalContext.current
 
     val provider = ResourcesProviderFactory.newInstance
-    val temperatureUnit = SettingsManager.getInstance(context).getTemperatureUnit(context)
     val step = temperatureUnit.chartStep
     val minY = remember(mappedValues, showRealTemp, normals) {
         if (showRealTemp) {
@@ -801,41 +836,47 @@ private fun TemperatureChart(
     }
 
     BreezyLineChart(
-        location,
-        modelProducer,
-        daily.date,
-        maxY,
-        { _, value, _ ->
-            value.toTemperature(temperatureUnit)
-                .formatMeasure(context, valueWidth = UnitWidth.NARROW, unitWidth = UnitWidth.NARROW)
+        location = location,
+        modelProducer = modelProducer,
+        theDay = daily.date,
+        maxY = maxY,
+        topAxisItemPlacer = remember(mappedValues) {
+            TimeTopAxisItemPlacer(mappedValues.keys.toImmutableList())
         },
-        persistentListOf(
-            persistentMapOf(
-                47.celsius.toDouble(temperatureUnit).toFloat() to Color(71, 14, 0),
-                30.celsius.toDouble(temperatureUnit).toFloat() to Color(232, 83, 25),
-                21.celsius.toDouble(temperatureUnit).toFloat() to Color(243, 183, 4),
-                10.celsius.toDouble(temperatureUnit).toFloat() to Color(128, 147, 24),
-                1.celsius.toDouble(temperatureUnit).toFloat() to Color(68, 125, 99),
-                0.celsius.toDouble(temperatureUnit).toFloat() to Color(93, 133, 198),
-                -4.celsius.toDouble(temperatureUnit).toFloat() to Color(100, 166, 189),
-                -8.celsius.toDouble(temperatureUnit).toFloat() to Color(106, 191, 181),
-                -15.celsius.toDouble(temperatureUnit).toFloat() to Color(157, 219, 217),
-                -25.celsius.toDouble(temperatureUnit).toFloat() to Color(143, 89, 169),
-                -40.celsius.toDouble(temperatureUnit).toFloat() to Color(162, 70, 145),
-                -55.celsius.toDouble(temperatureUnit).toFloat() to Color(202, 172, 195),
-                -70.celsius.toDouble(temperatureUnit).toFloat() to Color(115, 70, 105)
-            ),
-            persistentMapOf(
-                50f to Color(128, 128, 128, 160),
-                0f to Color(128, 128, 128, 160)
+        topAxisSize = BaseAxis.Size.fixed(23.dp),
+        endAxisValueFormatter = { _, value, _ ->
+            value.toTemperature(temperatureUnit)
+                .formatMeasure(context, temperatureUnit, valueWidth = UnitWidth.NARROW, unitWidth = UnitWidth.NARROW)
+        },
+        colors = remember {
+            persistentListOf(
+                persistentMapOf(
+                    47.celsius.toDouble(temperatureUnit).toFloat() to Color(71, 14, 0),
+                    30.celsius.toDouble(temperatureUnit).toFloat() to Color(232, 83, 25),
+                    21.celsius.toDouble(temperatureUnit).toFloat() to Color(243, 183, 4),
+                    10.celsius.toDouble(temperatureUnit).toFloat() to Color(128, 147, 24),
+                    1.celsius.toDouble(temperatureUnit).toFloat() to Color(68, 125, 99),
+                    0.celsius.toDouble(temperatureUnit).toFloat() to Color(93, 133, 198),
+                    -4.celsius.toDouble(temperatureUnit).toFloat() to Color(100, 166, 189),
+                    -8.celsius.toDouble(temperatureUnit).toFloat() to Color(106, 191, 181),
+                    -15.celsius.toDouble(temperatureUnit).toFloat() to Color(157, 219, 217),
+                    -25.celsius.toDouble(temperatureUnit).toFloat() to Color(143, 89, 169),
+                    -40.celsius.toDouble(temperatureUnit).toFloat() to Color(162, 70, 145),
+                    -55.celsius.toDouble(temperatureUnit).toFloat() to Color(202, 172, 195),
+                    -70.celsius.toDouble(temperatureUnit).toFloat() to Color(115, 70, 105)
+                ),
+                persistentMapOf(
+                    50f to Color(128, 128, 128, 160),
+                    0f to Color(128, 128, 128, 160)
+                )
             )
-        ),
+        },
         topAxisValueFormatter = { _, value, _ ->
             mappedValues.getOrElse(value.toLong()) { null }?.let { hourly ->
                 hourly.weatherCode?.let {
                     val ss = SpannableString("abc")
                     val d = ResourceHelper.getWeatherIcon(provider, it, hourly.isDaylight)
-                    d.setBounds(0, 0, 64, 64)
+                    d.setBounds(0, 0, context.dpToPx(18f).roundToInt(), context.dpToPx(18f).roundToInt())
                     val span = ImageSpan(d, ImageSpan.ALIGN_BASELINE)
                     ss.setSpan(span, 0, 3, Spannable.SPAN_INCLUSIVE_EXCLUSIVE)
                     ss
@@ -859,9 +900,7 @@ private fun TemperatureChart(
             }
         }.toImmutableMap(),
         minY = minY,
-        endAxisItemPlacer = remember {
-            VerticalAxis.ItemPlacer.step({ step })
-        },
+        endAxisItemPlacer = remember { VerticalAxis.ItemPlacer.step({ step }) },
         markerVisibilityListener = markerVisibilityListener
     )
 }

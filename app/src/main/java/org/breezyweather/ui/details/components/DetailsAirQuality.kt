@@ -54,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -97,8 +98,8 @@ import org.breezyweather.domain.weather.model.getIndex
 import org.breezyweather.domain.weather.model.getName
 import org.breezyweather.ui.common.charts.BreezyLineChart
 import org.breezyweather.ui.common.charts.SpecificVerticalAxisItemPlacer
+import org.breezyweather.ui.common.charts.TimeTopAxisItemPlacer
 import org.breezyweather.ui.common.widgets.Material3ExpressiveCardListItem
-import org.breezyweather.ui.settings.preference.bottomInsetItem
 import org.breezyweather.unit.formatting.UnitWidth
 import java.util.Date
 import kotlin.math.max
@@ -335,7 +336,7 @@ fun DetailsAirQuality(
         item {
             AirQualityScale(selectedPollutant)
         }
-        bottomInsetItem()
+        bottomDetailsInset()
     }
 }
 
@@ -441,6 +442,7 @@ private fun AirQualityChart(
     markerVisibilityListener: CartesianMarkerVisibilityListener,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
 
     val maxY = remember(mappedValues, selectedPollutant) {
         max(
@@ -475,25 +477,32 @@ private fun AirQualityChart(
     }
 
     BreezyLineChart(
-        location,
-        modelProducer,
-        daily.date,
-        maxY.toDouble(),
-        { _, value, _ ->
-            if (selectedPollutant == null) {
-                UnitUtils.formatInt(context, value.roundToInt())
-            } else {
-                PollutantIndex.getUnit(selectedPollutant).formatMeasure(context, value)
+        location = location,
+        modelProducer = modelProducer,
+        theDay = daily.date,
+        maxY = maxY.toDouble(),
+        topAxisItemPlacer = remember(mappedValues) {
+            TimeTopAxisItemPlacer(mappedValues.keys.toImmutableList())
+        },
+        endAxisValueFormatter = remember(selectedPollutant) {
+            { _, value, _ ->
+                if (selectedPollutant == null) {
+                    UnitUtils.formatInt(context, value.roundToInt())
+                } else {
+                    PollutantIndex.getUnit(selectedPollutant).formatMeasure(context, value)
+                }
             }
         },
-        persistentListOf(
-            ((selectedPollutant?.thresholds ?: PollutantIndex.aqiThresholds).reversed().map { it.toFloat() }).zip(
-                context.resources.getIntArray(PollutantIndex.colorsArrayId).reversed().map { Color(it) }
-            ).toMap().toImmutableMap()
-        ),
+        colors = remember(selectedPollutant) {
+            persistentListOf(
+                ((selectedPollutant?.thresholds ?: PollutantIndex.aqiThresholds).reversed().map { it.toFloat() }).zip(
+                    resources.getIntArray(PollutantIndex.colorsArrayId).reversed().map { Color(it) }
+                ).toMap().toImmutableMap()
+            )
+        },
         trendHorizontalLines = persistentMapOf(
             (selectedPollutant?.let { it.thresholds[3] } ?: PollutantIndex.aqiThresholds[3]).toDouble() to
-                context.resources.getStringArray(R.array.air_quality_levels)[3]
+                resources.getStringArray(R.array.air_quality_levels)[3]
         ),
         topAxisValueFormatter = { _, value, _ ->
             mappedValues.getOrElse(value.toLong()) { null }
