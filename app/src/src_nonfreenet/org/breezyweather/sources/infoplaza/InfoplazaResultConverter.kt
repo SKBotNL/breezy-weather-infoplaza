@@ -39,6 +39,7 @@ import org.breezyweather.sources.infoplaza.json.InfoplazaNowcastTimeseries
 import org.breezyweather.unit.pollen.PollenConcentration
 import org.breezyweather.unit.pollen.PollenConcentration.Companion.pollenIndex
 import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
+import org.breezyweather.unit.ratio.Ratio.Companion.percent
 import org.breezyweather.unit.speed.Speed.Companion.metersPerSecond
 import org.breezyweather.unit.temperature.Temperature.Companion.celsius
 import java.util.Objects
@@ -117,13 +118,13 @@ internal fun getHourlyForecast(
                 total = result.precipitation?.amount?.millimeters,
             ),
             precipitationProbability = PrecipitationProbability(
-                total = result.precipitation?.probability
+                total = result.precipitation?.probability?.percent
             ),
             wind = Wind(
                 degree = directionToBearing(result.wind?.direction),
                 speed = result.wind?.speed?.ms?.metersPerSecond,
             ),
-            cloudCover = getCloudCover(result.weatherSymbol)
+            cloudCover = getCloudCover(result.weatherSymbol)?.percent
         )
     }
 }
