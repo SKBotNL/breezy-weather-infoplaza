@@ -162,7 +162,7 @@ object ClockDayDetailsWidgetIMP : AbstractRemoteViewsPresenter() {
         builder.append(location.getPlace(context))
         weather.current?.temperature?.temperature?.let {
             builder.append(" ").append(
-                it.formatMeasure(context, temperatureUnit, unitWidth = UnitWidth.NARROW)
+                it.formatMeasure(context, temperatureUnit, valueWidth = UnitWidth.NARROW, unitWidth = UnitWidth.NARROW)
             )
         }
         views.setTextViewText(R.id.widget_clock_day_subtitle, builder.toString())
@@ -179,7 +179,12 @@ object ClockDayDetailsWidgetIMP : AbstractRemoteViewsPresenter() {
                 R.id.widget_clock_day_feelsLikeTemp,
                 context.getString(
                     R.string.temperature_feels_like_with_unit,
-                    it.formatMeasure(context, temperatureUnit, unitWidth = UnitWidth.NARROW)
+                    it.formatMeasure(
+                        context,
+                        temperatureUnit,
+                        valueWidth = UnitWidth.NARROW,
+                        unitWidth = UnitWidth.NARROW
+                    )
                 )
             )
         } ?: run {
@@ -233,7 +238,8 @@ object ClockDayDetailsWidgetIMP : AbstractRemoteViewsPresenter() {
                 setTextViewTextSize(R.id.widget_clock_day_feelsLikeTemp, TypedValue.COMPLEX_UNIT_PX, contentSize)
                 setTextViewTextSize(R.id.widget_clock_day_aqiHumidity, TypedValue.COMPLEX_UNIT_PX, contentSize)
                 setTextViewTextSize(R.id.widget_clock_day_wind, TypedValue.COMPLEX_UNIT_PX, contentSize)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    // Introduced in Android 9, but remotable view method only since Android 12
                     setInt(R.id.widget_clock_day_subtitle, "setLineHeight", contentSize.roundToInt())
                 }
             }

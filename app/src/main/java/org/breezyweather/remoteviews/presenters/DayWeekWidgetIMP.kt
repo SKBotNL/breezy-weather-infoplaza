@@ -199,7 +199,8 @@ object DayWeekWidgetIMP : AbstractRemoteViewsPresenter() {
                 setTextViewTextSize(R.id.widget_day_week_temp_3, TypedValue.COMPLEX_UNIT_PX, contentSize)
                 setTextViewTextSize(R.id.widget_day_week_temp_4, TypedValue.COMPLEX_UNIT_PX, contentSize)
                 setTextViewTextSize(R.id.widget_day_week_temp_5, TypedValue.COMPLEX_UNIT_PX, contentSize)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    // Introduced in Android 9, but remotable view method only since Android 12
                     setInt(R.id.widget_day_week_temp_1, "setLineHeight", contentSize.roundToInt())
                     setInt(R.id.widget_day_week_temp_2, "setLineHeight", contentSize.roundToInt())
                     setInt(R.id.widget_day_week_temp_3, "setLineHeight", contentSize.roundToInt())
@@ -299,7 +300,8 @@ object DayWeekWidgetIMP : AbstractRemoteViewsPresenter() {
                 setTextViewTextSize(R.id.widget_day_week_title, TypedValue.COMPLEX_UNIT_PX, contentSize)
                 setTextViewTextSize(R.id.widget_day_week_subtitle, TypedValue.COMPLEX_UNIT_PX, contentSize)
                 setTextViewTextSize(R.id.widget_day_week_time, TypedValue.COMPLEX_UNIT_PX, timeSize)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    // Introduced in Android 9, but remotable view method only since Android 12
                     setInt(R.id.widget_day_week_subtitle, "setLineHeight", contentSize.roundToInt())
                 }
             }
@@ -328,7 +330,14 @@ object DayWeekWidgetIMP : AbstractRemoteViewsPresenter() {
                 stringBuilder.append(location.getPlace(context))
                 weather.current?.temperature?.temperature?.let {
                     stringBuilder.append("\n")
-                        .append(it.formatMeasure(context, temperatureUnit, unitWidth = UnitWidth.NARROW))
+                        .append(
+                            it.formatMeasure(
+                                context,
+                                temperatureUnit,
+                                valueWidth = UnitWidth.NARROW,
+                                unitWidth = UnitWidth.NARROW
+                            )
+                        )
                 }
                 stringBuilder.toString()
             }
@@ -341,7 +350,14 @@ object DayWeekWidgetIMP : AbstractRemoteViewsPresenter() {
                     if (stringBuilder.isNotEmpty()) {
                         stringBuilder.append(" ")
                     }
-                    stringBuilder.append(it.formatMeasure(context, temperatureUnit, unitWidth = UnitWidth.NARROW))
+                    stringBuilder.append(
+                        it.formatMeasure(
+                            context,
+                            temperatureUnit,
+                            valueWidth = UnitWidth.NARROW,
+                            unitWidth = UnitWidth.NARROW
+                        )
+                    )
                 }
                 return stringBuilder.toString()
             }
@@ -437,7 +453,12 @@ object DayWeekWidgetIMP : AbstractRemoteViewsPresenter() {
             "feels_like" -> weather.current?.temperature?.feelsLikeTemperature?.let {
                 context.getString(
                     R.string.temperature_feels_like_with_unit,
-                    it.formatMeasure(context, temperatureUnit, unitWidth = UnitWidth.NARROW)
+                    it.formatMeasure(
+                        context,
+                        temperatureUnit,
+                        valueWidth = UnitWidth.NARROW,
+                        unitWidth = UnitWidth.NARROW
+                    )
                 )
             }
             else -> getCustomSubtitle(context, subtitleData, location, weather, temperatureUnit, pollenIndexSource)

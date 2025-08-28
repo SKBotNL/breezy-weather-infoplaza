@@ -3,13 +3,12 @@
 Android library to handle:
 
 - Unit conversion, with syntax inspired by [Kotlin duration](https://kotlinlang.org/docs/time-measurement.html#time-sources).
-- Unit formatting in various languages, including on devices without ICU support or with missing CLDR data, with a simplified backport (no handling of plural and non-nominative rules, no regional translations for languages)
+- Unit formatting in various languages, including on devices without ICU support or with missing CLDR data, with a simplified backport (no handling of plural and non-nominative rules)
 - Number formatting
 - Computing of some common weather data (apparent temperature, dew point, etc)
 
 Remains to do:
 
-- Add missing non-English Android translations (for the units we use in Breezy Weather)
 - Complete unit testing
 - Plus and minus operations
 - Parse from string
@@ -41,8 +40,6 @@ Supported widths for Android translations:
 
 ## Distance
 
-Android translations are only in English, French and Esperanto at the moment.
-
 | Unit          | `NumberFormatter` | `MeasureFormat` | Android translations |
 |---------------|-------------------|-----------------|----------------------|
 | Meter         | Android >= 11     | Android 7 to 10 | Android < 7          |
@@ -59,8 +56,6 @@ Supported widths for Android translations:
 
 
 ## Speed
-
-Android translations are only in English, French and Esperanto at the moment.
 
 | Unit                  | `NumberFormatter` | `MeasureFormat` | Android translations |
 |-----------------------|-------------------|-----------------|----------------------|
@@ -83,8 +78,6 @@ Supported widths for Android translations:
 
 
 ## Precipitation
-
-Android translations are only in English, French and Esperanto at the moment.
 
 | Unit                   | `NumberFormatter` | `MeasureFormat` | Android translations |
 |------------------------|-------------------|-----------------|----------------------|

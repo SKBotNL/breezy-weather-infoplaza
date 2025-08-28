@@ -69,7 +69,7 @@
     <string name="settings_background_updates_section_troubleshoot">Aqeɛɛed</string>
     <string name="settings_location">Adig</string>
     <string name="settings_appearance">Udem</string>
-    <string name="settings_main_section_options">Iɣewwaṛen</string>
+    <string name="settings_main_section_options">Tixtiṛiyin</string>
     <string name="settings_main_background_animation_enabled">Urmid</string>
     <string name="settings_notifications">Ilɣa</string>
     <string name="precipitation_rain">Lehwa</string>
@@ -98,7 +98,6 @@
     <string name="uv_index_0_2">Iṣubb</string>
     <string name="uv_index_8_10">Yuli aṭas</string>
     <string name="action_set">Sbadu</string>
-    <string name="action_help_me_choose">Ɛawed-iyi deg ufran</string>
     <string name="common_weather_text_snow_heavy">Adfel s waṭas</string>
     <string name="weather_kind_hail">Abruri</string>
     <string name="uv_index_3_5">Yelha kan</string>
