@@ -218,8 +218,8 @@ private fun getWeatherCode(result: InfoplazaForecastWeatherSymbol?): WeatherCode
             else -> WeatherCode.THUNDERSTORM
         }
     }
-    if (result.precipitation?.amount != "NoDrops" && result.precipitation?.kind == "Rain") {
-        when (result.precipitation.kind) {
+    if (result.precipitation?.amount != "NoDrops") {
+        when (result.precipitation?.kind) {
             "Rain" -> return WeatherCode.RAIN
             "Snow" -> return WeatherCode.SNOW
             "FrozenRain" -> return WeatherCode.HAIL
