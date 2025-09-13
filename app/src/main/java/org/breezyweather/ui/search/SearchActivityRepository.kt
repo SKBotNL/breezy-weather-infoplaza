@@ -32,7 +32,6 @@ import org.breezyweather.domain.settings.ConfigStore
 import org.breezyweather.domain.settings.SettingsManager
 import org.breezyweather.sources.RefreshHelper
 import org.breezyweather.sources.SourceManager
-import org.breezyweather.sources.getWeatherSource
 import org.breezyweather.ui.main.utils.RefreshErrorType
 import javax.inject.Inject
 
@@ -190,10 +189,9 @@ class SearchActivityRepository @Inject internal constructor(
         set(value) {
             mConfig.edit().putString(KEY_LAST_DEFAULT_SOURCE, value).apply()
         }
-        get() = if (BuildConfig.FLAVOR != "freenet") {
-            mConfig.getString(KEY_LAST_DEFAULT_SOURCE, null) ?: BuildConfig.DEFAULT_LOCATION_SEARCH_SOURCE
-        } else {
-            "openmeteo"
+        get() {
+            return mConfig.getString(KEY_LAST_DEFAULT_SOURCE, null)
+                ?: BuildConfig.DEFAULT_LOCATION_SEARCH_SOURCE
         }
 
     fun cancel() {

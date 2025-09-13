@@ -278,9 +278,12 @@ class HomeFragment : MainModuleFragment() {
                     if (it?.location != null) {
                         binding.toolbar.menu.findItem(R.id.action_edit).isVisible = true
                         binding.toolbar.menu.findItem(R.id.action_open_in_other_app).isVisible = true
+                        binding.emptyText.visibility = if (it.location.weather != null) View.GONE else View.VISIBLE
+                    } else {
+                        binding.toolbar.menu.findItem(R.id.action_edit).isVisible = false
+                        binding.toolbar.menu.findItem(R.id.action_open_in_other_app).isVisible = false
+                        binding.emptyText.visibility = View.GONE
                     }
-
-                    // TODO: Dirty workaround to avoid recollecting on lifecycle resume
                     if (it?.location != lastCurrentLocation) {
                         updateViews(it?.location)
                         lastCurrentLocation = it?.location
@@ -351,17 +354,6 @@ class HomeFragment : MainModuleFragment() {
         if (location?.weather == null) {
             adapter!!.setNullWeather()
             adapter!!.notifyDataSetChanged()
-            binding.recyclerView.setOnTouchListener { _, event ->
-                if (event.action == MotionEvent.ACTION_DOWN &&
-                    !binding.refreshLayout.isRefreshing
-                ) {
-                    viewModel.updateWithUpdatingChecking(
-                        triggeredByUser = true,
-                        checkPermissions = true
-                    )
-                }
-                false
-            }
             return
         }
 
@@ -433,10 +425,23 @@ class HomeFragment : MainModuleFragment() {
         )
     }
 
-    private fun setRefreshing(b: Boolean) {
+    private fun setRefreshing(isRefreshing: Boolean) {
         binding.refreshLayout.post {
             if (isFragmentViewCreated) {
-                binding.refreshLayout.isRefreshing = b
+                binding.refreshLayout.isRefreshing = isRefreshing
+                binding.emptyText.visibility = if (isRefreshing) {
+                    View.GONE
+                } else {
+                    viewModel.currentLocation.value?.location.let { loc ->
+                        if (loc == null) {
+                            View.GONE
+                        } else if (loc.weather == null) {
+                            View.VISIBLE
+                        } else {
+                            View.GONE
+                        }
+                    }
+                }
             }
         }
     }

@@ -498,7 +498,7 @@
     <string name="cloud_cover_short">Felhőborítottság</string>
     <string name="settings_weather_sources_default_source">Új helyszínek alapértelmezett forrása</string>
     <string name="settings_weather_source_unavailable">%s (nem elérhető)</string>
-    <string name="settings_weather_source_freenet_disclaimer">További időjárási források állnak rendelkezésre az alkalmazás egyéb kiadási változataiból. További információkért koppintson ide.</string>
+    <string name="settings_weather_source_freenet_disclaimer">Az alkalmazás Freenet verzióját használja. Ha nem szabad hálózati szolgáltatásokat szeretne használni, váltson át az általános verzióra.</string>
     <string name="weather_message_too_frequent_refreshes">Várjon néhány másodpercet mielőtt újrapróbálkozna…</string>
     <string name="location_delete_location_dialog_title">Eltávolítja ezt helyszínt?</string>
     <string name="location_delete_location_dialog_message">A(z) „%s” nevű helyszínt készül törölni a mentett helyszínek listájáról.</string>
@@ -523,8 +523,7 @@
     <string name="sunshine">Napsütés</string>
     <string name="widget_custom_subtitle_keyword_xpis_description">Pollenindex összefoglalása ma, holnap, …, 4 nap múlva</string>
     <string name="about_open_link_message">%s oldal megnyitása?</string>
-    <string name="message_source_not_installed_error_content_tip_1">Ez akkor fordulhat elő, ha az alkalmazás normál változatában adta hozzá a helyszínt, majd átváltott a csak nyílt forráskódot tartalmazó változatra. A probléma megoldódhat, ha visszatér a normál verzióra.</string>
-    <string name="message_source_not_installed_error_content_tip_2">Vagy módosítsa a helyszínhez tartozó időjárási forrást, vagy törölje és adja hozzá újra a helyszínt.</string>
+    <string name="message_source_not_installed_error_content">Vagy módosítsa a helyszínhez tartozó időjárási forrást, vagy törölje és adja hozzá újra a helyszínt.</string>
     <string name="settings_weather_source_open_meteo_weather_models_seamless">Zökkenőmentes</string>
     <string name="settings_per_location">Helyszínbeállítások</string>
     <string name="settings_weather_source_open_meteo_weather_models_seamless_description">Kombinálja az összes időjárási modellt ettől a szolgáltatótól egy zökkenőmentes előrejelzéshez</string>
@@ -777,4 +776,9 @@
     <string name="widget_live_wallpaper_animations_enable_warning1">A háttérkép-animációkról ismert, hogy többek között a következőket okozzák: magas akkumulátor-fogyasztás; az akkumulátor túlmelegedése; magas memóriafogyasztás; a rendszer érzékenységének romlása; az Android rendszer összeomlása.</string>
     <string name="widget_live_wallpaper_animations_enable_warning2">Ha úgy dönt, hogy engedélyezi őket, teljes felelősséget vállal az esetlegesen felmerülő problémákért, és nem kap támogatást.</string>
     <string name="widget_live_wallpaper_animations_enable_dangerous">VESZÉLYES</string>
+    <string name="settings_appearance_dark_mode_custom">Sötét mód bekapcsolása ettől: %1$s, eddig: %2$s</string>
+    <string name="message_source_non_free_network_title">Ehhez a forráshoz az alkalmazás általános verziója szükséges</string>
+    <string name="message_source_non_free_network_content">Az alkalmazás Freenet verzióját használja, amely csak a szabad hálózaton tárolt forrásokat támogatja. Ha továbbra is ezt a forrást szeretné használni, váltson vissza az általános verzióra. Ellenkező esetben válasszon egy másik forrást.</string>
+    <string name="settings_weather_source_non_freenet">%s (nem szabad hálózati szolgáltatás)</string>
+    <string name="action_pull_down_to_refresh">Húzza lefelé a frissítéshez</string>
 </resources>

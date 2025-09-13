@@ -19,8 +19,16 @@ package org.breezyweather.ui.settings.compose
 import android.Manifest
 import android.app.Activity
 import android.os.Build
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.dimensionResource
@@ -37,9 +45,12 @@ import org.breezyweather.common.preference.EditTextPreference
 import org.breezyweather.common.preference.ListPreference
 import org.breezyweather.common.source.ConfigurableSource
 import org.breezyweather.common.source.LocationSource
+import org.breezyweather.common.source.NonFreeNetSource
 import org.breezyweather.common.source.getName
 import org.breezyweather.common.utils.helpers.SnackbarHelper
 import org.breezyweather.domain.settings.SettingsManager
+import org.breezyweather.ui.common.composables.AlertDialogLink
+import org.breezyweather.ui.common.widgets.Material3ExpressiveCardListItem
 import org.breezyweather.ui.common.widgets.Material3Scaffold
 import org.breezyweather.ui.common.widgets.generateCollapsedScrollBehavior
 import org.breezyweather.ui.common.widgets.insets.FitStatusBarTopAppBar
@@ -93,28 +104,72 @@ fun LocationSettingsScreen(
         PreferenceScreen(
             paddingValues = paddings.plus(PaddingValues(horizontal = dimensionResource(R.dimen.normal_margin)))
         ) {
-            if (BuildConfig.FLAVOR != "freenet") {
-                sectionHeaderItem(R.string.settings_location_section_general)
-                listPreferenceItem(R.string.settings_location_service) { id ->
-                    ListPreferenceViewWithCard(
-                        title = context.getString(id),
-                        selectedKey = SettingsManager.getInstance(context).locationSource,
-                        valueArray = locationSources.map { it.id }.toTypedArray(),
-                        nameArray = locationSources.map { it.getName(context) }.toTypedArray(),
-                        enableArray = locationSources.map {
-                            it !is ConfigurableSource || it.isConfigured
-                        }.toTypedArray(),
-                        summary = { _, value -> locationSources.firstOrNull { it.id == value }?.name },
+            if (BuildConfig.FLAVOR == "freenet") {
+                clickablePreferenceItem(R.string.settings_weather_source_freenet_disclaimer) { id ->
+                    val dialogLinkOpenState = remember { mutableStateOf(false) }
+
+                    Material3ExpressiveCardListItem(
+                        surface = MaterialTheme.colorScheme.secondaryContainer,
+                        onSurface = MaterialTheme.colorScheme.onSecondaryContainer,
                         isFirst = true,
                         isLast = true,
-                        onValueChanged = { sourceId ->
-                            SettingsManager.getInstance(context).locationSource = sourceId
+                        modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.small_margin))
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(
+                                top = dimensionResource(R.dimen.normal_margin),
+                                start = dimensionResource(R.dimen.normal_margin),
+                                end = dimensionResource(R.dimen.normal_margin)
+                            )
+                        ) {
+                            Text(
+                                text = stringResource(R.string.settings_weather_source_freenet_disclaimer),
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            TextButton(
+                                modifier = Modifier.align(Alignment.CenterHorizontally),
+                                onClick = {
+                                    dialogLinkOpenState.value = true
+                                }
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.action_learn_more)
+                                )
+                            }
                         }
-                    )
+                    }
+                    if (dialogLinkOpenState.value) {
+                        AlertDialogLink(
+                            onClose = { dialogLinkOpenState.value = false },
+                            linkToOpen = "https://github.com/breezy-weather/breezy-weather/blob/main/INSTALL.md"
+                        )
+                    }
                 }
-                sectionFooterItem(R.string.settings_location_section_general)
                 largeSeparatorItem()
             }
+
+            sectionHeaderItem(R.string.settings_location_section_general)
+            listPreferenceItem(R.string.settings_location_service) { id ->
+                ListPreferenceViewWithCard(
+                    title = context.getString(id),
+                    selectedKey = SettingsManager.getInstance(context).locationSource,
+                    valueArray = locationSources.map { it.id }.toTypedArray(),
+                    nameArray = locationSources.map { it.getName(context) }.toTypedArray(),
+                    enableArray = locationSources.map {
+                        (it !is ConfigurableSource || it.isConfigured) &&
+                            (BuildConfig.FLAVOR != "freenet" || it !is NonFreeNetSource)
+                    }.toTypedArray(),
+                    summary = { _, value -> locationSources.firstOrNull { it.id == value }?.name },
+                    isFirst = true,
+                    isLast = true,
+                    onValueChanged = { sourceId ->
+                        SettingsManager.getInstance(context).locationSource = sourceId
+                    }
+                )
+            }
+            sectionFooterItem(R.string.settings_location_section_general)
+            largeSeparatorItem()
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 sectionHeaderItem(R.string.location_service_native)

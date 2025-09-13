@@ -67,6 +67,7 @@ import org.breezyweather.common.source.ConfigurableSource
 import org.breezyweather.common.source.HttpSource
 import org.breezyweather.common.source.LocationParametersSource
 import org.breezyweather.common.source.LocationResult
+import org.breezyweather.common.source.NonFreeNetSource
 import org.breezyweather.common.source.RefreshError
 import org.breezyweather.common.source.ReverseGeocodingSource
 import org.breezyweather.common.source.WeatherResult
@@ -139,9 +140,9 @@ class RefreshHelper @Inject constructor(
                     errors.add(RefreshError(RefreshErrorType.ACCESS_BACKGROUND_LOCATION_PERMISSION_MISSING))
                 }
             }
-        }
-        if (!LocationManagerCompat.isLocationEnabled(context.locationManager)) {
-            errors.add(RefreshError(RefreshErrorType.LOCATION_ACCESS_OFF))
+            if (!LocationManagerCompat.isLocationEnabled(context.locationManager)) {
+                errors.add(RefreshError(RefreshErrorType.LOCATION_ACCESS_OFF))
+            }
         }
         if (errors.isNotEmpty()) {
             return errors
@@ -193,6 +194,7 @@ class RefreshHelper @Inject constructor(
         }
 
         var needsCountryCodeRefresh = false
+        var needsSavingToDb = false
 
         val currentErrors = mutableListOf<RefreshError>()
 
@@ -201,6 +203,7 @@ class RefreshHelper @Inject constructor(
             val coordinatesChanged = location.latitude != currentLocationStore.lastKnownLatitude.toDouble() ||
                 location.longitude != currentLocationStore.lastKnownLongitude.toDouble()
             if (coordinatesChanged) {
+                needsSavingToDb = true
                 location.copy(
                     latitude = currentLocationStore.lastKnownLatitude.toDouble(),
                     longitude = currentLocationStore.lastKnownLongitude.toDouble(),
@@ -280,6 +283,7 @@ class RefreshHelper @Inject constructor(
                             it.countryCode.equals(cc, ignoreCase = true)
                         } != false ||
                             it.countryCode.equals("AN", ignoreCase = true)
+                        needsSavingToDb = true
                         it
                     }
                 }
@@ -310,7 +314,9 @@ class RefreshHelper @Inject constructor(
                         ).copy(
                             // We failed to refresh, so retry reverse geocoding next time
                             needsGeocodeRefresh = true
-                        )
+                        ).also {
+                            needsSavingToDb = true
+                        }
                     } catch (_: Throwable) {
                         /**
                          * Returns the original location
@@ -338,6 +344,7 @@ class RefreshHelper @Inject constructor(
 
         // STEP 3 - Validate ambiguous ISO 3166 codes
         val locationInfoFromDefaultSource = if (needsCountryCodeRefresh) {
+            needsSavingToDb = true
             getLocationWithDisambiguatedCountryCode(locationGeocoded, context)
         } else {
             locationGeocoded
@@ -345,6 +352,7 @@ class RefreshHelper @Inject constructor(
 
         // STEP 4 - Add timezone if missing
         val locationWithTimeZone = if (locationGeocoded.isTimeZoneInvalid) {
+            needsSavingToDb = true
             locationInfoFromDefaultSource.copy(
                 timeZone = getTimeZoneForLocation(context, locationGeocoded)
             )
@@ -353,7 +361,7 @@ class RefreshHelper @Inject constructor(
         }
 
         // STEP 5 - If there was any change, update in database
-        if (location != locationWithTimeZone) {
+        if (needsSavingToDb) {
             locationRepository.update(locationWithTimeZone)
         }
 
@@ -588,7 +596,15 @@ class RefreshHelper @Inject constructor(
                                         val featuresToUpdate = entry.value
                                             .filter {
                                                 // Remove sources that are not configured
-                                                if (service is ConfigurableSource && !service.isConfigured) {
+                                                if (BuildConfig.FLAVOR == "freenet" && service is NonFreeNetSource) {
+                                                    errors.add(
+                                                        RefreshError(
+                                                            RefreshErrorType.NON_FREE_NETWORK_SOURCE,
+                                                            entry.key
+                                                        )
+                                                    )
+                                                    false
+                                                } else if (service is ConfigurableSource && !service.isConfigured) {
                                                     errors.add(
                                                         RefreshError(
                                                             RefreshErrorType.API_KEY_REQUIRED_MISSING,
@@ -781,7 +797,7 @@ class RefreshHelper @Inject constructor(
                         }
                     } else {
                         null
-                    }, // Doesn't fallback to old current, as we will use forecast instead later
+                    }, // Fallback will be handled later
                     airQuality = if (!location.airQualitySource.isNullOrEmpty()) {
                         if (errors.any {
                                 it.feature == SourceFeature.AIR_QUALITY &&
@@ -949,7 +965,13 @@ class RefreshHelper @Inject constructor(
                     normalsUpdateLongitude = normalsUpdateLongitude
                 ),
                 current = completeCurrentFromHourlyData(
-                    weatherWrapperCompleted.current,
+                    weatherWrapperCompleted.current
+                        ?: if (isUpdateStillValid(base.currentUpdateTime, wait = 30)) {
+                            // Allow to re-use current data if it was successfully refreshed less than 30 min ago
+                            location.weather?.current?.toCurrentWrapper()
+                        } else {
+                            null
+                        },
                     currentHour,
                     currentDay,
                     weatherWrapperCompleted.airQuality?.current
@@ -990,13 +1012,17 @@ class RefreshHelper @Inject constructor(
             return Observable.error(NoNetworkException())
         }
 
-        return searchService.requestLocationSearch(context, query).map { locationList ->
-            locationList.map {
-                it.copy(
-                    longitude = it.longitude?.roundDecimals(6),
-                    latitude = it.latitude?.roundDecimals(6)
-                )
+        return try {
+            searchService.requestLocationSearch(context, query).map { locationList ->
+                locationList.map {
+                    it.copy(
+                        longitude = it.longitude?.roundDecimals(6),
+                        latitude = it.latitude?.roundDecimals(6)
+                    )
+                }
             }
+        } catch (e: Throwable) {
+            return Observable.error(e)
         }
     }
 

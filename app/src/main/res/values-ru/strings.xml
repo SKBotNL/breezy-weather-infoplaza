@@ -509,7 +509,7 @@
     <string name="widget_custom_subtitle_keyword_caqi_description">Текущий индекс качества воздуха</string>
     <string name="widget_custom_subtitle_keyword_xaqi_description">Индекс качества воздуха на сегодня, завтра, …, 4 дня спустя</string>
     <string name="settings_weather_source_unavailable">%s (недоступно)</string>
-    <string name="settings_weather_source_freenet_disclaimer">Дополнительные источники данных о погоде доступны в других версиях приложения. Нажмите здесь, чтобы узнать больше.</string>
+    <string name="settings_weather_source_freenet_disclaimer">Вы используете версию приложения Freenet. Переключитесь на версию Стандарт если вы желаете использовать не свободные источники.</string>
     <string name="pollen_castanea">Каштан</string>
     <string name="pollen_plantaginaceae">Подорожник</string>
     <string name="pollen_platanus">Платан</string>
@@ -531,8 +531,7 @@
     <string name="settings_weather_source_open_meteo_weather_models">Модели погоды</string>
     <string name="settings_weather_source_open_meteo_weather_models_best_match_description">Объединяет в себе лучшие модели погоды для этого местоположения</string>
     <string name="settings_weather_source_open_meteo_weather_models_seamless_description">Объединяет все модели погоды из этого источника в единый прогноз</string>
-    <string name="message_source_not_installed_error_content_tip_1">Это может произойти, если вы добавили свое местоположение в стандартную версию Breezy Weather, а затем переключились на версию только с libre-networks, в которой поддерживается меньше источников данных о погоде. Возврат к стандартной версии может решить эту проблему.</string>
-    <string name="message_source_not_installed_error_content_tip_2">Либо измените источники погоды для этого местоположения, либо удалите и добавьте это местоположение заново.</string>
+    <string name="message_source_not_installed_error_content">Либо измените источники погоды для этого местоположения, либо удалите и добавьте это местоположение заново.</string>
     <string name="widget_custom_subtitle_keyword_xpis_description">Сводка пыльцевого индекса на сегодня, завтра, …, 4 дня спустя</string>
     <string name="sunshine">Солнечно</string>
     <string name="alert">Оповещение</string>
@@ -780,4 +779,9 @@
     <string name="widget_live_wallpaper_animations_enable_warning1">Известно, что анимации обоев могут приводить, в том числе, к: большому расходу аккумулятора; его перегреву; высокому потреблению памяти; ухудшению отзывчивости системы; сбоям Android.</string>
     <string name="widget_live_wallpaper_animations_enable_warning2">Если вы решите включить их, вы берёте на себя полную ответственность за любые возникающие проблемы, и поддержка предоставлена не будет.</string>
     <string name="settings_regional_preference">Региональные настройки</string>
+    <string name="settings_appearance_dark_mode_custom">Тёмный режим с %1$s до %2$s</string>
+    <string name="message_source_non_free_network_title">Этот источник требует Стандартную версию приложения</string>
+    <string name="message_source_non_free_network_content">Вы используете версию приложения Freenet, которая поддерживает только источники, размещенные в свободной сети. Чтобы продолжить использование этого источника, переключитесь обратно на версию Стандарт. В противном случае выберите другой источник.</string>
+    <string name="settings_weather_source_non_freenet">%s (не свободный сетевой сервис)</string>
+    <string name="action_pull_down_to_refresh">Потяните вниз, чтобы обновить</string>
 </resources>

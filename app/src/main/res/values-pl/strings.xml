@@ -536,7 +536,7 @@
     <string name="settings_background_updates_refresh_never_warning1">Po wyłączeniu aktualizacji w tle nie będziesz już otrzymywać powiadomień o alertach lub opadach. Widżety nie będą odświeżane do momentu otwarcia aplikacji.</string>
     <string name="settings_background_updates_refresh_never_warning3">Rozważ użycie mniejszej częstotliwości odświeżania zamiast wyłączania aktualizacji w tle, w przeciwnym razie dotknij „Kontynuuj”, jeśli nadal chcesz kontynuować.</string>
     <string name="settings_per_location_theme">Motyw</string>
-    <string name="settings_weather_source_freenet_disclaimer">Więcej źródeł pogody jest dostępnych w innych wersjach Breezy Weather. Kliknij tutaj, aby dowiedzieć się więcej.</string>
+    <string name="settings_weather_source_freenet_disclaimer">Używasz wersji Freenet aplikacji. Jeśli chcesz korzystać z płatnych usług sieciowych, przełącz się na wersję Standard.</string>
     <string name="location_delete_location_dialog_title">Usunąć lokalizację?</string>
     <string name="weather_message_too_frequent_refreshes">Odczekaj kilka sekund zanim spróbujesz ponownie…</string>
     <string name="location_delete_location_dialog_message">Zamierzasz usunąć „%s” z listy zapisanych lokalizacji.</string>
@@ -556,8 +556,7 @@
     <string name="pollen_cupressaceae_taxaceae">Cyprys</string>
     <string name="pollen_fraxinus">Jesion</string>
     <string name="widget_custom_subtitle_keyword_xaqi_description">Indeks jakości powietrza na dziś, jutro, …, 4 dni później</string>
-    <string name="message_source_not_installed_error_content_tip_1">Może się tak zdarzyć, jeśli dodałeś swoją lokalizację w standardowej wersji Breezy Weather, a następnie przełączyłeś się na wersję tylko z wolnymi źródłami sieciowymi. Powrót do wersji standardowej może rozwiązać ten problem.</string>
-    <string name="message_source_not_installed_error_content_tip_2">Zmień źródła pogody dla tej lokalizacji lub usuń i ponownie dodaj tę lokalizację.</string>
+    <string name="message_source_not_installed_error_content">Zmień źródła pogody dla tej lokalizacji lub usuń i ponownie dodaj tę lokalizację.</string>
     <string name="widget_label_hide_header">Ukryj nagłówek</string>
     <string name="sunshine">Promienie słoneczne</string>
     <string name="location_delete_location_dialog_message_no_name">Zamierzasz usunąć tę lokalizację z listy zapisanych lokalizacji.</string>
@@ -708,8 +707,8 @@
     <string name="visibility_poor">Zła</string>
     <string name="visibility_moderate">Umiarkowana</string>
     <string name="visibility_good">Dobra</string>
-    <string name="visibility_clear">Czysta</string>
-    <string name="visibility_perfectly_clear">Całkowicie przejrzyste</string>
+    <string name="visibility_clear">Bardzo dobra</string>
+    <string name="visibility_perfectly_clear">Doskonała</string>
     <string name="cloud_cover_about">O zachmurzeniu</string>
     <string name="cloud_cover_about_description">Zachmurzenie oznacza procentową powierzchnię nieba zasłoniętą średnio przez chmury. Poziom zachmurzenia jest powiązany z długością trwania nasłonecznienia.</string>
     <string name="data_sources">Źródła danych</string>
@@ -784,4 +783,9 @@
     <string name="widget_live_wallpaper_animations_enable_dangerous">NIEBEZPIECZNY</string>
     <string name="widget_live_wallpaper_animations_enable_warning1">Animowane tapety mogą powodować, m.in.: wysokie zużycie baterii, przegrzewanie się urządzenia, wysokie zużycie pamięci, obniżoną responsywność systemu oraz awarie Androida.</string>
     <string name="widget_live_wallpaper_animations_enable_warning2">Jeśli zdecydujesz się je włączyć, przejmujesz pełną odpowiedzialność za wszelkie problemy, które mogą się pojawić, a wsparcie techniczne nie będzie świadczone.</string>
+    <string name="settings_appearance_dark_mode_custom">Tryb ciemny od %1$s do %2$s</string>
+    <string name="message_source_non_free_network_title">To źródło jest dostępne tylko w wersji Standard aplikacji</string>
+    <string name="message_source_non_free_network_content">Używasz wersji Freenet, która wspiera wyłącznie darmowe źródła danych. Aby korzystać z tego źródła, musisz przełączyć się na wersję Standard. Alternatywnie, wybierz inne źródło.</string>
+    <string name="settings_weather_source_non_freenet">%s (usługa płatna)</string>
+    <string name="action_pull_down_to_refresh">Przeciągnij w dół, aby odświeżyć</string>
 </resources>

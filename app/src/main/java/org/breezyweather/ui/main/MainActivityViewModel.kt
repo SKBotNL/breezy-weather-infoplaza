@@ -48,7 +48,6 @@ import org.breezyweather.domain.settings.CurrentLocationStore
 import org.breezyweather.domain.settings.SettingsManager
 import org.breezyweather.sources.RefreshHelper
 import org.breezyweather.sources.SourceManager
-import org.breezyweather.sources.getReverseGeocodingSource
 import org.breezyweather.ui.main.utils.RefreshErrorType
 import org.breezyweather.ui.main.utils.StatementManager
 import java.util.Date
@@ -337,7 +336,6 @@ class MainActivityViewModel @Inject constructor(
             )
             return
         }
-
         _loading.value = true
 
         if (BuildConfig.FLAVOR != "freenet" && SettingsManager.getInstance(getApplication()).isAppUpdateCheckEnabled) {

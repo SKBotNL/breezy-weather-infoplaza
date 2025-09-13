@@ -500,7 +500,7 @@
     <string name="widget_custom_subtitle_keyword_caqi_description">Поточний індекс якості повітря</string>
     <string name="widget_custom_subtitle_keyword_xaqi_description">Індекс якості повітря сьогодні, завтра, …, через 4 дні</string>
     <string name="settings_weather_source_unavailable">%s (недоступно)</string>
-    <string name="settings_weather_source_freenet_disclaimer">Інші джерела погодних даних доступні в інших версіях застосунку. Натисніть тут, щоби дізнатися більше.</string>
+    <string name="settings_weather_source_freenet_disclaimer">Ви використовуєте версію програми Freenet. Перейдіть на стандартну версію, якщо хочете користуватися не-вільними мережевими сервісами.</string>
     <string name="pollen_castanea">Каштан</string>
     <string name="pollen_corylus">Ліщина</string>
     <string name="pollen_fraxinus">Ясен</string>
@@ -522,8 +522,7 @@
     <string name="settings_weather_source_open_meteo_weather_models_seamless">Безшовна</string>
     <string name="about_open_link_message">Відкрити %s?</string>
     <string name="settings_weather_source_open_meteo_weather_models_seamless_description">Поєднує всі моделі погоди від цього постачальника в безшовний прогноз</string>
-    <string name="message_source_not_installed_error_content_tip_1">Це може трапитися, якщо ви додали своє розташування в стандартній версії застосунку, а потім перейшли на версію лише з вільними джерелами погоди. Повернення до стандартної версії може розв’язати цю проблему.</string>
-    <string name="message_source_not_installed_error_content_tip_2">Або змініть джерела погодних даних для цього розташування, або видаліть та знову додайте його.</string>
+    <string name="message_source_not_installed_error_content">Або змініть джерела погодних даних для цього розташування, або видаліть та знову додайте його.</string>
     <string name="widget_custom_subtitle_keyword_xpis_description">Зведення індексу пилку сьогодні, завтра, …, через 4 дні</string>
     <string name="sunshine">Годин сонця</string>
     <string name="alert">Попередження</string>
@@ -771,4 +770,9 @@
     <string name="widget_live_wallpaper_animations_enable_dangerous">НЕБЕЗПЕЧНО</string>
     <string name="widget_live_wallpaper_animations_enable_warning1">Відомо, що анімовані шпалери можуть спричиняти, серед іншого: високе споживання заряду батареї; перегрів батареї; високе споживання пам’яті; зниження швидкості роботи системи; збої системи Android.</string>
     <string name="widget_live_wallpaper_animations_enable_warning2">Якщо ви вирішите їх увімкнути, ви берете на себе повну відповідальність за будь-які проблеми, які можуть виникнути, і підтримка вам не надаватиметься.</string>
+    <string name="settings_appearance_dark_mode_custom">Темний режим з %1$s до %2$s</string>
+    <string name="message_source_non_free_network_title">Для цього джерела потрібна стандартна версія програми</string>
+    <string name="message_source_non_free_network_content">Ви використовуєте версію програми Freenet, яка підтримує лише джерела, розміщені у вільний мережі. Щоб продовжувати використовувати це джерело, поверніться до стандартної версії. В іншому випадку виберіть інше джерело.</string>
+    <string name="settings_weather_source_non_freenet">%s (не-вільна мережева послуга)</string>
+    <string name="action_pull_down_to_refresh">Потягніть униз, щоб оновити</string>
 </resources>

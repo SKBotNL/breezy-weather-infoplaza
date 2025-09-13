@@ -22,8 +22,8 @@ android {
 
     defaultConfig {
         applicationId = "org.breezyweather"
-        versionCode = 60009
-        versionName = "6.0.9-beta"
+        versionCode = 60012
+        versionName = "6.0.12-rc"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getGitSha()}\"")
@@ -135,6 +135,11 @@ android {
             "String",
             "CWA_KEY",
             "\"${properties.getProperty("breezy.cwa.key") ?: ""}\""
+        )
+        it.buildConfigField(
+            "String",
+            "ECCC_KEY",
+            "\"${properties.getProperty("breezy.eccc.key") ?: ""}\""
         )
         it.buildConfigField(
             "String",

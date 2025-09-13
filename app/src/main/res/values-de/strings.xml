@@ -309,7 +309,7 @@
     <string name="settings_main_background_animation_disabled">Aus</string>
     <string name="settings_notifications">Benachrichtigungen</string>
     <string name="settings_main_cards_other_element_animations_switch">Animation weiterer Elemente</string>
-    <string name="settings_appearance_summary">Sprache, dunkler Modus, Symbolpaket, Einheiten</string>
+    <string name="settings_appearance_summary">Sprache, dunkles Design, Symbolpaket, Einheiten</string>
     <string name="settings_notifications_summary">Benachrichtigungen für Wetterwarnungen, Niederschlag oder Vorhersagen für den ersten Ort</string>
     <string name="settings_modules_notification_feels_like_switch">Gefühlte Temperatur verwenden</string>
     <string name="settings_main_section_displayed_data">Angezeigte Daten</string>
@@ -492,7 +492,7 @@
     <string name="ceiling_short">Wolkendecke</string>
     <string name="settings_weather_sources_default_source">Standardquelle für neue Orte</string>
     <string name="settings_weather_source_unavailable">%s (nicht verfügbar)</string>
-    <string name="settings_weather_source_freenet_disclaimer">Mehr Wetterquellen sind in den anderen Varianten der App verfügbar. Tippe hier, um mehr zu erfahren.</string>
+    <string name="settings_weather_source_freenet_disclaimer">Du benutzt die Freenet Version der App. Wechsel zur Standard-Version, wenn du nicht-freie Netzwerk-Services benutzen möchtest.</string>
     <string name="location_delete_location_dialog_message">Du bist dabei, „%s“ aus deiner Liste der gespeicherten Orte zu löschen.</string>
     <string name="location_delete_location_dialog_title">Ort löschen?</string>
     <string name="widget_label_hide_header">Kopfzeile ausblenden</string>
@@ -517,8 +517,7 @@
     <string name="about_open_link_message">%s öffnen?</string>
     <string name="widget_custom_subtitle_keyword_xpis_description">Pollenindex-Übersicht für heute, morgen, …, 4 Tage später</string>
     <string name="sunshine">Sonnenschein</string>
-    <string name="message_source_not_installed_error_content_tip_1">Dies kann passieren, wenn du deinen Ort in der Standardvariante der App hinzugefügt hast und dann zur Variante mit nur freien Netzwerkquellen gewechselt bist. Eine Rückkehr zur Standardvariante könnte dieses Problem lösen.</string>
-    <string name="message_source_not_installed_error_content_tip_2">Ändere entweder die Wetterquelle für diesen Ort oder entferne ihn und füge ihn dann wieder hinzu.</string>
+    <string name="message_source_not_installed_error_content">Ändere entweder die Wetterquelle für diesen Ort oder entferne ihn und füge ihn dann wieder hinzu.</string>
     <string name="settings_per_location">Ortseinstellungen</string>
     <string name="settings_per_location_summary">Zusätzliche Anpassungen für diesen Ort</string>
     <string name="settings_weather_source_open_meteo_weather_models_best_match_description">Kombiniert die besten Wettermodelle für diesen Ort</string>
@@ -784,4 +783,9 @@
     <string name="widget_live_wallpaper_animations_enable_dangerous">GEFÄHRLICH</string>
     <string name="widget_live_wallpaper_animations_enable_warning1">Hintergrundanimationen können unter anderem Folgendes verursachen: hohen Akkuverbrauch; Akkuüberhitzung; hohen Speicherverbrauch; verschlechterte Systemreaktionsfähigkeit; Android-Systemabsturz.</string>
     <string name="widget_live_wallpaper_animations_enable_warning2">Wenn du dich entscheidest, sie zu aktivieren, übernimmst du die volle Verantwortung für alle auftretenden Probleme und es wird keine Unterstützung bereitgestellt.</string>
+    <string name="settings_appearance_dark_mode_custom">Dunkles Design von %1$s bis %2$s</string>
+    <string name="message_source_non_free_network_title">Diese Quelle erfordert die Standardversion der App</string>
+    <string name="message_source_non_free_network_content">Du verwendest die Freenet-Version der App, die nur Quellen unterstützt, die in einem freien Netzwerk gehostet werden. Um diese Quelle weiterhin zu verwenden, wechsel zurück zur Standardversion. Andernfalls wähle eine andere Quelle.</string>
+    <string name="settings_weather_source_non_freenet">%s (nicht-freier Netzwerkservice)</string>
+    <string name="action_pull_down_to_refresh">Zum Aktualisieren nach unten ziehen</string>
 </resources>

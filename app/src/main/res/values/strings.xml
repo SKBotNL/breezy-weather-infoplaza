@@ -481,6 +481,7 @@
     <string name="action_about">About</string>
     <string name="action_dependencies" translatable="false">@string/about_dependencies</string>
     <string name="action_refresh">Refresh</string>
+    <string name="action_pull_down_to_refresh">Pull down to refresh</string>
     <string name="action_restart">Restart</string>
     <string name="action_more">More</string>
     <string name="action_edit">Edit</string>
@@ -544,9 +545,9 @@
     <string name="message_parsing_error_title">Failed to parse weather data</string>
     <string name="message_parsing_error_content">Make sure you updated to latest version of the app. Server may be temporarily unavailable, in that case, please try again later. If the problem persists, please dump a crash log from debug settings, and report an issue on GitHub.</string>
     <string name="message_source_not_installed_error_title">Source no longer available</string>
-    <!-- Free as in “libre -->
-    <string name="message_source_not_installed_error_content_tip_1">This can happen when you added your location in the Standard flavor of the app and then switched to the flavor with only libre network sources. Going back to the Standard flavor may solve this problem.</string>
-    <string name="message_source_not_installed_error_content_tip_2">Either change the weather sources for this location, or delete and re-add this location.</string>
+    <string name="message_source_not_installed_error_content">Either change the weather sources for this location, or delete and re-add this location.</string>
+    <string name="message_source_non_free_network_title">This source requires the Standard version of the app</string>
+    <string name="message_source_non_free_network_content">You’re using the Freenet version of the app, which only supports sources hosted on a free network. To keep using this source, switch back to the Standard version. Otherwise, choose a different source.</string>
     <string name="message_tap_again_to_exit">Tap again to exit</string>
     <!-- Widgets -->
     <string name="widget_day">Daily</string>
@@ -699,16 +700,18 @@
     <string name="settings_weather_sources_summary">Default weather source for new locations, custom API keys, other source settings</string>
     <string name="settings_weather_sources_section_general" translatable="false">@string/settings_section_general</string>
     <string name="settings_weather_sources_default_source">Default source for new locations</string>
+    <string name="settings_weather_source_non_freenet">%s (non-free network service)</string>
     <string name="settings_weather_source_unavailable">%s (unavailable)</string>
     <string name="settings_weather_source_not_configured">%s (not configured)</string>
     <string name="settings_weather_source_none">None</string>
-    <string name="settings_weather_source_freenet_disclaimer">More weather sources are available from other flavors of the app. Tap here to learn more.</string>
+    <string name="settings_weather_source_freenet_disclaimer">You are using the Freenet version of the app. Switch to the Standard version if you want to use non-free network services.</string>
     <string name="settings_weather_source_current_position_disclaimer">More weather sources may become available for your location after the first refresh.</string>
     <string name="settings_weather_sources_per_location_summary">Customize weather data sources used for this location</string>
     <string name="settings_source_default_value">Default (unchanged)</string>
     <string name="settings_source_api_key">API key</string>
     <string name="settings_location_source_baidu_ip_api_key" translatable="false">@string/settings_source_api_key</string>
     <string name="settings_weather_source_accu_api_key" translatable="false">@string/settings_source_api_key</string>
+    <string name="settings_weather_source_eccc_api_key" translatable="false">@string/settings_source_api_key</string>
     <string name="settings_weather_source_open_weather_api_key" translatable="false">@string/settings_source_api_key</string>
     <string name="settings_weather_source_pirate_weather_api_key" translatable="false">@string/settings_source_api_key</string>
     <string name="settings_weather_source_here_api_key" translatable="false">@string/settings_source_api_key</string>
@@ -767,6 +770,8 @@
     <string name="settings_appearance_language_title">Language</string>
     <string name="settings_appearance_calendar_title">Alternate calendar</string>
     <string name="settings_appearance_dark_mode_title">App dark mode</string>
+    <!-- %1$s = 22:00 / %2$s = 06:00 -->
+    <string name="settings_appearance_dark_mode_custom">Dark mode from %1$s to %2$s</string>
     <string name="settings_appearance_dark_mode_locations_title">Location-based dark mode</string>
     <!-- Literally means “Will be in light mode when sun is up and in dark mode when sun is down” -->
     <string name="settings_appearance_dark_mode_locations_day_night">Follow day/night</string>

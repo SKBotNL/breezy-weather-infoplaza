@@ -20,6 +20,8 @@ import android.content.Context
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -32,6 +34,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
@@ -48,6 +51,7 @@ import org.breezyweather.BuildConfig
 import org.breezyweather.R
 import org.breezyweather.common.extensions.currentLocale
 import org.breezyweather.common.source.ConfigurableSource
+import org.breezyweather.common.source.NonFreeNetSource
 import org.breezyweather.common.source.WeatherSource
 import org.breezyweather.common.source.getName
 import org.breezyweather.common.utils.helpers.IntentHelper
@@ -55,8 +59,6 @@ import org.breezyweather.common.utils.helpers.SnackbarHelper
 import org.breezyweather.domain.settings.SettingsManager
 import org.breezyweather.domain.source.resourceName
 import org.breezyweather.sources.SourceManager
-import org.breezyweather.sources.getSupportedFeatureSources
-import org.breezyweather.sources.sourcesWithPreferencesScreen
 import org.breezyweather.ui.common.widgets.Material3ExpressiveCardListItem
 import org.breezyweather.ui.main.MainActivity
 import org.breezyweather.ui.settings.preference.composables.EditTextPreferenceView
@@ -91,7 +93,12 @@ fun LocationPreference(
                 iconId = R.drawable.ic_location,
                 selectedKey = SettingsManager.getInstance(activity).locationSource,
                 sourceList = locationSources.map {
-                    Triple(it.id, it.getName(context), it !is ConfigurableSource || it.isConfigured)
+                    Triple(
+                        it.id,
+                        it.getName(context),
+                        (it !is ConfigurableSource || it.isConfigured) &&
+                            (BuildConfig.FLAVOR != "freenet" || it !is NonFreeNetSource)
+                    )
                 }.toImmutableList(),
                 colors = ListItemDefaults.colors(AlertDialogDefaults.containerColor)
             ) { sourceId ->
@@ -322,6 +329,7 @@ internal fun getCompatibleSources(
                         it.id,
                         it.getName(context, feature, location),
                         (it !is ConfigurableSource || it.isConfigured) &&
+                            (BuildConfig.FLAVOR != "freenet" || it !is NonFreeNetSource) &&
                             it.isFeatureSupportedForLocation(location, feature)
                     )
                 }
@@ -438,19 +446,37 @@ fun SecondarySourcesPreference(
                         onSurface = MaterialTheme.colorScheme.onSecondaryContainer,
                         isFirst = true,
                         isLast = true,
-                        modifier = Modifier
-                            .padding(horizontal = dimensionResource(R.dimen.small_margin))
-                            .clickable { dialogLinkOpenState.value = true }
+                        modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.small_margin))
                     ) {
-                        Text(
-                            text = stringResource(R.string.settings_weather_source_freenet_disclaimer),
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(dimensionResource(R.dimen.normal_margin))
-                        )
+                        Column(
+                            modifier = Modifier.padding(
+                                top = dimensionResource(R.dimen.normal_margin),
+                                start = dimensionResource(R.dimen.normal_margin),
+                                end = dimensionResource(R.dimen.normal_margin)
+                            )
+                        ) {
+                            Text(
+                                text = stringResource(R.string.settings_weather_source_freenet_disclaimer),
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            TextButton(
+                                modifier = Modifier.align(Alignment.CenterHorizontally),
+                                onClick = {
+                                    dialogLinkOpenState.value = true
+                                }
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.action_learn_more)
+                                )
+                            }
+                        }
                     }
                 }
                 if (location.isCurrentPosition && !location.isUsable) {
+                    if (BuildConfig.FLAVOR == "freenet") {
+                        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_margin)))
+                    }
                     Material3ExpressiveCardListItem(
                         surface = MaterialTheme.colorScheme.secondaryContainer,
                         onSurface = MaterialTheme.colorScheme.onSecondaryContainer,

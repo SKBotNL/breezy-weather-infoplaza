@@ -46,7 +46,6 @@ import org.breezyweather.domain.settings.SettingsChangedMessage
 import org.breezyweather.domain.settings.SettingsManager
 import org.breezyweather.sources.RefreshHelper
 import org.breezyweather.sources.SourceManager
-import org.breezyweather.sources.getSupportedFeatureSources
 import org.breezyweather.ui.settings.compose.AppearanceSettingsScreen
 import org.breezyweather.ui.settings.compose.BackgroundSettingsScreen
 import org.breezyweather.ui.settings.compose.DebugSettingsScreen
@@ -317,7 +316,7 @@ class SettingsActivity : BreezyActivity() {
                 WeatherSourcesSettingsScreen(
                     context = this@SettingsActivity,
                     onNavigateBack = { onBack() },
-                    configuredWorldwideSources = sourceManager
+                    worldwideSources = sourceManager
                         .getSupportedFeatureSources(SourceFeature.FORECAST, Location()),
                     configurableSources = sourceManager.getConfigurableSources()
                 )

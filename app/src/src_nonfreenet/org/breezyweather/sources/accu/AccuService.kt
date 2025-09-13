@@ -21,7 +21,6 @@ import android.graphics.Color
 import androidx.annotation.DrawableRes
 import breezyweather.domain.location.model.Location
 import breezyweather.domain.location.model.LocationAddressInfo
-import breezyweather.domain.source.SourceContinent
 import breezyweather.domain.source.SourceFeature
 import breezyweather.domain.weather.model.AirQuality
 import breezyweather.domain.weather.model.Alert
@@ -61,12 +60,6 @@ import org.breezyweather.common.extensions.toTimezoneNoHour
 import org.breezyweather.common.preference.EditTextPreference
 import org.breezyweather.common.preference.ListPreference
 import org.breezyweather.common.preference.Preference
-import org.breezyweather.common.source.ConfigurableSource
-import org.breezyweather.common.source.HttpSource
-import org.breezyweather.common.source.LocationParametersSource
-import org.breezyweather.common.source.LocationSearchSource
-import org.breezyweather.common.source.ReverseGeocodingSource
-import org.breezyweather.common.source.WeatherSource
 import org.breezyweather.domain.settings.SettingsManager
 import org.breezyweather.domain.settings.SourceConfigStore
 import org.breezyweather.sources.accu.json.AccuAirQualityData
@@ -84,7 +77,6 @@ import org.breezyweather.sources.accu.json.AccuValue
 import org.breezyweather.sources.accu.preferences.AccuDaysPreference
 import org.breezyweather.sources.accu.preferences.AccuHoursPreference
 import org.breezyweather.sources.accu.preferences.AccuPortalPreference
-import org.breezyweather.sources.openmeteo.OpenMeteoService.Companion.COPERNICUS_POLLEN_BBOX
 import org.breezyweather.unit.distance.Distance
 import org.breezyweather.unit.distance.Distance.Companion.feet
 import org.breezyweather.unit.distance.Distance.Companion.kilometers
@@ -119,16 +111,8 @@ import kotlin.time.Duration.Companion.seconds
 class AccuService @Inject constructor(
     @ApplicationContext context: Context,
     @Named("JsonClient") client: Retrofit.Builder,
-) : HttpSource(),
-    WeatherSource,
-    LocationSearchSource,
-    ReverseGeocodingSource,
-    ConfigurableSource,
-    LocationParametersSource {
+) : AccuServiceStub() {
 
-    override val id = "accu"
-    override val name = "AccuWeather"
-    override val continent = SourceContinent.WORLDWIDE
     override val privacyPolicyUrl = "https://www.accuweather.com/en/privacy"
 
     private val mDeveloperApi by lazy {
@@ -144,18 +128,6 @@ class AccuService @Inject constructor(
             .create(AccuEnterpriseApi::class.java)
     }
 
-    private val weatherAttribution = "AccuWeather"
-    override val locationSearchAttribution = weatherAttribution
-    override val supportedFeatures = mapOf(
-        SourceFeature.FORECAST to weatherAttribution,
-        SourceFeature.CURRENT to weatherAttribution,
-        SourceFeature.AIR_QUALITY to weatherAttribution,
-        SourceFeature.POLLEN to weatherAttribution,
-        SourceFeature.MINUTELY to weatherAttribution,
-        SourceFeature.ALERT to weatherAttribution,
-        SourceFeature.NORMALS to weatherAttribution,
-        SourceFeature.REVERSE_GEOCODING to weatherAttribution
-    )
     override val attributionLinks = mapOf(
         weatherAttribution to "https://www.accuweather.com/"
     )
@@ -163,24 +135,6 @@ class AccuService @Inject constructor(
     @DrawableRes
     override fun getAttributionIcon(): Int {
         return R.drawable.accu_icon
-    }
-
-    override fun isFeatureSupportedForLocation(
-        location: Location,
-        feature: SourceFeature,
-    ): Boolean {
-        return when (feature) {
-            SourceFeature.POLLEN -> COPERNICUS_POLLEN_BBOX.contains(LatLng(location.latitude, location.longitude)) || (
-                location.countryCode.equals("US", ignoreCase = true) &&
-                    CONTIGUOUS_US_STATES_BBOX.contains(LatLng(location.latitude, location.longitude))
-                ) || (location.countryCode.equals("CA", ignoreCase = true))
-            else ->
-                portal == AccuPortalPreference.ENTERPRISE ||
-                    feature == SourceFeature.FORECAST ||
-                    feature == SourceFeature.CURRENT ||
-                    feature == SourceFeature.ALERT ||
-                    feature == SourceFeature.REVERSE_GEOCODING
-        }
     }
 
     override fun requestWeather(
@@ -893,7 +847,7 @@ class AccuService @Inject constructor(
         }
         get() = config.getString("apikey", null) ?: ""
 
-    private var portal: AccuPortalPreference
+    override var portal: AccuPortalPreference
         set(value) {
             config.edit().putString("portal", value.id).apply()
         }
@@ -934,8 +888,6 @@ class AccuService @Inject constructor(
 
     override val isConfigured
         get() = getApiKeyOrDefault().isNotEmpty()
-
-    override val isRestricted = false
 
     override fun getPreferences(context: Context): List<Preference> {
         return listOf(
@@ -1047,25 +999,9 @@ class AccuService @Inject constructor(
         )
     )
 
-    // We have no way to distinguish the ones below. Others were deduced with other info in the code above
-    override val knownAmbiguousCountryCodes = arrayOf(
-        "MA", // Claims: EH
-        "NO" // Territories: SJ
-    )
-
     companion object {
         private const val ACCU_DEVELOPER_BASE_URL = "https://dataservice.accuweather.com/"
         private const val ACCU_ENTERPRISE_BASE_URL = "https://api.accuweather.com/"
-
-        // Accuweather's pollen forecast is only available in the 48 contiguous U.S. states + D.C., Canada,
-        // and European coverage area of Copernicus. We will limit Pollen Source to these areas.
-
-        // 48 contiguous states boundary taken from Natural Earth Data, extended by 1° in each direction.
-        // Source: https://www.naturalearthdata.com/
-        private val CONTIGUOUS_US_STATES_BBOX = LatLngBounds(
-            LatLng(23.542547919, -125.734607238),
-            LatLng(50.369494121, -65.977324999)
-        )
 
         // Extracted from: https://developer.accuweather.com/localizations-by-language
         // Leads to failure to refresh otherwise

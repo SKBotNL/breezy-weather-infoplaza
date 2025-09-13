@@ -17,14 +17,16 @@
 package org.breezyweather.ui.settings.compose
 
 import android.content.Context
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.dimensionResource
@@ -40,6 +42,7 @@ import org.breezyweather.common.preference.ListPreference
 import org.breezyweather.common.source.ConfigurableSource
 import org.breezyweather.common.source.FeatureSource
 import org.breezyweather.common.source.LocationSource
+import org.breezyweather.common.source.NonFreeNetSource
 import org.breezyweather.common.source.getName
 import org.breezyweather.domain.settings.SettingsManager
 import org.breezyweather.ui.common.composables.AlertDialogLink
@@ -67,7 +70,7 @@ import java.text.Collator
 fun WeatherSourcesSettingsScreen(
     context: Context,
     onNavigateBack: () -> Unit,
-    configuredWorldwideSources: ImmutableList<FeatureSource>,
+    worldwideSources: ImmutableList<FeatureSource>,
     configurableSources: ImmutableList<ConfigurableSource>,
     modifier: Modifier = Modifier,
 ) {
@@ -92,20 +95,35 @@ fun WeatherSourcesSettingsScreen(
                     val dialogLinkOpenState = remember { mutableStateOf(false) }
 
                     Material3ExpressiveCardListItem(
-                        isFirst = true,
-                        isLast = true,
                         surface = MaterialTheme.colorScheme.secondaryContainer,
                         onSurface = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.clickable {
-                            dialogLinkOpenState.value = true
-                        }
+                        isFirst = true,
+                        isLast = true,
+                        modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.small_margin))
                     ) {
-                        Text(
-                            text = stringResource(id),
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(dimensionResource(R.dimen.normal_margin))
-                        )
+                        Column(
+                            modifier = Modifier.padding(
+                                top = dimensionResource(R.dimen.normal_margin),
+                                start = dimensionResource(R.dimen.normal_margin),
+                                end = dimensionResource(R.dimen.normal_margin)
+                            )
+                        ) {
+                            Text(
+                                text = stringResource(R.string.settings_weather_source_freenet_disclaimer),
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            TextButton(
+                                modifier = Modifier.align(Alignment.CenterHorizontally),
+                                onClick = {
+                                    dialogLinkOpenState.value = true
+                                }
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.action_learn_more)
+                                )
+                            }
+                        }
                     }
                     if (dialogLinkOpenState.value) {
                         AlertDialogLink(
@@ -119,11 +137,11 @@ fun WeatherSourcesSettingsScreen(
 
             sectionHeaderItem(R.string.settings_weather_sources_section_general)
             listPreferenceItem(R.string.settings_weather_sources_default_source) { id ->
-                val configuredWorldwideSourcesAssociated = configuredWorldwideSources.associate { it.id to it.name }
+                val worldwideSourcesAssociated = worldwideSources.associate { it.id to it.name }
                 val defaultWeatherSource = SettingsManager.getInstance(context).defaultForecastSource
                 SourceView(
                     title = stringResource(id),
-                    selectedKey = if (configuredWorldwideSourcesAssociated.contains(defaultWeatherSource)) {
+                    selectedKey = if (worldwideSourcesAssociated.contains(defaultWeatherSource)) {
                         defaultWeatherSource
                     } else {
                         "auto"
@@ -131,8 +149,13 @@ fun WeatherSourcesSettingsScreen(
                     sourceList = buildList {
                         add(Triple("auto", stringResource(R.string.settings_automatic), true))
                         addAll(
-                            configuredWorldwideSources.map {
-                                Triple(it.id, it.getName(context), it !is ConfigurableSource || it.isConfigured)
+                            worldwideSources.map {
+                                Triple(
+                                    it.id,
+                                    it.getName(context),
+                                    (it !is ConfigurableSource || it.isConfigured) &&
+                                        (BuildConfig.FLAVOR != "freenet" || it !is NonFreeNetSource)
+                                )
                             }
                         )
                     }.toImmutableList(),
