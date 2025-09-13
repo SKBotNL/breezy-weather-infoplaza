@@ -224,6 +224,7 @@ class SourceManager @Inject constructor(
         openMeteoService,
         accuService,
         fpasService,
+        infoplazaService,
         metNoService,
         nceiService,
         openWeatherService,
