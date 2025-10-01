@@ -24,6 +24,7 @@ data class InfoplazaForecastDaily(
     val intervalStart: InfoplazaForecastIntervalStart,
     val digits: Digits?,
     val sunshine: Sunshine?,
+    val precipitation: InfoplazaForecastPrecipitation?,
 ) {
     @Serializable
     data class Dayparts(

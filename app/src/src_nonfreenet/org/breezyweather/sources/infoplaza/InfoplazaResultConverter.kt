@@ -79,6 +79,12 @@ internal fun getDailyForecast(
                         current.dayPart?.afternoon?.temperature?.feelsLike?.celsius,
                         current.dayPart?.evening?.temperature?.feelsLike?.celsius
                     ).maxOrNull()
+                ),
+                precipitation = Precipitation(
+                    total = current.precipitation?.amount?.millimeters
+                ),
+                precipitationProbability = PrecipitationProbability(
+                    total = current.precipitation?.probability?.percent
                 )
             ),
             night = HalfDayWrapper(
@@ -95,6 +101,12 @@ internal fun getDailyForecast(
                         current.dayPart?.night?.temperature?.feelsLike?.celsius,
                         next.dayPart?.morning?.temperature?.feelsLike?.celsius
                     ).maxOrNull()
+                ),
+                precipitation = Precipitation(
+                    total = current.precipitation?.amount?.millimeters
+                ),
+                precipitationProbability = PrecipitationProbability(
+                    total = current.precipitation?.probability?.percent
                 )
             ),
             uV = UV(index = current.digits?.health?.maxUvIndex),

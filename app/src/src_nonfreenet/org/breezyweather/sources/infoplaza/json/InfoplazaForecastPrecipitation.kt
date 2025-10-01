@@ -19,21 +19,7 @@ package org.breezyweather.sources.infoplaza.json
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class InfoplazaForecastHourly(
-    val temperature: InfoplazaForecastTemperature?,
-    val precipitation: InfoplazaForecastPrecipitation?,
-    val intervalStart: InfoplazaForecastIntervalStart,
-    val weatherSymbol: InfoplazaForecastWeatherSymbol?,
-    val wind: Wind?,
-) {
-    @Serializable
-    data class Wind(
-        val direction: String?,
-        val speed: Speed?,
-    ) {
-        @Serializable
-        data class Speed(
-            val ms: Double?,
-        )
-    }
-}
+data class InfoplazaForecastPrecipitation(
+    val amount: Double?,
+    val probability: Double?,
+)
