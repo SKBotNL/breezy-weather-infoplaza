@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of Breezy Weather.
  *
  * Breezy Weather is free software: you can redistribute it and/or modify it
@@ -20,15 +20,17 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MetIeHourly(
+data class MetIeForecastHourly(
     val date: String,
-    val time: String,
-    val weatherNumber: String?,
-    val weatherDescription: String?,
-    @SerialName("wind-speed") val windSpeed: Int?,
-    val rainfall: String?,
-    @SerialName("wind-direction") val windDirection: String?,
-    val temperature: Int?,
-    val humidity: String?,
-    val pressure: String?,
+    val localTime: String,
+    val temperature: MetIeForecastValue?,
+    val windDirection: MetIeForecastWindDirection?,
+    val windSpeed: MetIeForecastWindSpeed?,
+    val windGust: MetIeForecastWindSpeed?,
+    val humidity: MetIeForecastValue?,
+    val pressure: MetIeForecastValue?,
+    val cloudiness: MetIeForecastPercent?,
+    val precipitation: MetIeForecastPrecipitation?,
+    val symbol: MetIeForecastSymbol?,
+    @SerialName("feels_like") val feelsLike: Int?,
 )

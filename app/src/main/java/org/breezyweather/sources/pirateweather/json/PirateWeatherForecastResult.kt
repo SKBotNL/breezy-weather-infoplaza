@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of Breezy Weather.
  *
  * Breezy Weather is free software: you can redistribute it and/or modify it
@@ -20,11 +20,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class PirateWeatherForecastResult(
-    val latitude: Double?,
-    val longitude: Double?,
-    val timezone: String?,
-    val offset: Double?,
-    val elevation: Int?,
     val currently: PirateWeatherCurrently?,
     val minutely: PirateWeatherForecast<PirateWeatherMinutely>?,
     val hourly: PirateWeatherForecast<PirateWeatherHourly>?,

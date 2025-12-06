@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of Breezy Weather.
  *
  * Breezy Weather is free software: you can redistribute it and/or modify it
@@ -317,6 +317,7 @@ class PirateWeatherService @Inject constructor(
             "clear-day", "clear-night" -> WeatherCode.CLEAR
             "partly-cloudy-day", "partly-cloudy-night" -> WeatherCode.PARTLY_CLOUDY
             "cloudy" -> WeatherCode.CLOUDY
+            "thunderstorm" -> WeatherCode.THUNDERSTORM
             else -> null
         }
     }

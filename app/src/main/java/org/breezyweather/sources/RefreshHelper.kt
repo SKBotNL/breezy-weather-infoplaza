@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of Breezy Weather.
  *
  * Breezy Weather is free software: you can redistribute it and/or modify it
@@ -262,7 +262,7 @@ class RefreshHelper @Inject constructor(
                     } else if (reverseGeocodingService.id != BuildConfig.DEFAULT_GEOCODING_SOURCE &&
                         !it.hasValidCountryCode
                     ) {
-                        /**
+                        /*
                          * If country code is missing or invalid, don't accept the result and reverse to
                          * previous valid location
                          * Exception: The default geocoding source is allowed to send an empty countryCode
@@ -318,7 +318,7 @@ class RefreshHelper @Inject constructor(
                             needsSavingToDb = true
                         }
                     } catch (_: Throwable) {
-                        /**
+                        /*
                          * Returns the original location
                          * Previously, we used to return the new coordinates without the reverse geocoding,
                          * leading to issues when reverse geocoding fails (because the mandatory countryCode
@@ -330,7 +330,7 @@ class RefreshHelper @Inject constructor(
                         location
                     }
                 } else {
-                    /**
+                    /*
                      * Returns the original location
                      * Same comment as above
                      */
@@ -738,7 +738,7 @@ class RefreshHelper @Inject constructor(
                     }
                 }
 
-                /**
+                /*
                  * Make sure we return data from the correct source
                  */
                 WeatherWrapper(
@@ -975,9 +975,14 @@ class RefreshHelper @Inject constructor(
                     currentHour,
                     currentDay,
                     weatherWrapperCompleted.airQuality?.current
-                        ?: weatherWrapperCompleted.airQuality?.hourlyForecast?.entries?.firstOrNull {
-                            it.key.time >= System.currentTimeMillis() - 1.hours.inWholeMilliseconds
-                        }?.value, // Workaround for incompatibility with hourly forecast times
+                        ?: if (isUpdateStillValid(base.currentUpdateTime, wait = 30)) {
+                            // Allow to re-use current data if it was successfully refreshed less than 30 min ago
+                            location.weather?.current?.airQuality
+                        } else {
+                            null
+                        } ?: weatherWrapperCompleted.airQuality?.hourlyForecast?.entries?.firstOrNull {
+                        it.key.time >= System.currentTimeMillis() - 1.hours.inWholeMilliseconds
+                    }?.value, // Workaround for incompatibility with hourly forecast times
                     location
                 ),
                 dailyForecast = dailyForecast,

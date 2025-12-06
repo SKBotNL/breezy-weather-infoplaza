@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of Breezy Weather.
  *
  * Breezy Weather is free software: you can redistribute it and/or modify it
@@ -20,9 +20,6 @@ import android.content.Context
 import android.text.Layout
 import android.text.SpannableStringBuilder
 import android.view.LayoutInflater
-import android.view.MotionEvent
-import android.view.View
-import android.view.View.OnTouchListener
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.compose.ui.graphics.Color
@@ -76,7 +73,6 @@ import org.breezyweather.ui.theme.weatherView.WeatherViewController
 import org.breezyweather.unit.precipitation.Precipitation.Companion.micrometers
 import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
 import java.util.Date
-import kotlin.math.abs
 import kotlin.math.max
 import kotlin.time.Duration.Companion.minutes
 
@@ -115,7 +111,7 @@ class PrecipitationNowcastViewHolder(parent: ViewGroup) : AbstractMainCardViewHo
             minutely.values.max().inMicrometers
         )
         val trendHorizontalLines: ImmutableMap<Double, String> = buildMap {
-            /**
+            /*
              * Don’t show some thresholds when max precipitation is very high
              * - Below heavy level: keep all 3 lines
              * - Between heavy level and 2 * heavy level: keep light and heavy lines
@@ -240,34 +236,10 @@ class PrecipitationNowcastViewHolder(parent: ViewGroup) : AbstractMainCardViewHo
             },
             marker = marker
         )
+        chartView.consumeMoveEvents = true
         chartView.animateIn = SettingsManager.getInstance(context).isElementsAnimationEnabled
         chartView.modelProducer = modelProducer
         chartView.contentDescription = minutelyList.getContentDescription(context, location)
-        @Suppress("ClickableViewAccessibility")
-        chartView.setOnTouchListener(
-            object : OnTouchListener {
-                private var mLastX = 0f
-                private var mLastY = 0f
-
-                @Suppress("ClickableViewAccessibility")
-                override fun onTouch(v: View, event: MotionEvent): Boolean {
-                    when (event.action) {
-                        MotionEvent.ACTION_DOWN -> {
-                            mLastX = event.x
-                            mLastY = event.y
-                        }
-                        MotionEvent.ACTION_MOVE -> {
-                            if (abs(event.x - mLastX) > abs(event.y - mLastY)) {
-                                v.parent.requestDisallowInterceptTouchEvent(true)
-                            }
-                            mLastX = event.x
-                            mLastY = event.y
-                        }
-                    }
-                    return false
-                }
-            }
-        )
 
         activity.lifecycleScope.launch {
             modelProducer.runTransaction {

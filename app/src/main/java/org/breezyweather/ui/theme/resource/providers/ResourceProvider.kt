@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of Breezy Weather.
  *
  * Breezy Weather is free software: you can redistribute it and/or modify it
@@ -50,7 +50,6 @@ abstract class ResourceProvider {
     abstract fun getWeatherAnimators(code: WeatherCode?, dayTime: Boolean): Array<Animator?>
 
     // minimal icon.
-    @RequiresApi(Build.VERSION_CODES.M)
     abstract fun getMinimalIcon(code: WeatherCode?, dayTime: Boolean): Icon
     abstract fun getMinimalLightIcon(code: WeatherCode?, dayTime: Boolean): Drawable
     abstract fun getMinimalLightIconUri(code: WeatherCode?, dayTime: Boolean): Uri

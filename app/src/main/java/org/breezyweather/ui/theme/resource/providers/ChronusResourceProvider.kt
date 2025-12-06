@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of Breezy Weather.
  *
  * Breezy Weather is free software: you can redistribute it and/or modify it
@@ -155,7 +155,6 @@ class ChronusResourceProvider(
         return mDefaultProvider.getMinimalXmlIcon(code, dayTime)
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     override fun getMinimalIcon(code: WeatherCode?, dayTime: Boolean): Icon {
         return mDefaultProvider.getMinimalIcon(code, dayTime)
     }

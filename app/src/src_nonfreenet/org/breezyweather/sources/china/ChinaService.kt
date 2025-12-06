@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of Breezy Weather.
  *
  * Breezy Weather is free software: you can redistribute it and/or modify it
@@ -117,7 +117,7 @@ class ChinaService @Inject constructor(
                 location.latitude,
                 location.longitude,
                 location.isCurrentPosition,
-                locationKey = "weathercn%3A$locationKey",
+                locationKey = "weathercn:$locationKey",
                 days = 15,
                 appKey = CHINA_APP_KEY,
                 sign = CHINA_SIGN,
@@ -148,7 +148,7 @@ class ChinaService @Inject constructor(
                 context.currentLocale.toString().lowercase(),
                 isGlobal = false,
                 appKey = CHINA_APP_KEY,
-                locationKey = "weathercn%3A$locationKey",
+                locationKey = "weathercn:$locationKey",
                 sign = CHINA_SIGN
             ).onErrorResumeNext {
                 failedFeatures[SourceFeature.MINUTELY] = it
@@ -588,7 +588,7 @@ class ChinaService @Inject constructor(
     }
 
     companion object {
-        private const val CHINA_WEATHER_BASE_URL = "https://weatherapi.market.xiaomi.com/wtr-v3/"
+        private const val CHINA_WEATHER_BASE_URL = "https://weatherapi.intl.xiaomi.com/wtr-v3/"
         private const val CHINA_APP_KEY = "weather20151024"
         private const val CHINA_SIGN = "zUFJoAR2ZVrDy1vF3D07"
     }

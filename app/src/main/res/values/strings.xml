@@ -352,6 +352,7 @@
     <string name="pressure_average" translatable="false">@string/chart_average</string>
     <string name="pressure_rising">Rising</string>
     <string name="pressure_steady">Steady</string>
+    <string name="pressure_standard">Standard</string>
     <string name="pressure_falling">Falling</string>
     <string name="pressure_about">About pressure</string>
     <!-- If there is no acronym MSLP in your language, just skip the parenthesis in the translation -->
@@ -723,6 +724,7 @@
     <string name="settings_weather_source_atmo_sud_api_key" translatable="false">@string/settings_source_api_key</string>
     <string name="settings_weather_source_cwa_api_key" translatable="false">@string/settings_source_api_key</string>
     <string name="settings_weather_source_bmkg_api_key" translatable="false">@string/settings_source_api_key</string>
+    <string name="settings_weather_source_met_ie_api_key" translatable="false">@string/settings_source_api_key</string>
     <string name="settings_weather_source_met_office_api_key" translatable="false">@string/settings_source_api_key</string>
     <string name="settings_weather_source_aemet_api_key" translatable="false">@string/settings_source_api_key</string>
     <!-- Synonym of instance: Server -->
@@ -764,6 +766,7 @@
     <string name="settings_weather_source_open_meteo_weather_models_seamless">Seamless</string>
     <string name="settings_weather_source_open_meteo_weather_models_seamless_description">Combines all weather models from this provider into a seamless prediction</string>
     <string name="settings_source_geonames_api_key" translatable="false">@string/settings_source_api_key</string>
+    <string name="settings_weather_source_polleninfo_api_key" translatable="false">@string/settings_source_api_key</string>"
     <string name="settings_appearance">Appearance</string>
     <string name="settings_appearance_summary">Language, dark mode, icon pack, units</string>
     <string name="settings_appearance_section_regional">Language and region</string>

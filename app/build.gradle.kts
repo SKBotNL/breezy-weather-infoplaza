@@ -12,7 +12,7 @@ plugins {
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
     kotlin("plugin.serialization")
-    id("com.mikepenz.aboutlibraries.plugin")
+    id("com.mikepenz.aboutlibraries.plugin.android")
 }
 
 val supportedAbi = setOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
@@ -22,8 +22,8 @@ android {
 
     defaultConfig {
         applicationId = "org.breezyweather"
-        versionCode = 60012
-        versionName = "6.0.12-rc"
+        versionCode = 60013
+        versionName = "6.0.13"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getGitSha()}\"")
@@ -148,8 +148,13 @@ android {
         )
         it.buildConfigField(
             "String",
-            "HERE_KEY",
-            "\"${properties.getProperty("breezy.here.key") ?: ""}\""
+            "MET_IE_KEY",
+            "\"${properties.getProperty("breezy.metie.key") ?: ""}\""
+        )
+        it.buildConfigField(
+            "String",
+            "MET_OFFICE_KEY",
+            "\"${properties.getProperty("breezy.metoffice.key") ?: ""}\""
         )
         it.buildConfigField(
             "String",
@@ -173,8 +178,8 @@ android {
         )
         it.buildConfigField(
             "String",
-            "MET_OFFICE_KEY",
-            "\"${properties.getProperty("breezy.metoffice.key") ?: ""}\""
+            "POLLENINFO_KEY",
+            "\"${properties.getProperty("breezy.polleninfo.key") ?: ""}\""
         )
     }
 
@@ -204,13 +209,17 @@ android {
     packaging {
         resources.excludes.addAll(
             listOf(
-                "META-INF/DEPENDENCIES",
+                "kotlin-tooling-metadata.json",
                 "LICENSE.txt",
+                "META-INF/versions/9/OSGI-INF/MANIFEST.MF",
+                "META-INF/**/*.properties",
+                "META-INF/**/LICENSE.txt",
+                "META-INF/*.properties",
+                "META-INF/*.version",
+                "META-INF/DEPENDENCIES",
                 "META-INF/LICENSE",
-                "META-INF/LICENSE.txt",
-                "META-INF/README.md",
                 "META-INF/NOTICE",
-                "META-INF/*.kotlin_module"
+                "META-INF/README.md"
             )
         )
     }

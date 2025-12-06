@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of Breezy Weather.
  *
  * Breezy Weather is free software: you can redistribute it and/or modify it
@@ -108,6 +108,7 @@ class AirQualityViewHolder(parent: ViewGroup) : AbstractMainCardViewHolder(
     }
 
     override fun onEnterScreen() {
+        super.onEnterScreen()
         if (itemAnimationEnabled && mEnable) {
             mLocation!!.weather!!.validAirQuality?.let { airQuality ->
                 val aqiColor = airQuality.getColor(aqiProgress.context)

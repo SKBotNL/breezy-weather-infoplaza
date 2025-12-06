@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of Breezy Weather.
  *
  * Breezy Weather is free software: you can redistribute it and/or modify it
@@ -72,6 +72,7 @@ class SunViewHolder(parent: ViewGroup) : AstroViewHolder(parent, isSun = true) {
 
     @SuppressLint("Recycle")
     override fun onEnterScreen() {
+        super.onEnterScreen()
         if (itemAnimationEnabled && mWeather != null) {
             val timeDay = ValueAnimator.ofObject(LongEvaluator(), mStartTime, mCurrentTime)
             timeDay.addUpdateListener { animation: ValueAnimator ->

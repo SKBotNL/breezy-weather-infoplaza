@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of Breezy Weather.
  *
  * Breezy Weather is free software: you can redistribute it and/or modify it
@@ -23,11 +23,6 @@ data class PirateWeatherCurrently(
     val time: Long,
     val icon: String?,
     val summary: String?,
-
-    val precipType: String?,
-    val precipIntensity: Double?,
-    val precipProbability: Double?,
-    val precipIntensityError: Double?,
 
     val temperature: Double?,
     val apparentTemperature: Double?,

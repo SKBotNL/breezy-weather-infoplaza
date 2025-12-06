@@ -112,6 +112,7 @@ import org.breezyweather.sources.openmeteo.OpenMeteoService
 import org.breezyweather.sources.openweather.OpenWeatherService
 import org.breezyweather.sources.pagasa.PagasaService
 import org.breezyweather.sources.pirateweather.PirateWeatherService
+import org.breezyweather.sources.polleninfo.PollenInfoService
 import org.breezyweather.sources.recosante.RecosanteService
 import org.breezyweather.sources.smg.SmgService
 import org.breezyweather.sources.smhi.SmhiService
@@ -190,6 +191,7 @@ class SourceManager @Inject constructor(
     openWeatherService: OpenWeatherService,
     pagasaService: PagasaService,
     pirateWeatherService: PirateWeatherService,
+    pollenInfoService: PollenInfoService,
     recosanteService: RecosanteService,
     smaScService: SmaScService,
     smaSuService: SmaSuService,
@@ -282,6 +284,7 @@ class SourceManager @Inject constructor(
         ncdrService,
         nlscService,
         nwsService,
+        pollenInfoService,
         pagasaService,
         recosanteService,
         smaScService,

@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of Breezy Weather.
  *
  * Breezy Weather is free software: you can redistribute it and/or modify it
@@ -87,7 +87,7 @@ object NativeWidgetNotificationIMP : AbstractRemoteViewsPresenter() {
         val notification = context.notificationBuilder(Notifications.CHANNEL_WIDGET).apply {
             priority = NotificationCompat.PRIORITY_MAX
             setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            if (temperature != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (temperature != null) {
                 setSmallIcon(
                     IconCompat.createWithBitmap(
                         ResourceHelper.createTempBitmap(context, temperature, temperatureUnit)
@@ -123,7 +123,7 @@ object NativeWidgetNotificationIMP : AbstractRemoteViewsPresenter() {
             setContentIntent(getWeatherPendingIntent(context, null, Notifications.ID_WIDGET))
         }.build()
 
-        if (!tempIcon && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (!tempIcon) {
             current.weatherCode?.let { weatherCode ->
                 try {
                     notification.javaClass

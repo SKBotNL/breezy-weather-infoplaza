@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of Breezy Weather.
  *
  * Breezy Weather is free software: you can redistribute it and/or modify it
@@ -25,7 +25,6 @@ data class PirateWeatherAlert(
     @SerialName("time") val start: Long,
     @SerialName("expires") val end: Long,
     val description: String?,
-    val regions: List<String>?,
     val severity: String?,
     val uri: String?,
 )

@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of Breezy Weather.
  *
  * Breezy Weather is free software: you can redistribute it and/or modify it
@@ -66,7 +66,6 @@ import org.breezyweather.common.extensions.launchUI
 import org.breezyweather.common.options.appearance.CalendarHelper
 import org.breezyweather.common.snackbar.Snackbar
 import org.breezyweather.common.snackbar.SnackbarManager
-import org.breezyweather.common.utils.UnitUtils
 import org.breezyweather.common.utils.helpers.SnackbarHelper
 import org.breezyweather.domain.settings.ConfigStore
 import org.breezyweather.unit.formatting.UnitWidth
@@ -195,9 +194,7 @@ abstract class AbstractWidgetConfigActivity : BreezyActivity() {
 
     private val onBackPressedCallback = object : OnBackPressedCallback(true) {
         override fun handleOnBackPressed() {
-            if (mBottomSheetBehavior!!.state == BottomSheetBehavior.STATE_EXPANDED) {
-                setBottomSheetState(true)
-            } else if (
+            if (
                 (System.currentTimeMillis() - mLastBackPressedTime) <
                 (Snackbar.ANIMATION_DURATION + Snackbar.ANIMATION_FADE_DURATION + SnackbarManager.LONG_DURATION_MS)
             ) {
@@ -658,7 +655,7 @@ abstract class AbstractWidgetConfigActivity : BreezyActivity() {
 
     @SuppressLint("MissingPermission")
     private fun bindWallpaper(checkPermissions: Boolean) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkPermissions) {
+        if (checkPermissions) {
             val hasPermission = checkPermissions(0)
             if (!hasPermission) {
                 return
@@ -677,7 +674,6 @@ abstract class AbstractWidgetConfigActivity : BreezyActivity() {
      * @return true : already got permissions.
      * false: request permissions.
      */
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun checkPermissions(requestCode: Int): Boolean {
         if (!hasPermission(Manifest.permission.READ_EXTERNAL_STORAGE)) {
             requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), requestCode)
@@ -782,10 +778,7 @@ abstract class AbstractWidgetConfigActivity : BreezyActivity() {
                     updateHostView()
                     return
                 }
-                var hasPermission = true
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    hasPermission = checkPermissions(1)
-                }
+                val hasPermission = checkPermissions(1)
                 if (hasPermission) {
                     updateHostView()
                 }

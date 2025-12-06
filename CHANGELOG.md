@@ -4,22 +4,37 @@
 - [Changelog for v4.x](docs/CHANGELOG_4.x.md)
 
 
-# Version 6.1.x (not yet released)
-
-The following features are already available in the current branch, but will be removed before each v6.0.x release and restored after, during the testing phase.
+# Version 6.1.0 (not yet released)
 
 **New features**
 - Content provider: allows (with your permission) other apps to query your weather data. [Read the announcement](https://github.com/breezy-weather/breezy-weather/discussions/2089)
 - New broadcast: you can use `org.breezyweather.ACTION_UPDATE_NOTIFIER` (or `org.breezyweather.debug.ACTION_UPDATE_NOTIFIER` with the debug build) to be notified of updated locations (most common use case is coupled with the content provider)
 
+**Weather sources**
+- Icelandic Met Office - Fix refresh error
+- Pirate Weather - Fix refresh error
 
-# Version 6.0.12-rc (not yet released)
+
+# Version 6.0.12 (2025-11-11)
+
+**This is the last release for Android Lollipop (5.0/5.1) users**
 
 **Improvements and fixes**
 - Daily/hourly forecast - Ensure the maximum value is always at a minimum defined value to ensure data is put in perspective, and remove threshold lines that weren’t very useful and cluttering the interface (wind, precipitation, cloud cover)
+- Make 24-hour charts and nowcasting charts less prone to swipe to next screen
+- Main screen - Fix moon icon disappearing past midnight
+- Main screen - Fix blocks not appearing after fade in animation was interrupted due to fast scrolling
+- Main screen - Fix animations re-appearing when scrolling (@min7-i)
+- Fix current air quality disappearing when refreshing too fast
 
 **Weather sources**
+- China - Fix refresh error for some users (@kmod-midori)
+- MET Éireann - Migrate to new API
 - Nominatim - Add missing preference to change server instance
+- Open-Meteo - Allow individual selection of new weather models: ECMWF IFS HRES 9 km, NCEP NAM U.S. Conus, MeteoSwiss
+- OpenWeather - Fix current condition not translated
+- Pirate Weather - Add support for thunderstorm icon (@cloneofghosts)
+- Pollen Information AT - Add support as a pollen source for some European countries (@phileix)
 
 **Translations**
 - Translations updated

@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of Breezy Weather.
  *
  * Breezy Weather is free software: you can redistribute it and/or modify it
@@ -121,7 +121,6 @@ object ResourceHelper {
         return provider.getMinimalXmlIcon(code, daytime)
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     fun getMinimalIcon(
         provider: ResourceProvider,
         code: WeatherCode,

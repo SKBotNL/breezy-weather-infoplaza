@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of Breezy Weather.
  *
  * Breezy Weather is free software: you can redistribute it and/or modify it
@@ -348,7 +348,7 @@ class MainActivityViewModel @Inject constructor(
             }
         }
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || !checkPermissions) {
+        if (!checkPermissions) {
             updating = true
             SettingsManager.getInstance(getApplication())
                 .weatherManualUpdateLastTimestamp = Date().time
