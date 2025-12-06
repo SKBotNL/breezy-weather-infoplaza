@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of Breezy Weather.
  *
  * Breezy Weather is free software: you can redistribute it and/or modify it
@@ -127,14 +127,14 @@ internal fun getHourlyForecast(
                 feelsLike = result.temperature?.feelsLike?.celsius
             ),
             precipitation = Precipitation(
-                total = result.precipitation?.amount?.millimeters,
+                total = result.precipitation?.amount?.millimeters
             ),
             precipitationProbability = PrecipitationProbability(
                 total = result.precipitation?.probability?.percent
             ),
             wind = Wind(
                 degree = directionToBearing(result.wind?.direction),
-                speed = result.wind?.speed?.ms?.metersPerSecond,
+                speed = result.wind?.speed?.ms?.metersPerSecond
             ),
             cloudCover = getCloudCover(result.weatherSymbol)?.percent
         )
@@ -198,7 +198,7 @@ internal fun getPollen(dailyResult: List<InfoplazaForecastDaily>?): PollenWrappe
                 willow = result.digits?.health?.hayFever?.trees?.willow?.toPollenIndex(),
                 mugwort = result.digits?.health?.hayFever?.grasses?.mugwort?.toPollenIndex(),
                 plantain = result.digits?.health?.hayFever?.grasses?.plantain?.toPollenIndex(),
-                sorrel = result.digits?.health?.hayFever?.grasses?.sorrel?.toPollenIndex(),
+                sorrel = result.digits?.health?.hayFever?.grasses?.sorrel?.toPollenIndex()
             )
         }
     )

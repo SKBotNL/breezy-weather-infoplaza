@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of Breezy Weather.
  *
  * Breezy Weather is free software: you can redistribute it and/or modify it
@@ -23,7 +23,7 @@ import retrofit2.http.GET
 import retrofit2.http.Path
 
 interface InfoplazaNowcastApi {
-    @GET("v4/nowcast/timeseries/{lat}/{lon}")
+    @GET("v4/nowcast/exact-timeseries/{lat}/{lon}")
     fun getTimeseries(
         @Path("lat") lat: Double,
         @Path("lon") lon: Double,

@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of Breezy Weather.
  *
  * Breezy Weather is free software: you can redistribute it and/or modify it
@@ -25,6 +25,7 @@ import io.reactivex.rxjava3.core.Observable
 import org.breezyweather.common.exceptions.InvalidLocationException
 import org.breezyweather.common.source.HttpSource
 import org.breezyweather.common.source.LocationParametersSource
+import org.breezyweather.common.source.NonFreeNetSource
 import org.breezyweather.common.source.WeatherSource
 import org.breezyweather.sources.infoplaza.json.InfoplazaAdviceResult
 import retrofit2.Retrofit
@@ -33,13 +34,17 @@ import javax.inject.Named
 
 class InfoplazaService @Inject constructor(
     @Named("JsonClient") client: Retrofit.Builder,
-) : HttpSource(), WeatherSource, LocationParametersSource {
+) : HttpSource(), WeatherSource, LocationParametersSource, NonFreeNetSource {
     override fun needsLocationParametersRefresh(
         location: Location,
         coordinatesChanged: Boolean,
         features: List<SourceFeature>,
     ): Boolean {
-        if (SourceFeature.FORECAST !in features && SourceFeature.POLLEN !in features && SourceFeature.ALERT !in features) return false
+        if (SourceFeature.FORECAST !in features && SourceFeature.POLLEN !in features &&
+            SourceFeature.ALERT !in features
+        ) {
+            return false
+        }
         return !(location.isCurrentPosition && !coordinatesChanged)
     }
 
@@ -95,10 +100,12 @@ class InfoplazaService @Inject constructor(
     ): Observable<WeatherWrapper> {
         val geoAreaId = location.parameters.getOrElse(id) { null }?.getOrElse("geoAreaId") { null }
 
-        if ((SourceFeature.FORECAST in requestedFeatures ||
-                SourceFeature.POLLEN in requestedFeatures ||
-                SourceFeature.ALERT in requestedFeatures)
-            && (geoAreaId.isNullOrEmpty() || geoAreaId == "null")
+        if ((
+                SourceFeature.FORECAST in requestedFeatures ||
+                    SourceFeature.POLLEN in requestedFeatures ||
+                    SourceFeature.ALERT in requestedFeatures
+                ) &&
+            (geoAreaId.isNullOrEmpty() || geoAreaId == "null")
         ) {
             return Observable.error(InvalidLocationException())
         }
@@ -146,7 +153,7 @@ class InfoplazaService @Inject constructor(
             hourly,
             daily,
             minutely,
-            advice,
+            advice
         ) {
                 hourlyResults,
                 dailyResults,

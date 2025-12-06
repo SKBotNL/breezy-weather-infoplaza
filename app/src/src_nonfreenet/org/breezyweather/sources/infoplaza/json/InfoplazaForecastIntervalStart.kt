@@ -1,4 +1,4 @@
-/**
+/*
  * This file is part of Breezy Weather.
  *
  * Breezy Weather is free software: you can redistribute it and/or modify it
@@ -14,7 +14,7 @@
  * along with Breezy Weather. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package org.breezyweather.sources.infoplaza.json;
+package org.breezyweather.sources.infoplaza.json
 
 import kotlinx.serialization.Serializable
 
