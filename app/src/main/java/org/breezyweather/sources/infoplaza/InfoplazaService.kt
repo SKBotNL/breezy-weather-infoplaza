@@ -25,7 +25,6 @@ import io.reactivex.rxjava3.core.Observable
 import org.breezyweather.common.exceptions.InvalidLocationException
 import org.breezyweather.common.source.HttpSource
 import org.breezyweather.common.source.LocationParametersSource
-import org.breezyweather.common.source.NonFreeNetSource
 import org.breezyweather.common.source.WeatherSource
 import org.breezyweather.sources.infoplaza.json.InfoplazaAdviceResult
 import retrofit2.Retrofit
@@ -34,7 +33,7 @@ import javax.inject.Named
 
 class InfoplazaService @Inject constructor(
     @Named("JsonClient") client: Retrofit.Builder,
-) : HttpSource(), WeatherSource, LocationParametersSource, NonFreeNetSource {
+) : HttpSource(), WeatherSource, LocationParametersSource {
     override fun needsLocationParametersRefresh(
         location: Location,
         coordinatesChanged: Boolean,
