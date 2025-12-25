@@ -173,32 +173,23 @@ internal fun getMinutelyForecast(minutelyResult: List<InfoplazaNowcastTimeseries
     }
 }
 
-fun Int?.toPollenIndex(): PollenConcentration? = when (this) {
-    0 -> 0.pollenIndex
-    1 -> 25.pollenIndex
-    2 -> 50.pollenIndex
-    3 -> 75.pollenIndex
-    4 -> 100.pollenIndex
-    else -> null
-}
-
 internal fun getPollen(dailyResult: List<InfoplazaForecastDaily>?): PollenWrapper? {
     if (dailyResult == null) return null
     return PollenWrapper(
         dailyForecast = dailyResult.associate { result ->
             result.intervalStart.millis.toDate() to Pollen(
-                alder = result.digits?.health?.hayFever?.trees?.alder.toPollenIndex(),
-                ash = result.digits?.health?.hayFever?.trees?.ash?.toPollenIndex(),
-                birch = result.digits?.health?.hayFever?.trees?.birch?.toPollenIndex(),
-                cypress = result.digits?.health?.hayFever?.trees?.cypress?.toPollenIndex(),
-                grass = result.digits?.health?.hayFever?.grasses?.grasses?.toPollenIndex(),
-                hazel = result.digits?.health?.hayFever?.trees?.hazel?.toPollenIndex(),
-                oak = result.digits?.health?.hayFever?.trees?.oak?.toPollenIndex(),
-                poplar = result.digits?.health?.hayFever?.trees?.poplar?.toPollenIndex(),
-                willow = result.digits?.health?.hayFever?.trees?.willow?.toPollenIndex(),
-                mugwort = result.digits?.health?.hayFever?.grasses?.mugwort?.toPollenIndex(),
-                plantain = result.digits?.health?.hayFever?.grasses?.plantain?.toPollenIndex(),
-                sorrel = result.digits?.health?.hayFever?.grasses?.sorrel?.toPollenIndex()
+                alder = result.digits?.health?.hayFever?.trees?.alder.pollenIndex,
+                ash = result.digits?.health?.hayFever?.trees?.ash?.pollenIndex,
+                birch = result.digits?.health?.hayFever?.trees?.birch?.pollenIndex,
+                cypress = result.digits?.health?.hayFever?.trees?.cypress?.pollenIndex,
+                grass = result.digits?.health?.hayFever?.grasses?.grasses?.pollenIndex,
+                hazel = result.digits?.health?.hayFever?.trees?.hazel?.pollenIndex,
+                oak = result.digits?.health?.hayFever?.trees?.oak?.pollenIndex,
+                poplar = result.digits?.health?.hayFever?.trees?.poplar?.pollenIndex,
+                willow = result.digits?.health?.hayFever?.trees?.willow?.pollenIndex,
+                mugwort = result.digits?.health?.hayFever?.grasses?.mugwort?.pollenIndex,
+                plantain = result.digits?.health?.hayFever?.grasses?.plantain?.pollenIndex,
+                sorrel = result.digits?.health?.hayFever?.grasses?.sorrel?.pollenIndex
             )
         }
     )
