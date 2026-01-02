@@ -227,6 +227,7 @@ private fun getWeatherCode(result: InfoplazaForecastWeatherSymbol?): WeatherCode
             "Snow" -> return WeatherCode.SNOW
             "FrozenRain" -> return WeatherCode.HAIL
             "Drizzle" -> return WeatherCode.RAIN
+            "WinterPrecipitation" -> return WeatherCode.SNOW
             else -> {}
         }
     }
