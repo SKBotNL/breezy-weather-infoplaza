@@ -25,7 +25,7 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface InfoplazaApi {
-    @GET("v3/en/forecast?interval=1H&offsetStart=0&offsetEnd=23")
+    @GET("v3/en/forecast?interval=1H&offsetStart=0&offsetEnd=48")
     fun getHourly(
         @Query("geoAreaId") geoAreaId: String,
     ): Observable<InfoplazaResult<InfoplazaForecastHourly>>
