@@ -23,20 +23,11 @@
     <img src="https://img.shields.io/github/license/breezy-weather/breezy-weather?style=for-the-badge" alt="License LGPL-3.0" />
   </a>
   <img src="https://img.shields.io/github/languages/code-size/breezy-weather/breezy-weather?style=for-the-badge" alt="GitHub code size in bytes" />
-  <br /><br />
-  <a href="https://github.com/breezy-weather/breezy-weather/releases">
-      <img src="https://img.shields.io/github/v/release/breezy-weather/breezy-weather?color=purple&include_prereleases&logo=github&style=for-the-badge" alt="Download from GitHub" />
-  </a>
-  <a href="https://apt.izzysoft.de/fdroid/index/apk/org.breezyweather/">
-      <img src="https://img.shields.io/endpoint?url=https://apt.izzysoft.de/fdroid/api/v1/shield/org.breezyweather?color=purple&include_prereleases&logo=FDROID&style=for-the-badge" alt="Download from IzzyOnDroid repo" />
-  </a>
-  <a href="https://f-droid.org/packages/org.breezyweather/">
-      <img src="https://img.shields.io/f-droid/v/org.breezyweather?color=purple&include_prereleases&logo=FDROID&style=for-the-badge" alt="Download from F-Droid default repo" />
-  </a>
 </div>
 
 
 <h4 align="center">Breezy Weather is a feature-rich free and open source Material 3 Expressive weather app with well-though-out visualizations, supporting forecast, observations, nowcasting, air quality, pollen, alerts, from more than 50 weather sources.</h4>
+<h4 align="center">This project adds support for using the Infoplaza API as a weather provider, which is in use by Buienalarm, Weeronline and Weerplaza among others.</h4>
 
 <div align="center">
 
