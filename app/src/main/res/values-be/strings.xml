@@ -88,7 +88,7 @@
     <string name="hourly_forecast">Прагноз па гадзінах</string>
     <string name="app_name">Надвор’е</string>
     <string name="pollen">Пылок</string>
-    <string name="ephemeris">Cонца і месяц</string>
+    <string name="ephemeris">Сонца і месяц</string>
     <string name="daily_tomorrow_short">Заўтра</string>
     <string name="temperature_wind_chill">Адчуваецца пры ветры</string>
     <string name="temperature_degree_day_cooling">Градуса-дзень ахаладжальнага сезона</string>
@@ -137,7 +137,7 @@
     <string name="ceiling">Ніжняя мяжа аблокаў</string>
     <string name="weather_message_invalid_location">Няправільнае месцазнаходжанне, выдаліце яго і дадайце нанова</string>
     <string name="weather_message_unsupported_feature">Крыніца не падтрымлівае адну з запытаных функцый</string>
-    <string name="weather_api_limit_reached_content">Каб абысці абмежаванне, дадайце уласны ключ API.</string>
+    <string name="weather_api_limit_reached_content">Каб абысці абмежаванне, дадайце ўласны ключ API.</string>
     <string name="weather_api_unauthorized_title">Неаўтарызаваны доступ да API</string>
     <string name="weather_api_key_required_missing_content">Каб выкарыстоўваць гэту функцыю, неабходна дадаць ключ API.</string>
     <string name="setting_weather_source_accu_days">Дні</string>
@@ -239,7 +239,7 @@
     <string name="widget_subtitle_data_aqi">Якасць паветра</string>
     <string name="widget_subtitle_data_wind">Вецер</string>
     <string name="widget_subtitle_data_custom">Уласны</string>
-    <string name="widget_custom_subtitle_explanation">Можна ўводзіць ўсё што хочаш, але варта ўлічваць даўжыню радка. Калі трэба вывесці даныя пра надвор’е, выкарыстоўвайце для спасылак сімвалы $ з адпаведным ключавым словам.\n\nНапрыклад, «Бягучае надвор’е: $cw$» будзе\nпаказана як «Бягучае надвор’е: Яснае неба».</string>
+    <string name="widget_custom_subtitle_explanation">Можна ўводзіць усё што хочаш, але варта ўлічваць даўжыню радка. Калі трэба вывесці даныя пра надвор’е, выкарыстоўвайце для спасылак сімвалы $ з адпаведным ключавым словам.\n\nНапрыклад, «Бягучае надвор’е: $cw$» будзе\nпаказана як «Бягучае надвор’е: Яснае неба».</string>
     <string name="widget_custom_subtitle_keyword_cw_description">Бягучае надвор’е</string>
     <string name="widget_custom_subtitle_keyword_ct_description">Бягучая тэмпература (°C/°F)</string>
     <string name="widget_custom_subtitle_keyword_cuv_description">Бягучы УФ-індэкс</string>
@@ -694,7 +694,7 @@
     <string name="air_quality_o3_sources">Азон утвараецца ў выніку хімічнай рэакцыі паміж атмасферным кіслародам, аксідамі азоту, монааксідам вугляроду і лятучымі арганічнымі злучэннямі пад уздзеяннем сонечнага святла.</string>
     <string name="air_quality_co_sources">Звычайна ўтвараецца пры няпоўным згаранні вугляродзістага паліва, напрыклад, у рухавіках аўтамабіляў і пры вытворчасці электраэнергіі.</string>
     <string name="nighttime_details">Пачынаецца ўвечары і працягваецца да світання наступнага дня</string>
-    <string name="pressure_about_description1">Атмасферны ціск — гэта ціск паветра на паверхню Зямлі і ўсе прадметы ў атмасферы. Праграма выкарыстоўвае ціск на сярэднім ўзроўні мора, каб палегчыць параўнанне ціску ў месцах на рознай вышыні.</string>
+    <string name="pressure_about_description1">Атмасферны ціск — гэта ціск паветра на паверхню Зямлі і ўсе прадметы ў атмасферы. Праграма выкарыстоўвае ціск на сярэднім узроўні мора, каб палегчыць параўнанне ціску для месцаў на рознай вышыні.</string>
     <string name="cloud_cover_about">Пра воблачнасць</string>
     <string name="cloud_cover_about_description">Воблачнасць азначае сярэдні працэнт неба, закрытага аблокамі. Воблачнасць звязана з працягласцю сонечнага ззяння.</string>
     <string name="data_sources">Крыніцы даных</string>
@@ -717,9 +717,9 @@
     <string name="ephemeris_sun">Сонца</string>
     <string name="ephemeris_moon">Месяц</string>
     <string name="about_update_check_eol">Гэта версія Android больш не падтрымліваецца</string>
-    <string name="ephemeris_dusk_at">Змрок ў %s</string>
+    <string name="ephemeris_dusk_at">Змрок у %s</string>
     <string name="ephemeris_about_dusk">Змрок — найцямнейшая частка змяркання перад поўным знікненнем бачнага святла.</string>
-    <string name="ephemeris_about_dawn">Світанне — час перад ўсходам сонца, калі з’яўляецца першае бачнае святло.</string>
+    <string name="ephemeris_about_dawn">Світанне — час перад усходам сонца, калі з’яўляецца першае бачнае святло.</string>
     <string name="precipitation_total_day">Ападкі ўдзень</string>
     <string name="precipitation_total_night">Ападкі ўначы</string>
     <string name="precipitation_rain_total_day">Дождж удзень</string>

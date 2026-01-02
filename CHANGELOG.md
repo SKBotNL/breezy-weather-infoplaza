@@ -10,8 +10,14 @@
 - Content provider: allows (with your permission) other apps to query your weather data. [Read the announcement](https://github.com/breezy-weather/breezy-weather/discussions/2089)
 - New broadcast: you can use `org.breezyweather.ACTION_UPDATE_NOTIFIER` (or `org.breezyweather.debug.ACTION_UPDATE_NOTIFIER` with the debug build) to be notified of updated locations (most common use case is coupled with the content provider)
 
+**Improvements and fixes**
+- Fix crash on some devices when current weather is snow (@Cactric)
+- Fix overlap of texts on double line charts when the line “below” goes above the “above” line (for example, a min. night temperature higher than the max. day temperature)
+- Fix wind speed being cut on main screen on some devices with some languages
+
 **Weather sources**
 - Icelandic Met Office - Fix refresh error
+- IMS - Add support for rain quantity (@ntzb)
 - Pirate Weather - Fix refresh error
 
 

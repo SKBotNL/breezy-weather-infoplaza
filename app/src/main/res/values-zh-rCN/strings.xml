@@ -61,8 +61,8 @@
     <string name="wind_direction_SW_short">西南</string>
     <string name="wind_direction_W_short">西</string>
     <string name="wind_direction_NW_short">西北</string>
-    <string name="precipitation_intensity_light">小雨</string>
-    <string name="precipitation_intensity_heavy">大雨</string>
+    <string name="precipitation_intensity_light">小</string>
+    <string name="precipitation_intensity_heavy">大</string>
     <string name="ephemeris_moon_phase_new_moon">新月</string>
     <string name="ephemeris_moon_phase_waxing_crescent">蛾眉月</string>
     <string name="ephemeris_moon_phase_first_quarter">上弦月</string>
@@ -863,4 +863,5 @@
     <string name="message_source_non_free_network_content">用过标准版应用中托管在非自由网络上的气象数据源，之后切换到仅含托管在自由网络上的 FOSS 版本会发生这个问题。要解决它，请回到标准版或更改气象数据源。</string>
     <string name="settings_weather_source_non_freenet">%s （非自由网络服务）</string>
     <string name="action_pull_down_to_refresh">下拉刷新</string>
+    <string name="pressure_standard">标准</string>
 </resources>

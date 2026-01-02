@@ -68,7 +68,7 @@
     <string name="daily_forecast">النشرة اليومية</string>
     <string name="hourly_forecast">توقعات كل ساعة</string>
     <string name="air_quality">جودة الهواء</string>
-    <string name="pollen">مسببات الحساسية</string>
+    <string name="pollen">حبوب اللقاح</string>
     <string name="ephemeris">الشمس والقمر</string>
     <string name="action_next">التالي</string>
     <string name="action_done">تم</string>
@@ -471,7 +471,7 @@
     <string name="weather_message_unsupported_feature">المصدر لا يدعم إحدى الميزات المطلوبة</string>
     <string name="about_contribution_designer">مصمم الشعار</string>
     <string name="temperature_average_short">المتوسط</string>
-    <string name="temperature_normal_short">عادي</string>
+    <string name="temperature_normal_short">طبيعي</string>
     <string name="temperature_normals">معايير درجة الحرارة</string>
     <string name="settings_main_threshold_lines_on_charts">خطوط العتبة على الرسوم البيانية</string>
     <string name="settings_modules_broadcast_send_data_title">إرسال بيانات الطقس إلى %s</string>
@@ -636,4 +636,10 @@
     <string name="action_allow">اسمح</string>
     <string name="action_open_in_other_app">افتح في تطبيق آخر</string>
     <string name="action_open_in_other_app_description">فتح هذا الموقع في تطبيق آخر</string>
+    <string name="air_quality_short">جودة الهواء</string>
+    <string name="ephemeris_sun">الشمس</string>
+    <string name="ephemeris_moon">القمر</string>
+    <string name="ephemeris_about">حول أوقات الشروق والغروب</string>
+    <string name="temperature_real_details">درجة الحرارة الفعلية.</string>
+    <string name="clock">الساعة</string>
 </resources>

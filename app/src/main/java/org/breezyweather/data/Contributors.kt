@@ -140,6 +140,14 @@ val appContributors: Array<ContributorItem> = arrayOf(
      */
     ContributorItem("Dipesh Pal", github = "codewithdipesh"),
     /*
+     * Crash when current weather is snow on some devices
+     */
+    ContributorItem("Cactric", github = "Cactric"),
+    /*
+     * Contributions to IMS source
+     */
+    ContributorItem("ntzb", github = "ntzb"),
+    /*
      * Logo
      */
     ContributorItem(
