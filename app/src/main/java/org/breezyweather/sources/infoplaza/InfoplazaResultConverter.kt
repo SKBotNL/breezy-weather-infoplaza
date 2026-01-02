@@ -36,7 +36,6 @@ import org.breezyweather.sources.infoplaza.json.InfoplazaForecastDaily
 import org.breezyweather.sources.infoplaza.json.InfoplazaForecastHourly
 import org.breezyweather.sources.infoplaza.json.InfoplazaForecastWeatherSymbol
 import org.breezyweather.sources.infoplaza.json.InfoplazaNowcastTimeseries
-import org.breezyweather.unit.pollen.PollenConcentration
 import org.breezyweather.unit.pollen.PollenConcentration.Companion.pollenIndex
 import org.breezyweather.unit.precipitation.Precipitation.Companion.millimeters
 import org.breezyweather.unit.ratio.Ratio.Companion.percent
@@ -178,7 +177,7 @@ internal fun getPollen(dailyResult: List<InfoplazaForecastDaily>?): PollenWrappe
     return PollenWrapper(
         dailyForecast = dailyResult.associate { result ->
             result.intervalStart.millis.toDate() to Pollen(
-                alder = result.digits?.health?.hayFever?.trees?.alder.pollenIndex,
+                alder = result.digits?.health?.hayFever?.trees?.alder?.pollenIndex,
                 ash = result.digits?.health?.hayFever?.trees?.ash?.pollenIndex,
                 birch = result.digits?.health?.hayFever?.trees?.birch?.pollenIndex,
                 cypress = result.digits?.health?.hayFever?.trees?.cypress?.pollenIndex,
