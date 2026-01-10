@@ -17,6 +17,7 @@
 package org.breezyweather.sources.infoplaza
 
 import breezyweather.domain.weather.model.Alert
+import breezyweather.domain.weather.model.DailyRelativeHumidity
 import breezyweather.domain.weather.model.Minutely
 import breezyweather.domain.weather.model.Pollen
 import breezyweather.domain.weather.model.Precipitation
@@ -109,7 +110,8 @@ internal fun getDailyForecast(
                 )
             ),
             uV = UV(index = current.digits?.health?.maxUvIndex),
-            sunshineDuration = current.sunshine?.minutes?.minutes
+            sunshineDuration = current.sunshine?.minutes?.minutes,
+            relativeHumidity = DailyRelativeHumidity(average = current.digits?.health?.relativeHumidity?.percent),
         )
     }
 }

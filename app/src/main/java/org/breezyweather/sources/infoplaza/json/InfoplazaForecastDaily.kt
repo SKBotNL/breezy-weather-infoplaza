@@ -56,6 +56,7 @@ data class InfoplazaForecastDaily(
         data class Health(
             val hayFever: HayFever?,
             val maxUvIndex: Double?,
+            val relativeHumidity: Int?,
         ) {
             @Serializable
             data class HayFever(
