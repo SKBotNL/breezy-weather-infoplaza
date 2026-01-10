@@ -22,8 +22,9 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface InfoplazaSearchApi {
-    @GET("v3/weeronline/search/expanded?limit=15")
-    fun search(
-        @Query("search") search: String,
+    @GET("v3/weeronline/nearby?count=1&lang=en&radius=30000&sortByDistance=true")
+    fun nearby(
+        @Query("lat") latitude: Double,
+        @Query("lon") longitude: Double,
     ): Observable<List<InfoplazaSearchEntry>>
 }

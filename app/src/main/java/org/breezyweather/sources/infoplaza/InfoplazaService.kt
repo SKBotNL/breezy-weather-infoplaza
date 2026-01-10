@@ -48,7 +48,7 @@ class InfoplazaService @Inject constructor(
     }
 
     override fun requestLocationParameters(context: Context, location: Location): Observable<Map<String, String>> {
-        return mSearchApi.search(location.city + " " + location.country).map { list ->
+        return mSearchApi.nearby(location.latitude, location.longitude).map { list ->
             mapOf(
                 "geoAreaId" to list.firstOrNull { it.locationId != null }?.locationId.toString()
             )
