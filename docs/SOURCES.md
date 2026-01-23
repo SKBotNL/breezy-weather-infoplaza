@@ -7,102 +7,103 @@ By default, when you add a location manually, Breezy Weather will auto-suggest y
 Below, you can find details about the support and implementation status for features on each weather source. Note that no forecast above 7 days is reliable, so you should not decide based on the highest number of days available.
 
 ## Summary
-| Country/Territory                  | Source                                                  | Supported features                                                                   |
-|------------------------------------|---------------------------------------------------------|--------------------------------------------------------------------------------------|
-| 🌐 Worldwide                       | [Open-Meteo](#open-meteo)                               | Forecast, Current, Air quality, Pollen, Search                                       |
-| 🌐 Worldwide                       | [AccuWeather](#accuweather) 🔓                          | Forecast, Current, Air quality, Pollen, Nowcasting, Alerts, Normals, Search, Address |
-| 🌐 Worldwide                       | [Android](#android)                                     | Address                                                                              |
-| 🌐 Worldwide                       | [GeoNames](#geonames) 🔐                                | Search                                                                               |
-| 🌐 Worldwide                       | [FOSS Public Alert Server](#foss-public-alert-server)   | Alerts                                                                               |
-| 🌐 Worldwide                       | [NCEI](#national-centers-for-environmental-information) | Normals                                                                              |
-| 🌐 Worldwide                       | [Nominatim](#nominatim)                                 | Address                                                                              |
-| 🌐 Worldwide                       | [OpenWeather](#openweather) 🔓                          | Forecast, Current, Air quality                                                       |
-| 🌐 Worldwide                       | [Pirate Weather](#pirate-weather) 🔐                    | Forecast, Current, Nowcasting, Alerts                                                |
-| 🌐 Worldwide                       | [WMO Severe Weather](#wmo-severe-weather)               | Alerts                                                                               |
-| 🇦🇩 Andorra                       | [Météo-France](#météo-france)                           | Forecast, Alert, Normals, Address                                                    |
-| 🇦🇹 Austria                       | [GeoSphere Austria](#geosphere-austria)                 | Forecast, Air quality, Nowcasting, Alerts                                            |
-| 🇧🇩 Bangladesh                    | [BMD](#bangladesh-meteorological-department)            | Forecast, Address                                                                    |
-| 🇧🇯 Benin                         | [ClimWeb](#climweb)                                     | Alerts, Normals                                                                      |
-| 🇧🇫 Burkina Faso                  | [ClimWeb](#climweb)                                     | Alerts                                                                               |
-| 🇧🇮 Burundi                       | [ClimWeb](#climweb)                                     | Alerts                                                                               |
-| 🇨🇦 Canada                        | [ECCC](#environment-and-climate-change-canada)          | Forecast, Current, Alerts, Normals, Address                                          |
-| 🇹🇩 Chad                          | [ClimWeb](#climweb)                                     | Alerts, Normals                                                                      |
-| 🇨🇳 China                         | [China](#china)                                         | Forecast, Current, Air quality, Nowcasting, Alerts, Address                          |
-| 🇨🇩 Democratic Republic of Congo  | [ClimWeb](#climweb)                                     | Alerts                                                                               |
-| 🇩🇰 Denmark                       | [DMI](#danmarks-meteorologiske-institut)                | Forecast, Alerts, Address                                                            |
-| 🇪🇪 Estonia                       | [Ilmateenistus](#ilmateenistus)                         | Forecast, Address                                                                    |
-| 🇪🇪 Estonia                       | [EKUK](#ekuk)                                           | Air quality, Pollen (later this year)                                                |
-| 🇪🇹 Ethiopia                      | [ClimWeb](#climweb)                                     | Alerts, Normals                                                                      |
-| 🇫🇰 Falkland Is.                  | [Met Office](#met-office) 🔐                            | Forecast, Address                                                                    |
-| 🇫🇴 Faroe Is.                     | [DMI](#danmarks-meteorologiske-institut)                | Forecast, Alerts, Address                                                            |
-| 🇫🇷 France                        | [Météo-France](#météo-france)                           | Forecast, Current, Nowcasting, Alerts, Normals, Address                              |
-| 🇫🇷 France                        | [Atmo France](#atmo-france)                             | Pollen                                                                               |
-| 🇫🇷 France                        | [Recosanté](#recosanté)                                 | Pollen                                                                               |
-| 🇫🇷 France (Auvergne-Rhône-Alpes) | [Atmo Auvergne-Rhône-Alpes](#atmo)                      | Air Quality                                                                          |
-| 🇫🇷 France (Grand Est)            | [ATMO GrandEst](#atmo)                                  | Air Quality                                                                          |
-| 🇫🇷 France (Hauts-de-France)      | [Atmo Hauts-de-France](#atmo)                           | Air Quality                                                                          |
-| 🇫🇷 France (PACA)                 | [AtmoSud](#atmo)                                        | Air Quality                                                                          |
-| 🇬🇫 French Guiana                 | [Météo-France](#météo-france)                           | Forecast, Alert, Normals, Address                                                    |
-| 🇵🇫 French Polynesia              | [Météo-France](#météo-france)                           | Forecast, Alert, Normals, Address                                                    |
-| 🇬🇲 Gambia                        | [ClimWeb](#climweb)                                     | Alerts                                                                               |
-| 🇩🇪 Germany                       | [Bright Sky](#bright-sky)                               | Forecast, Current, Alerts                                                            |
-| 🇬🇭 Ghana                         | [ClimWeb](#climweb)                                     | Alerts                                                                               |
-| 🇬🇮 Gibraltar                     | [Met Office](#met-office) 🔐                            | Forecast, Address                                                                    |
-| 🇬🇱 Greenland                     | [DMI](#danmarks-meteorologiske-institut)                | Forecast, Alerts, Address                                                            |
-| 🇬🇵 Guadeloupe                    | [Météo-France](#météo-france)                           | Forecast, Alert, Normals, Address                                                    |
-| 🇬🇺 Guam                          | [NWS](#national-weather-service)                        | Forecast, Current, Alerts, Address                                                   |
-| 🇬🇬 Guernsey                      | [Met Office](#met-office) 🔐                            | Forecast, Address                                                                    |
-| 🇬🇼 Guinea-Bissau                 | [ClimWeb](#climweb)                                     | Alerts                                                                               |
-| 🇭🇰 Hong Kong                     | [HKO](#hong-kong-observatory)                           | Forecast, Current, Alerts, Normals, Address                                          |
-| 🇭🇰 Hong Kong                     | [EPD](#environmental-protection-department)             | Air quality                                                                          |
-| 🇮🇸 Iceland                       | [Veðurstofa Íslands](#veðurstofa-íslands)               | Forecast, Current, Alerts, Address                                                   |
-| 🇮🇳 India                         | [IMD](#india-meteorological-department)                 | Forecast                                                                             |
-| 🇮🇩 Indonesia                     | [BMKG](#bmkg)                                           | Forecast, Current, Air quality, Alerts, Address                                      |
-| 🇮🇪 Ireland                       | [MET Éireann](#met-éireann)                             | Forecast, Alerts, Address                                                            |
-| 🇮🇲 Isle of Man                   | [Met Office](#met-office) 🔐                            | Forecast, Address                                                                    |
-| 🇮🇱 Israel                        | [IMS](#israel-meteorological-service)                   | Forecast, Current, Alerts, Address                                                   |
-| 🇮🇹 Italy                         | [Meteo AM](#servizio-meteo-am)                          | Forecast, Current, Address                                                           |
-| 🇯🇵 Japan                         | [JMA](#japan-meteorological-agency)                     | Forecast, Current, Alerts, Normals, Address                                          |
-| 🇯🇪 Jersey                        | [Met Office](#met-office) 🔐                            | Forecast, Address                                                                    |
-| 🇱🇻 Latvia                        | [LVĢMC](#lvģmc)                                         | Forecast, Current, Air quality, Address                                              |
-| 🇱🇹 Lithuania                     | [LHMT](#lhmt)                                           | Forecast, Current, Alerts, Address                                                   |
-| 🇱🇺 Luxembourg                    | [MeteoLux](#meteolux)                                   | Forecast, Current, Alerts, Address                                                   |
-| 🇲🇴 Macao                         | [SMG](#serviços-meteorológicos-e-geofísicos)            | Forecast, Current, Air quality, Alerts, Normals                                      |
-| 🇲🇼 Malawi                        | [ClimWeb](#climweb)                                     | Alerts, Normals                                                                      |
-| 🇲🇱 Mali                          | [ClimWeb](#climweb)                                     | Alerts                                                                               |
-| 🇲🇶 Martinique                    | [Météo-France](#météo-france)                           | Forecast, Alert, Normals, Address                                                    |
-| 🇾🇹 Mayotte                       | [Météo-France](#météo-france)                           | Forecast, Alert, Normals, Address                                                    |
-| 🇲🇨 Monaco                        | [Météo-France](#météo-france)                           | Forecast, Normals, Address                                                           |
-| 🇲🇳 Mongolia                      | [NAMEM](#namem)                                         | Forecast, Current, Air quality, Normals, Address                                     |
-| 🇳🇨 New Caledonia                 | [Météo-France](#météo-france)                           | Forecast, Alert, Normals, Address                                                    |
-| 🇳🇪 Niger                         | [ClimWeb](#climweb)                                     | Alerts, Normals                                                                      |
-| 🇲🇵 Northern Mariana Is.          | [NWS](#national-weather-service)                        | Forecast, Current, Alerts, Address                                                   |
-| 🇳🇴 Norway                        | [MET Norway](#met-norway)                               | Forecast, Nowcasting, Air quality, Alerts                                            |
-| 🇵🇭 Philippines                   | [PAGASA](#pagasa)                                       | Forecast, Current                                                                    |
-| 🇵🇹 Portugal                      | [IPMA](#instituto-português-do-mar-e-da-atmosfera)      | Forecast, Alerts, Address                                                            |
-| 🇵🇷 Puerto Rico                   | [NWS](#national-weather-service)                        | Forecast, Current, Alerts, Address                                                   |
-| 🇷🇪 Réunion                       | [Météo-France](#météo-france)                           | Forecast, Alert, Normals, Address                                                    |
-| 🇸🇲 San Marino                    | [Meteo AM](#servizio-meteo-am)                          | Forecast, Current, Address                                                           |
-| 🇸🇨 Seychelles                    | [ClimWeb](#climweb)                                     | Alerts, Normals                                                                      |
-| 🇸🇸 South Sudan                   | [ClimWeb](#climweb)                                     | Alerts                                                                               |
-| 🇪🇸 Spain                         | [AEMET](#aemet) 🔐                                      | Forecast, Current, Normals                                                           |
-| 🇧🇱 St. Barthélemy                | [Météo-France](#météo-france)                           | Forecast, Alert, Normals, Address                                                    |
-| 🇲🇫 St. Martin                    | [Météo-France](#météo-france)                           | Forecast, Alert, Normals, Address                                                    |
-| 🇵🇲 St. Pierre &amp; Miquelon     | [Météo-France](#météo-france)                           | Forecast, Alert, Normals, Address                                                    |
-| 🇸🇩 Sudan                         | [ClimWeb](#climweb)                                     | Alerts                                                                               |
-| 🇸🇯 Svalbard &amp; Jan Mayen      | [MET Norway](#met-norway)                               | Forecast, Alerts                                                                     |
-| 🇸🇪 Sweden                        | [SMHI](#smhi)                                           | Forecast                                                                             |
-| 🇹🇼 Taiwan                        | [CWA](#central-weather-administration) 🔐               | Forecast, Current, Air quality, Alerts, Normals, Address                             |
-| 🇹🇼 Taiwan                        | [NCDR](#national-center-for-disaster-reduction)         | Alerts                                                                               |
-| 🇹🇼 Taiwan                        | [NLSC](#national-land-survey-and-mapping-center)        | Address                                                                              |
-| 🇹🇬 Togo                          | [ClimWeb](#climweb)                                     | Alerts                                                                               |
-| 🇹🇷 Türkiye                       | [MGM](#meteoroloji-genel-müdürlüğü)                     | Forecast, Current, Alerts, Normals, Address                                          |
-| 🇬🇧 United Kingdom                | [Met Office](#met-office) 🔐                            | Forecast, Address                                                                    |
-| 🇺🇸 United States                 | [NWS](#national-weather-service)                        | Forecast, Current, Alerts, Address                                                   |
-| 🇻🇮 U.S. Virgin Is.               | [NWS](#national-weather-service)                        | Forecast, Current, Alerts, Address                                                   |
-| 🇻🇦 Vatican City                  | [Meteo AM](#servizio-meteo-am)                          | Forecast, Current, Address                                                           |
-| 🇼🇫 Wallis &amp; Futuna           | [Météo-France](#météo-france)                           | Forecast, Alert, Normals, Address                                                    |
-| 🇿🇼 Zimbabwe                      | [ClimWeb](#climweb)                                     | Alerts                                                                               |
+| Country/Territory                  | Source                                                                                            | Supported features                                                                   |
+|------------------------------------|---------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| 🌐 Worldwide                       | [Open-Meteo](#open-meteo)                                                                         | Forecast, Current, Air quality, Pollen, Search                                       |
+| 🌐 Worldwide                       | [AccuWeather](#accuweather) 🔓                                                                    | Forecast, Current, Air quality, Pollen, Nowcasting, Alerts, Normals, Search, Address |
+| 🌐 Worldwide                       | [Android](#android)                                                                               | Address                                                                              |
+| 🌐 Worldwide                       | [GeoNames](#geonames) 🔐                                                                          | Search                                                                               |
+| 🌐 Worldwide                       | [FOSS Public Alert Server](#foss-public-alert-server)                                             | Alerts                                                                               |
+| 🌐 Worldwide                       | [NCEI](#national-centers-for-environmental-information)                                           | Normals                                                                              |
+| 🌐 Worldwide                       | [Nominatim](#nominatim)                                                                           | Address                                                                              |
+| 🌐 Worldwide                       | [OpenWeather](#openweather) 🔓                                                                    | Forecast, Current, Air quality                                                       |
+| 🌐 Worldwide                       | [Pirate Weather](#pirate-weather) 🔐                                                              | Forecast, Current, Nowcasting, Alerts                                                |
+| 🌐 Worldwide                       | [WMO Severe Weather](#wmo-severe-weather)                                                         | Alerts                                                                               |
+| 🇦🇩 Andorra                       | [Météo-France](#météo-france)                                                                     | Forecast, Alert, Normals, Address                                                    |
+| 🇦🇹 Austria                       | [GeoSphere Austria](#geosphere-austria)                                                           | Forecast, Air quality, Nowcasting, Alerts                                            |
+| 🇧🇩 Bangladesh                    | [BMD](#bangladesh-meteorological-department)                                                      | Forecast, Address                                                                    |
+| 🇧🇯 Benin                         | [ClimWeb](#climweb)                                                                               | Alerts, Normals                                                                      |
+| 🇧🇫 Burkina Faso                  | [ClimWeb](#climweb)                                                                               | Alerts                                                                               |
+| 🇧🇮 Burundi                       | [ClimWeb](#climweb)                                                                               | Alerts                                                                               |
+| 🇨🇦 Canada                        | [ECCC](#environment-and-climate-change-canada)                                                    | Forecast, Current, Alerts, Normals, Address                                          |
+| 🇹🇩 Chad                          | [ClimWeb](#climweb)                                                                               | Alerts, Normals                                                                      |
+| 🇨🇳 China                         | [China](#china)                                                                                   | Forecast, Current, Air quality, Nowcasting, Alerts, Address                          |
+| 🇨🇩 Democratic Republic of Congo  | [ClimWeb](#climweb)                                                                               | Alerts                                                                               |
+| 🇩🇰 Denmark                       | [DMI](#danmarks-meteorologiske-institut)                                                          | Forecast, Alerts, Address                                                            |
+| 🇪🇪 Estonia                       | [Ilmateenistus](#ilmateenistus)                                                                   | Forecast, Address                                                                    |
+| 🇪🇪 Estonia                       | [EKUK](#ekuk)                                                                                     | Air quality, Pollen (later this year)                                                |
+| 🇪🇹 Ethiopia                      | [ClimWeb](#climweb)                                                                               | Alerts, Normals                                                                      |
+| 🇫🇰 Falkland Is.                  | [Met Office](#met-office) 🔐                                                                      | Forecast, Address                                                                    |
+| 🇫🇴 Faroe Is.                     | [DMI](#danmarks-meteorologiske-institut)                                                          | Forecast, Alerts, Address                                                            |
+| 🇫🇷 France                        | [Météo-France](#météo-france)                                                                     | Forecast, Current, Nowcasting, Alerts, Normals, Address                              |
+| 🇫🇷 France                        | [Atmo France](#atmo-france)                                                                       | Pollen                                                                               |
+| 🇫🇷 France                        | [Recosanté](#recosanté)                                                                           | Pollen                                                                               |
+| 🇫🇷 France (Auvergne-Rhône-Alpes) | [Atmo Auvergne-Rhône-Alpes](#atmo)                                                                | Air Quality                                                                          |
+| 🇫🇷 France (Grand Est)            | [ATMO GrandEst](#atmo)                                                                            | Air Quality                                                                          |
+| 🇫🇷 France (Hauts-de-France)      | [Atmo Hauts-de-France](#atmo)                                                                     | Air Quality                                                                          |
+| 🇫🇷 France (PACA)                 | [AtmoSud](#atmo)                                                                                  | Air Quality                                                                          |
+| 🇬🇫 French Guiana                 | [Météo-France](#météo-france)                                                                     | Forecast, Alert, Normals, Address                                                    |
+| 🇵🇫 French Polynesia              | [Météo-France](#météo-france)                                                                     | Forecast, Alert, Normals, Address                                                    |
+| 🇬🇲 Gambia                        | [ClimWeb](#climweb)                                                                               | Alerts                                                                               |
+| 🇩🇪 Germany                       | [Bright Sky](#bright-sky)                                                                         | Forecast, Current, Alerts                                                            |
+| 🇬🇭 Ghana                         | [ClimWeb](#climweb)                                                                               | Alerts                                                                               |
+| 🇬🇮 Gibraltar                     | [Met Office](#met-office) 🔐                                                                      | Forecast, Address                                                                    |
+| 🇬🇱 Greenland                     | [DMI](#danmarks-meteorologiske-institut)                                                          | Forecast, Alerts, Address                                                            |
+| 🇬🇵 Guadeloupe                    | [Météo-France](#météo-france)                                                                     | Forecast, Alert, Normals, Address                                                    |
+| 🇬🇺 Guam                          | [NWS](#national-weather-service)                                                                  | Forecast, Current, Alerts, Address                                                   |
+| 🇬🇬 Guernsey                      | [Met Office](#met-office) 🔐                                                                      | Forecast, Address                                                                    |
+| 🇬🇼 Guinea-Bissau                 | [ClimWeb](#climweb)                                                                               | Alerts                                                                               |
+| 🇭🇰 Hong Kong                     | [HKO](#hong-kong-observatory)                                                                     | Forecast, Current, Alerts, Normals, Address                                          |
+| 🇭🇰 Hong Kong                     | [EPD](#environmental-protection-department)                                                       | Air quality                                                                          |
+| 🇮🇸 Iceland                       | [Veðurstofa Íslands](#veðurstofa-íslands)                                                         | Forecast, Current, Alerts, Address                                                   |
+| 🇮🇳 India                         | [IMD](#india-meteorological-department)                                                           | Forecast                                                                             |
+| 🇮🇩 Indonesia                     | [BMKG](#bmkg)                                                                                     | Forecast, Current, Air quality, Alerts, Address                                      |
+| 🇮🇪 Ireland                       | [MET Éireann](#met-éireann)                                                                       | Forecast, Alerts, Address                                                            |
+| 🇮🇲 Isle of Man                   | [Met Office](#met-office) 🔐                                                                      | Forecast, Address                                                                    |
+| 🇮🇱 Israel                        | [IMS](#israel-meteorological-service)                                                             | Forecast, Current, Alerts, Address                                                   |
+| 🇮🇹 Italy                         | [Meteo AM](#servizio-meteo-am)                                                                    | Forecast, Current, Address                                                           |
+| 🇯🇵 Japan                         | [JMA](#japan-meteorological-agency)                                                               | Forecast, Current, Alerts, Normals, Address                                          |
+| 🇯🇪 Jersey                        | [Met Office](#met-office) 🔐                                                                      | Forecast, Address                                                                    |
+| 🇱🇻 Latvia                        | [LVĢMC](#lvģmc)                                                                                   | Forecast, Current, Air quality, Address                                              |
+| 🇱🇹 Lithuania                     | [LHMT](#lhmt)                                                                                     | Forecast, Current, Alerts, Address                                                   |
+| 🇱🇺 Luxembourg                    | [MeteoLux](#meteolux)                                                                             | Forecast, Current, Alerts, Address                                                   |
+| 🇲🇴 Macao                         | [SMG](#serviços-meteorológicos-e-geofísicos)                                                      | Forecast, Current, Air quality, Alerts, Normals                                      |
+| 🇲🇼 Malawi                        | [ClimWeb](#climweb)                                                                               | Alerts, Normals                                                                      |
+| 🇲🇱 Mali                          | [ClimWeb](#climweb)                                                                               | Alerts                                                                               |
+| 🇲🇶 Martinique                    | [Météo-France](#météo-france)                                                                     | Forecast, Alert, Normals, Address                                                    |
+| 🇾🇹 Mayotte                       | [Météo-France](#météo-france)                                                                     | Forecast, Alert, Normals, Address                                                    |
+| 🇲🇨 Monaco                        | [Météo-France](#météo-france)                                                                     | Forecast, Normals, Address                                                           |
+| 🇲🇳 Mongolia                      | [NAMEM](#namem)                                                                                   | Forecast, Current, Air quality, Normals, Address                                     |
+| 🇳🇨 New Caledonia                 | [Météo-France](#météo-france)                                                                     | Forecast, Alert, Normals, Address                                                    |
+| 🇳🇨 Netherlands                   | [Koninklijk Nederlands Meteorologisch Instituut](#koninklijk-nederlands-meteorologisch-instituut) | Forecast, Alert, Normals, Address                                                    |
+| 🇳🇪 Niger                         | [ClimWeb](#climweb)                                                                               | Alerts, Normals                                                                      |
+| 🇲🇵 Northern Mariana Is.          | [NWS](#national-weather-service)                                                                  | Forecast, Current, Alerts, Address                                                   |
+| 🇳🇴 Norway                        | [MET Norway](#met-norway)                                                                         | Forecast, Nowcasting, Air quality, Alerts                                            |
+| 🇵🇭 Philippines                   | [PAGASA](#pagasa)                                                                                 | Forecast, Current                                                                    |
+| 🇵🇹 Portugal                      | [IPMA](#instituto-português-do-mar-e-da-atmosfera)                                                | Forecast, Alerts, Address                                                            |
+| 🇵🇷 Puerto Rico                   | [NWS](#national-weather-service)                                                                  | Forecast, Current, Alerts, Address                                                   |
+| 🇷🇪 Réunion                       | [Météo-France](#météo-france)                                                                     | Forecast, Alert, Normals, Address                                                    |
+| 🇸🇲 San Marino                    | [Meteo AM](#servizio-meteo-am)                                                                    | Forecast, Current, Address                                                           |
+| 🇸🇨 Seychelles                    | [ClimWeb](#climweb)                                                                               | Alerts, Normals                                                                      |
+| 🇸🇸 South Sudan                   | [ClimWeb](#climweb)                                                                               | Alerts                                                                               |
+| 🇪🇸 Spain                         | [AEMET](#aemet) 🔐                                                                                | Forecast, Current, Normals                                                           |
+| 🇧🇱 St. Barthélemy                | [Météo-France](#météo-france)                                                                     | Forecast, Alert, Normals, Address                                                    |
+| 🇲🇫 St. Martin                    | [Météo-France](#météo-france)                                                                     | Forecast, Alert, Normals, Address                                                    |
+| 🇵🇲 St. Pierre &amp; Miquelon     | [Météo-France](#météo-france)                                                                     | Forecast, Alert, Normals, Address                                                    |
+| 🇸🇩 Sudan                         | [ClimWeb](#climweb)                                                                               | Alerts                                                                               |
+| 🇸🇯 Svalbard &amp; Jan Mayen      | [MET Norway](#met-norway)                                                                         | Forecast, Alerts                                                                     |
+| 🇸🇪 Sweden                        | [SMHI](#smhi)                                                                                     | Forecast                                                                             |
+| 🇹🇼 Taiwan                        | [CWA](#central-weather-administration) 🔐                                                         | Forecast, Current, Air quality, Alerts, Normals, Address                             |
+| 🇹🇼 Taiwan                        | [NCDR](#national-center-for-disaster-reduction)                                                   | Alerts                                                                               |
+| 🇹🇼 Taiwan                        | [NLSC](#national-land-survey-and-mapping-center)                                                  | Address                                                                              |
+| 🇹🇬 Togo                          | [ClimWeb](#climweb)                                                                               | Alerts                                                                               |
+| 🇹🇷 Türkiye                       | [MGM](#meteoroloji-genel-müdürlüğü)                                                               | Forecast, Current, Alerts, Normals, Address                                          |
+| 🇬🇧 United Kingdom                | [Met Office](#met-office) 🔐                                                                      | Forecast, Address                                                                    |
+| 🇺🇸 United States                 | [NWS](#national-weather-service)                                                                  | Forecast, Current, Alerts, Address                                                   |
+| 🇻🇮 U.S. Virgin Is.               | [NWS](#national-weather-service)                                                                  | Forecast, Current, Alerts, Address                                                   |
+| 🇻🇦 Vatican City                  | [Meteo AM](#servizio-meteo-am)                                                                    | Forecast, Current, Address                                                           |
+| 🇼🇫 Wallis &amp; Futuna           | [Météo-France](#météo-france)                                                                     | Forecast, Alert, Normals, Address                                                    |
+| 🇿🇼 Zimbabwe                      | [ClimWeb](#climweb)                                                                               | Alerts                                                                               |
 
 ## Worldwide sources
 
@@ -694,6 +695,36 @@ This source aggregates data from Beijing Meteorological Service, ColorfulClouds 
 | Precipitation Duration    | ❌         | Cloud Cover       | ❌         |
 | Wind                      | ✅         | Visibility        | ✅         |
 | Pressure                  | ✅         | Ceiling           | ❌         |
+</details>
+
+### Koninklijk Nederlands Meteorologisch Instituut
+
+**[Koninklijk Nederlands Meteorologisch Instituut](https://www.knmi.nl/)** (KNMI) is the official meteorological service of Netherlands.
+
+| Feature                        | Detail                                                           |
+|--------------------------------|------------------------------------------------------------------|
+| 🗺️ **Coverage**               | 🇯🇵 Netherlands                                                 |
+| 📆 **Daily forecast**          | Up to 14 days                                                    |
+| ⏱️ **Hourly forecast**         | Up to 2 days                                                     |
+| ▶️ **Current observation**     | Available: can complement another source as a **Current Source** |
+| 😶‍🌫️ **Air quality**         | Not available                                                    |
+| 🤧 **Pollen**                  | Not available                                                    |
+| ☔ **Precipitation nowcasting** | Not available                                                    |
+| ⚠️ **Alerts**                  | Available (no start/end dates)                                   |
+| 📊 **Normals**                 | Available                                                        |
+| 🧭 **Address lookup**          | Not available                                                    |
+
+<details><summary><h4>Details of available data from KNMI</h4></summary>
+
+| Data                      | Available | Data              | Available |
+|---------------------------|-----------|-------------------|-----------|
+| Weather Condition         | ✅         | Humidity          | ❌         |
+| Temperature               | ✅         | Dew Point         | ❌         |
+| Precipitation             | ✅         | UV Index          | ✅         |
+| Precipitation Probability | ✅         | Sunshine Duration | ❌         |
+| Precipitation Duration    | ❌         | Cloud Cover       | ❌         |
+| Wind                      | ✅         | Visibility        | ❌         |
+| Pressure                  | ❌         | Ceiling           | ❌         |
 </details>
 
 ### LHMT
