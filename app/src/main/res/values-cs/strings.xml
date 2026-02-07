@@ -24,7 +24,7 @@
     <string name="pressure">Tlak</string>
     <string name="visibility">Viditelnost</string>
     <string name="dew_point">Rosný bod</string>
-    <string name="cloud_cover">Oblačnost</string>
+    <string name="cloud_cover">Pokrytí oblačností</string>
     <string name="ceiling">Výška mraků</string>
     <string name="settings_icon_packs_get_more">Získat další</string>
     <string name="action_refresh">Obnovit</string>
@@ -32,8 +32,8 @@
     <string name="action_edit">Upravit</string>
     <string name="daily_yesterday_short">Včr</string>
     <string name="daily_tomorrow_short">Zít</string>
-    <string name="temperature_apparent">Pocitová</string>
-    <string name="temperature_wind_chill">Chladivý vítr</string>
+    <string name="temperature_apparent">Zdánlivá</string>
+    <string name="temperature_wind_chill">Ochlazující účinek větru</string>
     <string name="temperature_degree_day">Denostupeň</string>
     <string name="precipitation_thunderstorm">Bouřka</string>
     <string name="precipitation_rain">Déšť</string>
@@ -428,7 +428,7 @@
     <string name="pollen_alnus">Olše</string>
     <string name="pollen_level_5">Velmi vysoké</string>
     <string name="pollen_level_4">Vysoké</string>
-    <string name="precipitation_nowcasting">Minutové srážky</string>
+    <string name="precipitation_nowcasting">Velmi krátkodobá předpověď</string>
     <string name="pollen_betula">Bříza</string>
     <string name="pollen_artemisia">Pelyněk</string>
     <string name="pollen_olea">Oliva</string>
@@ -464,7 +464,7 @@
     <string name="common_weather_text_snow_showers_light">Slabé sněhové přeháňky</string>
     <string name="common_weather_text_drizzle">Mrholení</string>
     <string name="temperature_normal_short">Normální</string>
-    <string name="temperature_normals">Teplotní normy</string>
+    <string name="temperature_normals">Teplotní normály</string>
     <string name="message_source_not_installed_error_title">Zdroj již není k dispozici</string>
     <string name="about_contribution_designer">Tvůrce loga</string>
     <string name="common_weather_text_rain_showers">Dešťové přeháňky</string>
@@ -587,7 +587,7 @@
     <string name="common_weather_text_warm">Teplo</string>
     <string name="common_weather_text_cool">Chladno</string>
     <string name="common_weather_text_dry">Sucho</string>
-    <string name="common_weather_text_mist">Opar</string>
+    <string name="common_weather_text_mist">Kouřmo</string>
     <string name="common_weather_text_cold">Zima</string>
     <string name="common_weather_text_dust">Prach</string>
     <string name="common_weather_text_dust_storm">Prachová bouře</string>
@@ -612,8 +612,8 @@
     <string name="pollen_acer">Javor</string>
     <string name="pollen_alternaria">Čerň střídavá</string>
     <string name="pollen_juniperus">Jalovec</string>
-    <string name="common_weather_text_blowing_snow">Odfukování sněhu</string>
-    <string name="common_weather_text_drifting_snow">Tající sníh</string>
+    <string name="common_weather_text_blowing_snow">Vysoko zvířený sníh</string>
+    <string name="common_weather_text_drifting_snow">Nízko zvířený sníh</string>
     <string name="common_weather_text_glaze">Ledovka</string>
     <string name="pollen_atriplex">Lebeda</string>
     <string name="pollen_pinus">Borovice</string>
@@ -723,9 +723,9 @@
     <string name="visibility_very_poor">Velmi špatná</string>
     <string name="data_sources">Zdroje dat</string>
     <string name="data_modified">Tento materiál byl upraven z originálu aplikací %s, převážně za účelem výpočtu nebo doplnění chybějících údajů.</string>
-    <string name="ephemeris_about_dawn">Úsvit je, když se objeví první viditelné světlo dne před východem slunce.</string>
+    <string name="ephemeris_about_dawn">Svítání je, když se objeví první viditelné světlo dne před východem slunce.</string>
     <string name="ephemeris_about_dusk">Setmění je nejtmavější fáze soumraku předtím než zmizí poslední viditelné světlo.</string>
-    <string name="ephemeris_dawn_at">Úsvit v %s</string>
+    <string name="ephemeris_dawn_at">Svítání v %s</string>
     <string name="ephemeris_dusk_at">Setmění v %s</string>
     <string name="wind_origin">Ze %s</string>
     <string name="action_configure_item">Nastavit %s</string>
@@ -747,7 +747,7 @@
     <string name="daytime_short">Den</string>
     <string name="nighttime_short">Noc</string>
     <string name="temperature_normals_deviation">Odchylka</string>
-    <string name="temperature_normals_deviation_explanation_maximum">Odchylka od průměrné maximální teploty v měsíci %s v tomto umístění</string>
+    <string name="temperature_normals_deviation_explanation_maximum">Odchylka od průměrné maximální teploty v měsíci %s pro toto místo</string>
     <string name="temperature_normals_deviation_explanation_minimum">Odchylka od průměrné minimální teploty v měsíci %s v tomto umístění</string>
     <string name="widget_custom_subtitle_help_content_description">Zobrazit nápovědu k vlastním klíčovým slovům titulků</string>
     <string name="widget_custom_subtitle_alert_box_title">Vlastní nápověda titulků</string>
