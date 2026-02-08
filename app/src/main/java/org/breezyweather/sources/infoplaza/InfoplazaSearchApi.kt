@@ -22,7 +22,7 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface InfoplazaSearchApi {
-    @GET("v3/weeronline/nearby?count=1&lang=en&radius=30000&sortByDistance=true")
+    @GET("v3/weeronline/nearby?count=10&lang=en&radius=30000&sortByDistance=true")
     fun nearby(
         @Query("lat") latitude: Double,
         @Query("lon") longitude: Double,
